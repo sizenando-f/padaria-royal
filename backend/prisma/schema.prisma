@@ -1,0 +1,44 @@
+// backend/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Fornada {
+  id        Int      @id @default(autoincrement())
+  dataHora  DateTime @default(now())
+
+  // Temperaturas (Decimal para precisão exata)
+  tempInicial       Decimal @db.Decimal(5, 2)
+  tempFinalPrevista Decimal @db.Decimal(5, 2)
+
+  // Tempo armazenado em MINUTOS (Front converte para horas:minutos)
+  tempoFermentacao  Int 
+
+  // Ingredientes
+  farinhaKg       Decimal @db.Decimal(10, 3) // 3 casas (ex: 10.500)
+  emulsificanteMl Decimal @db.Decimal(10, 2)
+  fermentoGrama   Decimal @db.Decimal(10, 2)
+
+  observacoes String? @db.Text
+
+  // Relacionamento inverso (O prisma cria isso pra facilitar a busca)
+  avaliacao Avaliacao?
+}
+
+model Avaliacao {
+  id        Int      @id @default(autoincrement())
+  
+  // Chave Estrangeira ligando à Fornada
+  fornadaId Int     @unique
+  fornada   Fornada @relation(fields: [fornadaId], references: [id])
+
+  nota      Int     // 1 a 5
+  status    String  // "BOM", "RUIM", "EXCELENTE"
+  comentario String?
+}
