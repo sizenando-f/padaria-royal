@@ -9,16 +9,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Fornada {
+model Producao {
   id        Int      @id @default(autoincrement())
-  dataHora  DateTime @default(now())
 
-  // Temperaturas (Decimal para precisão exata)
-  tempInicial       Decimal @db.Decimal(5, 2)
-  tempFinalPrevista Decimal @db.Decimal(5, 2)
+  // Controle Temporal
+  dataProducao  DateTime @default(now())
+  horaInicio    DateTime
+  horaFim       DateTime
 
-  // Tempo armazenado em MINUTOS (Front converte para horas:minutos)
-  tempoFermentacao  Int 
+  // Calculado automaticamente pelo backend (diferença entre fim e inicio)
+  tempoFermentacaoMinutos  Int 
+
+  // Temperatura (Serão preenchidas via API ou manualmente)
+  tempAmbienteInicial   Decimal?  @db.Decimal(5,2)
+  tempAmbienteFinal     Decimal?  @db.Decimal(5,2)
 
   // Ingredientes
   farinhaKg       Decimal @db.Decimal(10, 3) // 3 casas (ex: 10.500)
@@ -36,7 +40,7 @@ model Avaliacao {
   
   // Chave Estrangeira ligando à Fornada
   fornadaId Int     @unique
-  fornada   Fornada @relation(fields: [fornadaId], references: [id])
+  fornada   Producao @relation(fields: [fornadaId], references: [id])
 
   nota      Int     // 1 a 5
   status    String  // "BOM", "RUIM", "EXCELENTE"

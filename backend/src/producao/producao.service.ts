@@ -1,0 +1,60 @@
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { CreateProducaoDto } from './dto/create-producao.dto';
+import { UpdateProducaoDto } from './dto/update-producao.dto';
+import { PrismaService } from 'src/prisma/prisma.service';  // Importa o Prisma Service
+
+@Injectable()
+export class ProducaoService {
+  // Fazemos a injeção
+  constructor(private prisma: PrismaService){}
+
+  // Para adicionar nova produção
+  async create(data: CreateProducaoDto) {
+    // Define a data baseado nas informações recebidas da requisição
+    const inicio = new Date(data.horaInicio);
+    const fim = new Date(data.horaFim);
+
+    // Valida lógica: o fim não pode ser antes do ínicio
+    if(fim <= inicio){
+      throw new BadRequestException('A hora final deve ser depois da hora inicial.');
+    }
+
+    // Calcula a diferença em minutos
+    const diffMs = fim.getTime() - inicio.getTime();
+    const minutos = Math.floor(diffMs/60000);
+
+    // Futuramente chamaremos a API de clima aqui
+    // Por enquanto valor enviado vai ser nulo
+
+    return await this.prisma.producao.create({
+      data: {
+        horaInicio: inicio,
+        horaFim: fim,
+        tempoFermentacaoMinutos: minutos,
+        farinhaKg: data.farinhaKg,
+        emulsificanteMl: data.emulsificanteMl,
+        fermentoGrama: data.fermentoGrama,
+        tempAmbienteInicial: data.tempAmbienteInicial,
+        tempAmbienteFinal: data.tempAmbienteFinal,
+        observacoes: data.observacoes,
+      }
+    })
+
+  }
+
+  async findAll() {
+    return await this.prisma.producao.findMany();
+  }
+
+  findOne(id: number) {
+    return `This action returns a #${id} producao`;
+  }
+
+  update(id: number, updateProducaoDto: UpdateProducaoDto) {
+    return `This action updates a #${id} producao`;
+  }
+
+  remove(id: number) {
+    return `This action removes a #${id} producao`;
+  }
+}
