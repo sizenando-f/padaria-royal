@@ -5,6 +5,13 @@ import { ValidationPipe } from '@nestjs/common';  // Importa
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Libera o Frontend
+  app.enableCors({
+    origin: 'http://localhost:3001',  // Só deixa o nosso front entrar
+    methods: 'GET, HEAD, PUT, PATCH, POST, DELETE',
+    credentials: true,
+  })
+
   // Ativa a validação global para o DTO
   app.useGlobalPipes(new ValidationPipe({
     transform: true,      // Converte tipos automaticamente se possível
