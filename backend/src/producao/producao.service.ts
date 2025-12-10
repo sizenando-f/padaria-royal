@@ -54,7 +54,16 @@ export class ProducaoService {
     return `This action updates a #${id} producao`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} producao`;
+  async remove(id: number) {
+    // Verifica se existe
+    const existe = await this.prisma.producao.findUnique({where: {id}});
+    if(!existe){
+      throw new Error('Produção não encontrada');
+    }
+
+    // Apaga de vez
+    return await this.prisma.producao.delete({
+      where: {id},
+    });
   }
 }

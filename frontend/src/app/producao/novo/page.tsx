@@ -107,15 +107,15 @@ export default function NovaProducao(){
             alert('Produção registrada com sucesso!');
 
             // Reinicia o formulário por usabilidade
-            setFormData({
-                dataProducao: '',
-                horaInicio: '',
-                horaFim: '',
+            setFormData((prev) => ({
+                dataProducao: prev.dataProducao,
+                horaInicio: prev.horaInicio,
+                horaFim: prev.horaFim,
                 farinhaKg: '',
                 emulsificanteMl: '',
                 fermentoGrama: '',
                 observacoes: '',
-            });
+            }));
 
         // Mostra o erro caso ocorra
         } catch (error) {
@@ -149,7 +149,7 @@ export default function NovaProducao(){
                         onChange={handleChange}
                         className="mt-1 block w-full rounded-md border border-gray-300 p-2 text-gray-600 bg-gray-50"/>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Início Real</label>
                             <input type="datetime-local" name="horaInicio"
@@ -185,7 +185,7 @@ export default function NovaProducao(){
                         value={formData.farinhaKg}
                         onChange={handleChange}/>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Emulsificante (ml)</label>
                             <input type="number" 
