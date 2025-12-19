@@ -12,6 +12,12 @@ export class ProducaoController {
     return this.producaoService.create(createProducaoDto);
   }
 
+  // Precisa vir antes do @Get('id') senão ele acha que 'pendentes é um ID'
+  @Get('pendentes')
+  findPendentes(){
+    return this.producaoService.findPendentes();
+  }
+
   @Get()
   findAll() {
     return this.producaoService.findAll();

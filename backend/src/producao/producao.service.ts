@@ -46,9 +46,31 @@ export class ProducaoService {
     return await this.prisma.producao.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} producao`;
+  // Para encontrar uma produção específica
+  async findOne(id: number) {
+    const producao = await this.prisma.producao.findUnique({
+      where: {id},
+    });
+
+    if(!producao) {
+      throw new Error(`Produção com ID ${id} não encontrado.`);
+    }
+
+    return producao;
   }
+
+  // Para buscar um que não tem nenhuma avaliação
+  async findPendentes() {
+    return await this.prisma.producao.findMany({
+      where: {
+        avaliacao: null,  // Filtra aqueles sem avaliação
+      },
+      orderBy: {
+        id: 'desc',     // Ordena pelos meais recentes
+      }
+    })
+  }
+
 
   update(id: number, updateProducaoDto: UpdateProducaoDto) {
     return `This action updates a #${id} producao`;

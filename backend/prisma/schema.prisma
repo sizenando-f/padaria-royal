@@ -39,8 +39,8 @@ model Avaliacao {
   id        Int      @id @default(autoincrement())
   
   // Chave Estrangeira ligando à Fornada
-  fornadaId Int     @unique
-  fornada   Producao @relation(fields: [fornadaId], references: [id])
+  producaoId Int     @unique
+  producao   Producao @relation(fields: [producaoId], references: [id])
 
   nota      Int     // 1 a 5
   status    String  // "BOM", "RUIM", "EXCELENTE"
