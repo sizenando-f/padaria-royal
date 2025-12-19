@@ -43,7 +43,14 @@ export class ProducaoService {
   }
 
   async findAll() {
-    return await this.prisma.producao.findMany();
+    return await this.prisma.producao.findMany({
+      include: {
+        avaliacao: true,  // Para trazer a avaliação junto
+      },
+      orderBy: {
+        id: 'desc',     // Mostra do mais recente ao mais antigo
+      }
+    });
   }
 
   // Para encontrar uma produção específica

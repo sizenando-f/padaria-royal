@@ -2,7 +2,14 @@
 
 import { useEffect, useState } from "react";
 
-import { Calendar, Clock, Thermometer, Trash2, Edit, Wheat, Droplets, FlaskConical } from "lucide-react";
+import { Calendar, Clock, Thermometer, Trash2, Edit, Wheat, Droplets, FlaskConical, Star } from "lucide-react";
+
+interface Avaliacao {
+    id: number;
+    nota: number;
+    status: string;
+    comentario: string | null;
+}
 
 interface Producao {
     id: number;
@@ -16,6 +23,7 @@ interface Producao {
     tempAmbienteInicial: string | null;
     tempAmbienteFinal: string | null;
     observacoes: string | null;
+    avaliacao?: Avaliacao | null;   // Pode vir do backend
 }
 
 export default function HistoricoProducao() {
@@ -89,6 +97,16 @@ export default function HistoricoProducao() {
         }
     }
 
+    const getStatusColor = (status: string) => {
+        switch(status) {
+            case 'EXCELENTE': return 'bg-green-100 text-green-700 border-green-200';
+            case 'BOM': return 'bg-blue-100 text-blue-700 border-blue-200';
+            case 'REGULAR': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+            case 'RUIM': return 'bg-red-100 text-red-700 border-red-200';
+            default: return 'bg-gray-100 text-gray-600 border-gray-200';
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-8">
             <div className="max-w-4xl mx-auto">
@@ -111,7 +129,23 @@ export default function HistoricoProducao() {
                                         <div>
                                             <h3 className="font-bold text-lg text-gray-800"> Fornada #{prod.id}</h3>
                                             {/* Badge de status */}
-                                            <span className="inline-block bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded mt-1">Pendente</span>
+                                            {prod.avaliacao ? (
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <span className={`text-xs px-2 py-1 rounded border font-bold ${getStatusColor(prod.avaliacao.status)}`}>
+                                                        {prod.avaliacao.status}
+                                                    </span>
+                                                    <div className="flex items-center text-orange-500">
+                                                        <Star size={14} fill="currentColor"/>
+                                                        <span className="text-xs font-bold ml-1">
+                                                            {prod.avaliacao.nota}/5
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <span className="inline-block bg-gray-100 text-gray-500 border border-gray-200 text-xs px-2 py-1 rounded mt-1 font-medium">
+                                                    Pendente Avaliação
+                                                </span>
+                                            )}
                                         </div>
 
                                         {/* Botões de ação */}
@@ -166,7 +200,7 @@ export default function HistoricoProducao() {
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <Droplets size={16} className="text-blue-400" />
-                                            <span className="font-semibold text-gray-700">Emulsif.::</span> {prod.emulsificanteMl}kg
+                                            <span className="font-semibold text-gray-700">Emulsif.:</span> {prod.emulsificanteMl}kg
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <FlaskConical size={16} className="text-purple-500" />

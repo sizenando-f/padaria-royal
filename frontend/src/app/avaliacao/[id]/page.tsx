@@ -104,7 +104,7 @@ export default function FormularAvaliacao(){
             <div className="bg-white w-full max-w-lg rounded-xl shadow-lg border border-gray-100 overflow-hidden">
                 {/* Cabeçalho */}
                 <div className="bg-orange-600 p-6 text-white">
-                    <button onClick={() => router.back()} className="flex items-center gap-1 text-orange-100 hover:text-white mb-4 text-sm font-bold">
+                    <button onClick={() => router.back()} className="flex items-center gap-1 text-orange-100 hover:text-white mb-4 text-sm font-bold cursor-pointer">
                         <ArrowLeft size={16} /> Voltar
                     </button>
                     <h1 className="text-2xl">Avaliar Fornada #{producao?.id}</h1>
@@ -124,7 +124,7 @@ export default function FormularAvaliacao(){
                         <label className="block text-sm font-bold text-gray-500 mb-2 uppercase tracking-wide">Qualidade Geral</label>
                         <div className="flex justify-center gap-2">
                             {[1, 2, 3, 4, 5].map((valor) => (
-                                <button key={valor} onClick={() => setNota(valor)} className="transition-transform hover:scale-110 focus:outline-none">
+                                <button key={valor} onClick={() => setNota(valor)} className="transition-transform hover:scale-110 focus:outline-none cursor-pointer">
                                     <Star size={42} fill={valor <= nota ? "#F59E0B" : "none"} className={valor <= nota ? "text-orange-500" : "text-gray-300"}/>
                                 </button>
                             ))}
@@ -141,7 +141,7 @@ export default function FormularAvaliacao(){
                         <div className="grid grid-cols-2 gap-3">
                             {opcoesStatus.map((opcao) => (
                                 <button key={opcao.label} onClick={() => setStatus(opcao.label)} 
-                                className={`py-3 rounded-lg font-bold text-sm border-2 transition-all ${status === opcao.label ? `${opcao.color} ring-2 ring-offset-1 ring-gray-300 scale-105` : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300'}`}>
+                                className={`py-3 rounded-lg font-bold text-sm border-2 cursor-pointer transition-all ${status === opcao.label ? `${opcao.color} ring-2 ring-offset-1 ring-gray-300 scale-105` : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300'}`}>
                                     {opcao.label}
                                 </button>
                             ))}
@@ -156,7 +156,7 @@ export default function FormularAvaliacao(){
                     </div>
 
                     {/* Botão de salvar */}
-                    <button onClick={handleSalvar} disabled={salvando} className="w-full bg-orange-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-orange-700 transition-colors flex justify-center items-center gap-2 shadow-lg shadow-orange-200 disabled:opacity-50">
+                    <button onClick={handleSalvar} disabled={salvando} className="w-full bg-orange-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-orange-700 transition-colors flex justify-center items-center gap-2 shadow-lg shadow-orange-200 disabled:opacity-50 cursor-pointer">
                         {salvando ? 'Salvando...' : (
                             <>
                                 <Save size={20} /> Confirmar Avaliação
