@@ -17,6 +17,11 @@ export class AvaliacaoController {
     return this.avaliacaoService.findAll();
   }
 
+  @Get('dashboard-stats')
+  getStats() {
+    return this.avaliacaoService.getDashboardStats();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.avaliacaoService.findOne(+id);
