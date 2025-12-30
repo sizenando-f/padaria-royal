@@ -204,7 +204,7 @@ export default function HistoricoProducao() {
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <FlaskConical size={16} className="text-purple-500" />
-                                            <span className="font-semibold text-gray-700">Fermento:</span> {prod.fermentoGrama}kg
+                                            <span className="font-semibold text-gray-700">Fermento:</span> {prod.fermentoGrama}g
                                         </div>
                                     </div>
                                 </div>

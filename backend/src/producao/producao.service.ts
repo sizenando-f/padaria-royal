@@ -2,6 +2,7 @@ import { Injectable, BadRequestException } from '@nestjs/common';
 import { CreateProducaoDto } from './dto/create-producao.dto';
 import { UpdateProducaoDto } from './dto/update-producao.dto';
 import { PrismaService } from 'src/prisma/prisma.service';  // Importa o Prisma Service
+import { freemem } from 'os';
 
 @Injectable()
 export class ProducaoService {
@@ -94,5 +95,48 @@ export class ProducaoService {
     return await this.prisma.producao.delete({
       where: {id},
     });
+  }
+
+  async calcularSugestao(farinhaInput: number){
+    // Pegamos os últimos 20 para uma amostra recente
+    const sucessos = await this.prisma.producao.findMany({
+      where: {
+        avaliacao: {
+          status: { in: ['EXCELENTE', 'BOM'] }
+        }
+      },
+      orderBy: { id: 'desc' },
+      take: 20,
+    });
+
+    // Se não houver histórico
+    if(sucessos.length === 0){
+      return { fermento: 0, emulsificante: 0, base: 0 };
+    }
+
+    // Para calcular as gramas por quilo de farinha
+    let totalFermentoPorKg = 0;
+    let totalEmulsificantePorKg = 0;
+
+    for(const prod of sucessos){
+      const farinha = Number(prod.farinhaKg);
+      const fermento = Number(prod.fermentoGrama);
+      const emulsificante = Number(prod.emulsificanteMl);
+
+      if(farinha > 0){
+        totalFermentoPorKg += (fermento / farinha);
+        totalEmulsificantePorKg += (emulsificante / farinha);
+      }
+    }
+
+    // Calcula a média
+    const mediaFermento = totalFermentoPorKg / sucessos.length;
+    const mediaEmulsificante = totalEmulsificantePorKg / sucessos.length;
+
+    return {
+      fermento: Math.round(mediaFermento * farinhaInput),   // Arredonda para inteiro
+      emulsificante: Math.round(mediaEmulsificante * farinhaInput), 
+      base: sucessos.length // Retorna quantos registros usou para calcular (mostra ao usuário)
+    }
   }
 }

@@ -1,10 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
+import { Wand2, Loader2 } from "lucide-react";
 
 export default function NovaProducao(){
     // Memória para salvar estado de carregamento 
     const [loading, setLoading] = useState(false);
+    // Para a sugestão inteligente
+    const [sugerindo, setSugerindo] = useState(false);
 
     // É a memória do componente que salva o que o usuário digita
     const [formData, setFormData] = useState({
@@ -137,6 +140,37 @@ export default function NovaProducao(){
         setFormData((prev) => ({ ...prev, [name]: value}));
     }
 
+    async function pedirSugestao(){
+        const farinha = Number(formData.farinhaKg.replace(',', '.'));
+        if(!farinha || farinha < 0){
+            alert('Digite a quantidade de farinha primeiro.');
+            return;
+        }
+
+        setSugerindo(true);
+        try{
+            const res = await fetch(`http://localhost:3000/producao/sugestao?farinha=${farinha}`);
+            const data = await res.json();
+
+            if (data.base === 0) {
+                alert('Ainda não temos históricos "Excelentes" suficientes para sugerir.');
+                return;
+            }
+
+            setFormData(prev => ({
+                ...prev,
+                fermentoGrama: data.fermento,
+                emulsificanteMl: data.emulsificante
+            }));
+
+            // alert(`Sugestão aplicada baseada em ${data.base} fornadas de sucesso`);
+        } catch (error) {
+            console.error(error);
+        } finally{
+            setSugerindo(false);
+        }
+    }
+
     return (
         <div className="min-h-screen bg-amber-50 p-8 flex justify-center items-start">
             <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-lg border border-amber-100">
@@ -183,8 +217,18 @@ export default function NovaProducao(){
                         className="mt-1 block w-full rounded-md border border-gray-300 p-2 outline-none focus:border-orange-500"
                         placeholder="Ex: 10.5"
                         value={formData.farinhaKg}
-                        onChange={handleChange}/>
+                        onChange={handleChange}
+                        />
+
+                        {/* Botão de susgestão inteligente */}
+                        <button type="button" onClick={pedirSugestao}
+                        className="mt-1 bg-purple-100 text-purple-700 px-3 rounded-md border border-purple-200 hover:bg-purple-200 transition-colors flex items-center gap-2 text-sm font-bold whitespace-nowrap"
+                        title="Calcular ingredientes baseados no histórico de sucesso">
+                            {sugerindo ? <Loader2 className="animate-spin" size={18}/> : <Wand2 size={18}/>}
+                            Sugestão Inteligente
+                        </button>
                     </div>
+                    <p className="text-xs text-gray-400 mt-1">Digite a farinha e clique na varinha para calcular o resto</p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Emulsificante (ml)</label>

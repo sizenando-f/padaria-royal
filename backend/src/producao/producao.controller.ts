@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ProducaoService } from './producao.service';
 import { CreateProducaoDto } from './dto/create-producao.dto';
 import { UpdateProducaoDto } from './dto/update-producao.dto';
@@ -16,6 +16,13 @@ export class ProducaoController {
   @Get('pendentes')
   findPendentes(){
     return this.producaoService.findPendentes();
+  }
+
+  // Rota para a sugestão
+  @Get('sugestao')
+  async obterSugestao(@Query('farinha') farinha: string){
+    if (!farinha) return {};
+    return this.producaoService.calcularSugestao(Number(farinha));
   }
 
   @Get()
