@@ -1,13 +1,17 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
-import { Wand2, Loader2 } from "lucide-react";
+import { Wand2, Loader2, ThermometerSun, Info, Thermometer, Wheat, FlaskConical, Droplets} from "lucide-react";
 
 export default function NovaProducao(){
     // Memória para salvar estado de carregamento 
     const [loading, setLoading] = useState(false);
     // Para a sugestão inteligente
     const [sugerindo, setSugerindo] = useState(false);
+
+    // Para mostrar as "Provas"
+    const [provasIA, setProvasIA] = useState<any[] | null>(null);
+    const [mensagemIA, setMensagemIA] = useState('');
 
     // É a memória do componente que salva o que o usuário digita
     const [formData, setFormData] = useState({
@@ -18,6 +22,8 @@ export default function NovaProducao(){
         emulsificanteMl: '',
         fermentoGrama: '',
         observacoes: '',
+        tempAmbienteInicial: '',
+        tempAmbienteFinal: '',
     });
 
     // Para a visualização do tempo
@@ -86,6 +92,8 @@ export default function NovaProducao(){
                 emulsificanteMl: Number(String(formData.emulsificanteMl).replace(',', '.')),
                 fermentoGrama: Number(String(formData.fermentoGrama).replace(',','.')),
                 observacoes: formData.observacoes,
+                tempAmbienteInicial: formData.tempAmbienteInicial ? Number(formData.tempAmbienteInicial.replace(',', '.')) : null,
+                tempAmbienteFinal: formData.tempAmbienteFinal ? Number(formData.tempAmbienteFinal.replace(',', '.')) : null
             };
 
             // Aqui o Frontend liga para o backend
@@ -118,6 +126,8 @@ export default function NovaProducao(){
                 emulsificanteMl: '',
                 fermentoGrama: '',
                 observacoes: '',
+                tempAmbienteInicial: '',
+                tempAmbienteFinal: '',
             }));
 
         // Mostra o erro caso ocorra
@@ -137,19 +147,30 @@ export default function NovaProducao(){
         // pega o nome e o valor do input qualquer
         const {name, value} = e.target;
         // Atualiza apenas aquele que mudou mantendo os antigos intactos
-        setFormData((prev) => ({ ...prev, [name]: value}));
+        setFormData(prev => ({ ...prev, [name]: value}));
     }
 
+    // Lógica de sugestão inteligente
     async function pedirSugestao(){
         const farinha = Number(formData.farinhaKg.replace(',', '.'));
+        const tIni = formData.tempAmbienteInicial ? Number(formData.tempAmbienteInicial) : undefined;
+        const tFim = formData.tempAmbienteFinal ? Number(formData.tempAmbienteFinal) : undefined;
+
+
         if(!farinha || farinha < 0){
             alert('Digite a quantidade de farinha primeiro.');
             return;
         }
 
         setSugerindo(true);
+        setProvasIA(null);
+
         try{
-            const res = await fetch(`http://localhost:3000/producao/sugestao?farinha=${farinha}`);
+            let url = `http://localhost:3000/producao/sugestao?farinha=${farinha}`;
+            if(tIni) url += `&temp=${tIni}`;
+            if(tFim) url += `&tempFim=${tFim}`;
+
+            const res = await fetch(url);
             const data = await res.json();
 
             if (data.base === 0) {
@@ -157,13 +178,15 @@ export default function NovaProducao(){
                 return;
             }
 
+            // Aplica alteração no fermento
             setFormData(prev => ({
                 ...prev,
                 fermentoGrama: data.fermento,
-                emulsificanteMl: data.emulsificante
             }));
 
-            // alert(`Sugestão aplicada baseada em ${data.base} fornadas de sucesso`);
+            setProvasIA(data.provas);
+            setMensagemIA(data.mensagem);
+
         } catch (error) {
             console.error(error);
         } finally{
@@ -208,45 +231,115 @@ export default function NovaProducao(){
                         <div className={`p-3 rounded-lg text-center font-medium border ${tempoEstimado.includes('inválido') ? 'bg-red-50 text-red-600 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>Tempo de Fermentação: {tempoEstimado}</div>
                     )}
 
+                    {/* CAMPO DE TEMPERATURA */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                            <label className="flex items-center gap-2 text-sm font-bold text-blue-800 mb-1">
+                                <ThermometerSun size={18} /> Temp. Inicial (°C)
+                            </label>
+                            <input type="number" name="tempAmbienteInicial"
+                            className="w-full rounded-md border border-blue-200 p-2 text-blue-900 focus:ring-blue-500 outline-none"
+                            placeholder="Ex: 29"
+                            value={formData.tempAmbienteInicial}
+                            onChange={handleChange} />
+                        </div>
+                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                            <label className="flex items-center gap-2 text-sm font-bold text-blue-800 mb-1">
+                                <ThermometerSun size={18} /> Temp. Final (°C)
+                            </label>
+                            <input type="number" name="tempAmbienteFinal"
+                                className="w-full rounded-md border border-blue-200 p-2 text-blue-900 focus:ring-blue-500 outline-none"
+                                placeholder="Ex: 32"
+                                value={formData.tempAmbienteFinal}
+                                onChange={handleChange} />
+                        </div>
+                    </div>
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Farinha (Kg)</label>
-                        <input type="number"
-                        step={0.1}
-                        name="farinhaKg"
-                        required
-                        className="mt-1 block w-full rounded-md border border-gray-300 p-2 outline-none focus:border-orange-500"
-                        placeholder="Ex: 10.5"
-                        value={formData.farinhaKg}
-                        onChange={handleChange}
-                        />
+                        <div className="flex gap-2">
+                            <input type="text" inputMode="decimal"
+                            step={0.1}
+                            name="farinhaKg"
+                            required
+                            className="mt-1 block w-full rounded-md border border-gray-300 p-2 outline-none focus:border-orange-500"
+                            placeholder="Ex: 10.5"
+                            value={formData.farinhaKg}
+                            onChange={handleChange}
+                            />
 
-                        {/* Botão de susgestão inteligente */}
-                        <button type="button" onClick={pedirSugestao}
-                        className="mt-1 bg-purple-100 text-purple-700 px-3 rounded-md border border-purple-200 hover:bg-purple-200 transition-colors flex items-center gap-2 text-sm font-bold whitespace-nowrap"
-                        title="Calcular ingredientes baseados no histórico de sucesso">
-                            {sugerindo ? <Loader2 className="animate-spin" size={18}/> : <Wand2 size={18}/>}
-                            Sugestão Inteligente
-                        </button>
+                            {/* Botão de susgestão inteligente */}
+                            <button type="button" onClick={pedirSugestao}
+                            className="mt-1 bg-purple-600 text-white px-4 rounded-md border border-purple-200 hover:bg-purple-700 transition-colors flex items-center gap-2 text-sm font-bold whitespace-nowrap shadow-sm"
+                            title="Calcular fermento ideal para este clima">
+                                {sugerindo ? <Loader2 className="animate-spin" size={18}/> : <Wand2 size={18}/>}
+                                Sugestão IA
+                            </button>
+                        </div>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">Digite a farinha e clique na varinha para calcular o resto</p>
+
+                    {/* Bloco para as provas */}
+                    {provasIA && provasIA.length > 0 && (
+                        <div className="bg-purple-50 p-4 rounded-xl border border-purple-100 text-sm animate-fade-in mt-2">
+                            {/* Mensagem do Backend */}
+                            <div className="flex items-center gap-2 text-purple-800 font-bold mb-3 border-b border-purple-200 pb-2">
+                                <Info size={18} />
+                                <span>{mensagemIA}</span>
+                            </div>
+                            
+                            <p className="text-xs text-purple-600 mb-3 font-medium uppercase tracking-wide">Top 3 registros usados:</p>
+
+                            <div className="grid grid-cols-1 gap-2">
+                                {provasIA.map((prova) => (
+                                    <div key={prova.id} className="bg-white p-3 rounded-lg border border-purple-200 shadow-sm flex justify-between items-center hover:bg-purple-50 transition-colors">
+                                        <div>
+                                            <span className="font-bold text-purple-900 block">Fornada #{prova.id}</span>
+                                            <div className="flex gap-1.5">
+                                                <Thermometer size={16}/>
+                                            <span className="text-xs text-gray-500">{prova.tIni}°C ➜ {prova.tFim ? `${prova.tFim}°C` : '?'}</span>
+                                            </div>
+                                            
+                                        </div>
+                                        <div className="text-right text-xs text-gray-600 space-y-1">
+                                            <div className="flex gap-1.5">
+                                                <Wheat size={16}/> {prova.farinha}kg Farinha
+                                            </div>
+                                            <div className="flex gap-1.5 font-bold text-purple-700">
+                                                <FlaskConical size={16}/> {prova.fermento}g Fermento
+                                            </div>
+                                            <div className="flex gap-1.5">
+                                                <Droplets size={16} /> {prova.emulsificante}ml Emulsif.
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    <p className="text-xs text-gray-400 mt-1">Digite a farinha e clique na varinha para calcular o fermento</p>
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Emulsificante (ml)</label>
                             <input type="number" 
                             name="emulsificanteMl"
-                            className="mt-1 w-full rounded-md border border-gray-300 p-2 outline-none focus:border-orange-500"
+                            className="mt-1 block w-full rounded-md border border-gray-300 p-2 outline-none focus:border-orange-500"
                             value={formData.emulsificanteMl}
                             onChange={handleChange}/>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700">Fermento (g)</label>
-                            <input type="number" 
-                            name="fermentoGrama"
-                            className="mt-1 block w-full rounded-md border border-gray-300 p-2 outline-none focus:border-orange-500"
-                            value={formData.fermentoGrama}
-                            onChange={handleChange}/>
+                            <div className="relative">
+                                <input type="number" 
+                                name="fermentoGrama"
+                                className={`mt-1 block w-full rounded-md border transition-all p-2 outline-none ${provasIA ? 'border-purple-400 bg-purple-50 font-bold text-purple-900' : 'border-gray-300'}`}
+                                value={formData.fermentoGrama}
+                                onChange={handleChange}/>
+                                {provasIA && <span className="absolute right-2 top-3 text-xs text-purple-500 font-bold">Sugerido</span>}
+                            </div>     
                         </div>
                     </div>
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Observações</label>
                         <textarea name="observacoes"
@@ -256,6 +349,7 @@ export default function NovaProducao(){
                         value={formData.observacoes}
                         onChange={handleChange}></textarea>
                     </div>
+                    
                     <button type="submit"
                     disabled={loading}
                     className="w-full bg-orange-600 text-white py-3 rounded-lg font-bold hover:bg-orange-700 transition-colors disabled:opacity-50">

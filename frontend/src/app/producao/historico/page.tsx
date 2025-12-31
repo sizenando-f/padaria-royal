@@ -200,7 +200,7 @@ export default function HistoricoProducao() {
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <Droplets size={16} className="text-blue-400" />
-                                            <span className="font-semibold text-gray-700">Emulsif.:</span> {prod.emulsificanteMl}kg
+                                            <span className="font-semibold text-gray-700">Emulsif.:</span> {prod.emulsificanteMl}ml
                                         </div>
                                         <div className="flex items-center gap-1.5">
                                             <FlaskConical size={16} className="text-purple-500" />

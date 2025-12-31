@@ -97,46 +97,103 @@ export class ProducaoService {
     });
   }
 
-  async calcularSugestao(farinhaInput: number){
-    // Pegamos os últimos 20 para uma amostra recente
-    const sucessos = await this.prisma.producao.findMany({
-      where: {
-        avaliacao: {
-          status: { in: ['EXCELENTE', 'BOM'] }
-        }
-      },
-      orderBy: { id: 'desc' },
-      take: 20,
+  async calcularSugestao(farinhaInput: number, tempAtual?: number, tempFinal?: number){
+    // Para pegar todas as prodoções de sucesso com as duas temperaturas
+   const historico = await this.prisma.producao.findMany({
+    where: {
+      avaliacao: {status: 'EXCELENTE'}, // Só o melhor
+      tempAmbienteInicial: {not: null}, // Com temperatura inicial
+      tempAmbienteFinal: {not: null},   // Com temperatura final
+      farinhaKg: {gt: 0}
+    },
+    select: {
+      id: true,
+      farinhaKg: true,
+      fermentoGrama: true,
+      emulsificanteMl: true,
+      tempAmbienteInicial: true,
+      tempAmbienteFinal: true
+    }
+   });
+
+   if(historico.length === 0){
+    return {
+      fermento: 0,
+      mensagem: 'Sem dados históricos excelentes com temperatura para calcular.',
+      provas: []
+    };
+   }
+
+   // VERIFICAR
+   let selecionados: any[] = [];
+
+   // Cálculo com pesos
+   if (tempAtual) {
+    // Calcula a distância de cada registro para o cenário atual
+    const comDistancia = historico.map(p => {
+      const tIni = Number(p.tempAmbienteInicial);
+      const tFim = p.tempAmbienteFinal ? Number(p.tempAmbienteFinal) : tIni;  // Usa a inicial como fallback
+    
+      // Distância Euclidiana simplificada: |Delta Inicial| + |Delta Final|
+      const diffIni = Math.abs(tIni - tempAtual);
+      const diffFim = tempFinal ? Math.abs(tFim - tempFinal) : 0;
+
+      const distanciaTotal = diffIni + diffFim;
+
+      // O peso é o inverso da distância, quanto menor a distância, maior o peso 
+      const peso = 1 / (distanciaTotal + 0.1); // Adiciona +1 pra evitar divisão por 0 caso a temperatura for idêntica
+
+      return {
+        ...p,
+        distancia: distanciaTotal,
+        peso
+      };
     });
 
-    // Se não houver histórico
-    if(sucessos.length === 0){
-      return { fermento: 0, emulsificante: 0, base: 0 };
+    // Ordena pelos mais próximos
+    comDistancia.sort((a, b) => a.distancia - b.distancia);
+
+    // Pega os top 20 mais parecidos
+    selecionados = comDistancia.slice(0, 20);
+   } else {
+      // Peso igual pra todos como fallback
+      selecionados = historico.slice(-20).map(p => ({
+        ...p,
+        peso: 1
+      }));
+   }
+
+   // Média ponderada
+   let somaPonderada = 0;
+   let somaPesos = 0;
+
+   for (const item of selecionados) {
+    const farinha = Number(item.farinhaKg);
+    const fermento = Number(item.fermentoGrama);
+    
+    // Se o peso é alto, essa proporção possui mais importância
+    if(farinha > 0){
+      const proporcao = fermento / farinha;
+      somaPonderada += (proporcao * item.peso);
+      somaPesos += item.peso;
     }
+   }
 
-    // Para calcular as gramas por quilo de farinha
-    let totalFermentoPorKg = 0;
-    let totalEmulsificantePorKg = 0;
+   const mediaProporcao = somaPesos > 0 ? somaPonderada / somaPesos : 0;
+   const fermentoSugerido = Math.round(mediaProporcao * farinhaInput);
 
-    for(const prod of sucessos){
-      const farinha = Number(prod.farinhaKg);
-      const fermento = Number(prod.fermentoGrama);
-      const emulsificante = Number(prod.emulsificanteMl);
-
-      if(farinha > 0){
-        totalFermentoPorKg += (fermento / farinha);
-        totalEmulsificantePorKg += (emulsificante / farinha);
-      }
-    }
-
-    // Calcula a média
-    const mediaFermento = totalFermentoPorKg / sucessos.length;
-    const mediaEmulsificante = totalEmulsificantePorKg / sucessos.length;
-
-    return {
-      fermento: Math.round(mediaFermento * farinhaInput),   // Arredonda para inteiro
-      emulsificante: Math.round(mediaEmulsificante * farinhaInput), 
-      base: sucessos.length // Retorna quantos registros usou para calcular (mostra ao usuário)
-    }
-  }
+   return {
+    fermento:  fermentoSugerido,
+    mensagem: `Cálculo realizado com base nas ${selecionados.length} fornadas mais similares encontradas.`,
+    // Retorna completo para a prova
+    provas: selecionados.map(s => ({
+      id: s.id,
+      tIni: Number(s.tempAmbienteInicial),
+      tFim: s.tempAmbienteFinal ? Number(s.tempAmbienteFinal) : null,
+      farinha: Number(s.farinhaKg),
+      fermento: Number(s.fermentoGrama),
+      emulsificante: Number(s.emulsificanteMl)
+    }))
+   }
+  };
 }

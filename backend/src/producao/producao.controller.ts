@@ -20,9 +20,17 @@ export class ProducaoController {
 
   // Rota para a sugestão
   @Get('sugestao')
-  async obterSugestao(@Query('farinha') farinha: string){
+  async obterSugestao(
+    @Query('farinha') farinha: string,
+    @Query('temp') temp?: string,
+    @Query('tempFim') tempFim?: string
+  ){
     if (!farinha) return {};
-    return this.producaoService.calcularSugestao(Number(farinha));
+    return this.producaoService.calcularSugestao(
+      Number(farinha), 
+      temp ? Number(temp) : undefined,
+      tempFim ? Number(tempFim) : undefined
+    );
   }
 
   @Get()
