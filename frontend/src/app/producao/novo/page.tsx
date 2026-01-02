@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
-import { Wand2, Loader2, ThermometerSun, Info, Thermometer, Wheat, FlaskConical, Droplets} from "lucide-react";
+import { Wand2, Loader2, ThermometerSun, Info, Thermometer, Wheat, FlaskConical, Droplets, CloudSun} from "lucide-react";
 
 export default function NovaProducao(){
     // Memória para salvar estado de carregamento 
@@ -29,6 +29,9 @@ export default function NovaProducao(){
     // Para a visualização do tempo
     const [tempoEstimado, setTempoEstimado] = useState<string | null>(null);
 
+    // Para o clima
+    const [buscandoClima, setBuscandoClima] = useState(false);
+
     // Pré-preenchimento ao carregar a tela
     useEffect(() => {
         const agora = new Date();
@@ -52,7 +55,9 @@ export default function NovaProducao(){
             horaFim: fimSugestao,
             dataProducao: new Date().toISOString().split('T')[0] // Apenas YYYY-MM-DD
         }));
+
     }, []); // Rodar apenas uma vez quando a tela abrir
+
 
     useEffect(() => {
         if(formData.horaInicio && formData.horaFim){
@@ -156,7 +161,6 @@ export default function NovaProducao(){
         const tIni = formData.tempAmbienteInicial ? Number(formData.tempAmbienteInicial) : undefined;
         const tFim = formData.tempAmbienteFinal ? Number(formData.tempAmbienteFinal) : undefined;
 
-
         if(!farinha || farinha < 0){
             alert('Digite a quantidade de farinha primeiro.');
             return;
@@ -192,6 +196,61 @@ export default function NovaProducao(){
         } finally{
             setSugerindo(false);
         }
+    }
+
+    async function buscarTemperaturas(){
+        if(!formData.dataProducao || !formData.horaInicio || !formData.horaFim){
+            alert("Defina a Data e os Horários de Início/Fim primeiro");
+            return;
+        }
+
+        setBuscandoClima(true);
+
+        try{
+            const dInicio = new Date(formData.horaInicio);
+            const dFim = new Date(formData.horaFim);
+
+            if(dFim < dInicio){
+                alert("A data final não pode ser anterior à inicial.");
+                setBuscandoClima(false);
+                return;
+            }
+
+            const query = new URLSearchParams({
+                inicio: dInicio.toISOString(),
+                fim: dFim.toISOString()
+            }).toString();
+
+            const res = await fetch(`http://localhost:3000/producao/clima-previsao?${query}`);
+            const data = await res.json();
+
+            if(data && data.tempInicial !== null){
+                setFormData(prev => ({
+                    ...prev,
+                    tempAmbienteInicial: data.tempInicial.toString(),
+                    tempAmbienteFinal: data.tempFinal.toString()
+                }));
+            } else {
+                alert(data.aviso || "Não foi possível obter a previsão para está data/hora");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Erro ao buscar dados do clima.");
+        } finally{
+            setBuscandoClima(false);
+        }
+    }
+
+    // Função auxiliar apenas visual
+    const formatarDataVisual = (isoString: string) => {
+        if (!isoString) return '--';
+        const d = new Date(isoString);
+        return d.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     }
 
     return (
@@ -232,28 +291,57 @@ export default function NovaProducao(){
                     )}
 
                     {/* CAMPO DE TEMPERATURA */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                            <label className="flex items-center gap-2 text-sm font-bold text-blue-800 mb-1">
-                                <ThermometerSun size={18} /> Temp. Inicial (°C)
-                            </label>
-                            <input type="number" name="tempAmbienteInicial"
-                            className="w-full rounded-md border border-blue-200 p-2 text-blue-900 focus:ring-blue-500 outline-none"
-                            placeholder="Ex: 29"
-                            value={formData.tempAmbienteInicial}
-                            onChange={handleChange} />
+                    <div className="bg-blue-50 p-4 rounded-lx border border-blue-100">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-blue-900 font-bold flex items-center gap-2">
+                                <ThermometerSun size={20} /> Temperaturas do Processo
+                            </h3>
+
+                            <button type="button"
+                                    onClick={buscarTemperaturas}
+                                    disabled={buscandoClima}
+                                    className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                            >
+                                {buscandoClima ? <Loader2 className="animate-spin" size={16} /> : <CloudSun size={18} />}
+                                Obter clima Automático
+                            </button>
                         </div>
-                        <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                            <label className="flex items-center gap-2 text-sm font-bold text-blue-800 mb-1">
-                                <ThermometerSun size={18} /> Temp. Final (°C)
-                            </label>
-                            <input type="number" name="tempAmbienteFinal"
-                                className="w-full rounded-md border border-blue-200 p-2 text-blue-900 focus:ring-blue-500 outline-none"
-                                placeholder="Ex: 32"
-                                value={formData.tempAmbienteFinal}
-                                onChange={handleChange} />
+                        <div className="grid grid-cols-2 gap-4">
+                            {/* Temperatura Inicial */}
+                            <div>
+                                <label className="text-xs font-bold text-blue-800 uppercase mb-1 block">
+                                    Início ({formatarDataVisual(formData.horaInicio)})
+                                </label>
+                                <div className="relative">
+                                    <input type="text" name="tempAmbienteInicial"
+                                    inputMode="decimal"
+                                    className="w-full rounded-md border border-blue-200 p-2 text-blue-900 focus:ring-blue-500 outline-none font-bold"
+                                    placeholder="--"
+                                    value={formData.tempAmbienteInicial}
+                                    onChange={handleChange} 
+                                    />
+                                    <span className="absolute right-3 top-2 text-blue-400 text-sm">°C</span>
+                                </div>
+                            </div>
+                            {/* Temperatura Final */}
+                            <div>
+                                <label className="text-xs font-bold text-blue-800 uppercase mb-1 block">
+                                    Final ({formatarDataVisual(formData.horaFim)})
+                                </label>
+                                <div className="relative">
+                                    <input type="text" inputMode="decimal" name="tempAmbienteFinal"
+                                        className="w-full rounded-md border border-blue-200 p-2 text-blue-900 focus:ring-blue-500 outline-none font-bold"
+                                        placeholder="--"
+                                        value={formData.tempAmbienteFinal}
+                                        onChange={handleChange} 
+                                    />
+                                    <span className="absolute right-3 top-2 text-blue-400 text-sm">°C</span>
+                                </div>
+                            </div>
                         </div>
+                        <p className="text-[10px] text-blue-400 mt-2 text-center">* Busca a previsão do tempo exata para os horários definidos acima.</p>
                     </div>
+                        
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Farinha (Kg)</label>

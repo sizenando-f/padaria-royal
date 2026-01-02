@@ -33,6 +33,15 @@ export class ProducaoController {
     );
   }
 
+  @Get('clima-previsao')
+  async getClima(
+    @Query('inicio') inicio: string,
+    @Query('fim') fim: string
+  ){
+    if (!inicio || !fim) return null;
+    return this.producaoService.getPrevisaoPorHorario(inicio, fim);
+  }
+
   @Get()
   findAll() {
     return this.producaoService.findAll();

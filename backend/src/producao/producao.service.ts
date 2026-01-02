@@ -1,13 +1,20 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { CreateProducaoDto } from './dto/create-producao.dto';
 import { UpdateProducaoDto } from './dto/update-producao.dto';
 import { PrismaService } from 'src/prisma/prisma.service';  // Importa o Prisma Service
-import { freemem } from 'os';
+import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
+
 
 @Injectable()
 export class ProducaoService {
+  private readonly logger = new Logger(ProducaoService.name);
+
   // Fazemos a injeção
-  constructor(private prisma: PrismaService){}
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService
+  ){}
 
   // Para adicionar nova produção
   async create(data: CreateProducaoDto) {
@@ -95,6 +102,60 @@ export class ProducaoService {
     return await this.prisma.producao.delete({
       where: {id},
     });
+  }
+
+  async getPrevisaoPorHorario(inicioIso: string, fimIso: string) {
+    try {
+      const apiKey = this.configService.get<string>('OPENWEATHER_API_KEY');
+      // Mudar posteriormente para variável de ambiente
+      const cidade = 'Rio Brilhante,BR';
+
+      if(!apiKey) throw new Error('API Key não configurada');
+
+      // Rota forecast que traz dados a cada 3 horas para os próximos 5 dias
+      const url = `https://api.openweathermap.org/data/2.5/forecast?q=${cidade}&appid=${apiKey}&units=metric&lang=pt_br`;
+
+      const response = await axios.get(url);
+      const listaPrevisoes = response.data.list;
+
+      // Converte as datas para segundos para comparar
+      const targetInicio = new Date(inicioIso).getTime() / 1000;
+      const targetFim = new Date(fimIso).getTime() / 1000;
+
+      // Função para achar a previsão mais próxima da hora desejada
+      const encontrarMaisProxima = (targetTime: number) => {
+        // Reduz lista para achar qual tem a menor diferença
+        return listaPrevisoes.reduce((prev, curr) => {
+          return (Math.abs(curr.dt - targetTime) < Math.abs(prev.dt - targetTime) ? curr : prev);
+        });
+      };
+
+      const previsaoInicio = encontrarMaisProxima(targetInicio);
+      const previsaoFim = encontrarMaisProxima(targetFim);
+
+      // Margem de erro
+      const tresHorasEmSegundos = 3 * 60 * 60;
+
+      const diffInicio = Math.abs(previsaoInicio.dt - targetInicio);
+
+      if(diffInicio > tresHorasEmSegundos * 2){
+        // Para caso a previsão estiver muito longe
+        return {
+          tempInicial: null,
+          tempFinal: null,
+          aviso: "Data fora do alcance de previsão (Passado ou +5 dias)"
+        };
+      }
+
+      return {
+        tempInicial: Math.round(previsaoInicio.main.temp),
+        tempFinal: Math.round(previsaoFim.main.temp),
+        climaDescricao: previsaoInicio.weather[0].description
+      }
+    } catch (error) {
+      this.logger.error(`Erro ao buscar previsão: ${error.message}`);
+      return null;
+    }
   }
 
   async calcularSugestao(farinhaInput: number, tempAtual?: number, tempFinal?: number){

@@ -5,9 +5,15 @@ import { PrismaService } from './prisma/prisma.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProducaoModule } from './producao/producao.module';
 import { AvaliacaoModule } from './avaliacao/avaliacao.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [PrismaModule, ProducaoModule, AvaliacaoModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true}),
+    PrismaModule, 
+    ProducaoModule, 
+    AvaliacaoModule
+  ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
 })
