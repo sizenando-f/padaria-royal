@@ -101,7 +101,7 @@ export default function Home() {
       </div>
 
       <footer className="mt-12 text-gray-400 text-sm">
-        Padaria Royal v2.1 • Desenvolvido por Você
+        Padaria Royal v2.1 • Desenvolvido por Sizenando França
       </footer>
     </div>
   );

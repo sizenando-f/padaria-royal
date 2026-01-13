@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseInterceptors, UploadedFile, Res } from '@nestjs/common';
 import { ProducaoService } from './producao.service';
 import { CreateProducaoDto } from './dto/create-producao.dto';
 import { UpdateProducaoDto } from './dto/update-producao.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import type { Response } from 'express';
 
 @Controller('producao')
 export class ProducaoController {
@@ -10,6 +12,22 @@ export class ProducaoController {
   @Post()
   create(@Body() createProducaoDto: CreateProducaoDto) {
     return this.producaoService.create(createProducaoDto);
+  }
+
+  @Post('importar')
+  @UseInterceptors(FileInterceptor('file'))
+  async importar(@UploadedFile() file: Express.Multer.File){
+    if(!file) throw new Error('Arquivo não enviado');
+    return this.producaoService.importarDados(file.buffer);
+  }
+
+  @Get('exportar')
+  async exportar(@Res() res: Response){
+    const csv = await this.producaoService.exportarDados();
+
+    res.header('Content-Type', 'text/csv');
+    res.header('Content-Disposition', 'attachment; filename=producao_royal_export.csv');
+    res.send(csv);
   }
 
   // Precisa vir antes do @Get('id') senão ele acha que 'pendentes é um ID'
@@ -23,13 +41,15 @@ export class ProducaoController {
   async obterSugestao(
     @Query('farinha') farinha: string,
     @Query('temp') temp?: string,
-    @Query('tempFim') tempFim?: string
+    @Query('tempFim') tempFim?: string,
+    @Query('minutos') minutos?: string
   ){
     if (!farinha) return {};
     return this.producaoService.calcularSugestao(
       Number(farinha), 
       temp ? Number(temp) : undefined,
-      tempFim ? Number(tempFim) : undefined
+      tempFim ? Number(tempFim) : undefined,
+      minutos ? Number(minutos) : undefined
     );
   }
 

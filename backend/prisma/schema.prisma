@@ -42,7 +42,8 @@ model Avaliacao {
   producaoId Int     @unique
   producao   Producao @relation(fields: [producaoId], references: [id], onDelete: Cascade)
 
-  nota      Int     // 1 a 5
-  status    String  // "BOM", "RUIM", "EXCELENTE"
+  nota      Int     // 1=Péssimo, 2=Ruim, 3=Regual, 4= Bom, 5=Excelente
   comentario String?
+
+  tempAmbienteFinalReal Decimal?
 }

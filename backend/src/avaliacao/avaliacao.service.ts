@@ -42,8 +42,15 @@ export class AvaliacaoService {
     return `This action returns a #${id} avaliacao`;
   }
 
-  update(id: number, updateAvaliacaoDto: UpdateAvaliacaoDto) {
-    return `This action updates a #${id} avaliacao`;
+  async update(id: number, data: UpdateAvaliacaoDto) {
+    return await this.prisma.avaliacao.update({
+      where: {id},
+      data: {
+        nota: data.nota,
+        tempAmbienteFinalReal: data.tempAmbienteFinalReal,
+        comentario: data.comentario
+      }
+    })
   }
 
   remove(id: number) {
@@ -62,20 +69,28 @@ export class AvaliacaoService {
     });
 
     // Contagem por status, quantos BOM, quantos RUIM e etc
-    const distribuicaoStatus = await this.prisma.avaliacao.groupBy({
-      by: ['status'],
+    const distribuicao = await this.prisma.avaliacao.groupBy({
+      by: ['nota'],
       _count: {
-        status: true,
+        nota: true,
       }
     });
+
+    const labels = {
+      1: 'PÉSSIMO',
+      2: 'RUIM',
+      3: 'REGULAR',
+      4: 'BOM',
+      5: 'EXCELENTE'
+    };
 
     // Formata para ficar fácil o frontend ler
     return {
       totalProducoes,
       mediaNota: mediaNotas._avg.nota ? Number(mediaNotas._avg.nota).toFixed(1) : '0.0',
-      distribuicao: distribuicaoStatus.map(item => ({
-        name: item.status,
-        value: item._count.status,
+      distribuicao: distribuicao.map(item => ({
+        name: labels[item.nota],
+        value: item._count.nota,
       })),
     };
 

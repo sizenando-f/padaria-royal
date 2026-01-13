@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from "react";
-import { Wand2, Loader2, ThermometerSun, Info, Thermometer, Wheat, FlaskConical, Droplets, CloudSun} from "lucide-react";
+import { Wand2, Loader2, ThermometerSun, Info, Thermometer, Wheat, FlaskConical, Droplets, CloudSun, Clock, FileText, MessageSquare} from "lucide-react";
 
 export default function NovaProducao(){
     // Memória para salvar estado de carregamento 
@@ -161,6 +161,17 @@ export default function NovaProducao(){
         const tIni = formData.tempAmbienteInicial ? Number(formData.tempAmbienteInicial) : undefined;
         const tFim = formData.tempAmbienteFinal ? Number(formData.tempAmbienteFinal) : undefined;
 
+        let minutosAlvo = undefined;
+        if(formData.horaInicio && formData.horaFim){
+            const d1 = new Date(formData.horaInicio);
+            const d2 = new Date(formData.horaFim);
+
+            const diffMs = d2.getTime() - d1.getTime();
+            if(diffMs > 0) {
+                minutosAlvo = Math.floor(diffMs / 60000);
+            }
+        }
+
         if(!farinha || farinha < 0){
             alert('Digite a quantidade de farinha primeiro.');
             return;
@@ -173,6 +184,7 @@ export default function NovaProducao(){
             let url = `http://localhost:3000/producao/sugestao?farinha=${farinha}`;
             if(tIni) url += `&temp=${tIni}`;
             if(tFim) url += `&tempFim=${tFim}`;
+            if(minutosAlvo) url += `&minutos=${minutosAlvo}`;
 
             const res = await fetch(url);
             const data = await res.json();
@@ -253,6 +265,29 @@ export default function NovaProducao(){
         });
     }
 
+    const adicionarHoras = (horas: number) => {
+        if(!formData.horaInicio){
+            alert('Defina a hora primeiro.');
+            return;
+        }
+
+        const dataInicio = new Date(formData.horaInicio);
+        dataInicio.setHours(dataInicio.getHours() + horas);
+
+        const ano = dataInicio.getFullYear();
+        const mes = String(dataInicio.getMonth() + 1).padStart(2, '0');
+        const dia = String(dataInicio.getDate()).padStart(2, '0');
+        const hora = String(dataInicio.getHours()).padStart(2, '0');
+        const min = String(dataInicio.getMinutes()).padStart(2, '0');
+
+        const novaDataFim = `${ano}-${mes}-${dia}T${hora}:${min}`;
+
+        setFormData(prev => ({
+            ...prev,
+            horaFim: novaDataFim
+        }));
+    }
+
     return (
         <div className="min-h-screen bg-amber-50 p-8 flex justify-center items-start">
             <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-lg border border-amber-100">
@@ -282,6 +317,18 @@ export default function NovaProducao(){
                             className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
                             value={formData.horaFim}
                             onChange={handleChange}/>
+                            {/* Botões de atalho */}
+                            <div className="flex gap-2 mt-2">
+                                <button type="button" onClick={() => adicionarHoras(7)} className="flex-1 bg-gray-100 text-gray-600 text-xs py-1.5 rounded border border-gray-200 hover:bg-orange-100 hover:text-orange-700 hover:border-orange-200 transition-colors font-semibold">
+                                    +7h
+                                </button>
+                                <button type="button" onClick={() => adicionarHoras(8)} className="flex-1 bg-gray-100 text-gray-600 text-xs py-1.5 rounded border border-gray-200 hover:bg-orange-100 hover:text-orange-700 hover:border-orange-200 transition-colors font-semibold">
+                                    +8h
+                                </button>
+                                <button type="button" onClick={() => adicionarHoras(12)} className="flex-1 bg-gray-100 text-gray-600 text-xs py-1.5 rounded border border-gray-200 hover:bg-orange-100 hover:text-orange-700 hover:border-orange-200 transition-colors font-semibold">
+                                    +12h
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -379,27 +426,74 @@ export default function NovaProducao(){
 
                             <div className="grid grid-cols-1 gap-2">
                                 {provasIA.map((prova) => (
-                                    <div key={prova.id} className="bg-white p-3 rounded-lg border border-purple-200 shadow-sm flex justify-between items-center hover:bg-purple-50 transition-colors">
-                                        <div>
-                                            <span className="font-bold text-purple-900 block">Fornada #{prova.id}</span>
-                                            <div className="flex gap-1.5">
-                                                <Thermometer size={16}/>
-                                            <span className="text-xs text-gray-500">{prova.tIni}°C ➜ {prova.tFim ? `${prova.tFim}°C` : '?'}</span>
+                                    <div key={prova.id} className="bg-white p-3 rounded-lg border border-purple-200 shadow-sm hover:bg-purple-50 transition-colors flex flex-col gap-2">
+                                        
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-bold text-purple-900 block text-sm">Fornada #{prova.id}</span>
+                                                    
+                                                    {/* === A NOVA BADGE DE QUALIDADE === */}
+                                                    {prova.nota === 5 && (
+                                                        <span className="text-[10px] font-bold bg-green-100 text-green-700 px-1.5 py-0.5 rounded border border-green-200 flex items-center gap-1">
+                                                            ★ Excelente
+                                                        </span>
+                                                    )}
+                                                    {prova.nota === 4 && (
+                                                        <span className="text-[10px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded border border-blue-200">
+                                                            Bom
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {/* Bloco de temperatura */}
+                                                <div className="flex flex-col mt-1">
+                                                    <div className="flex gap-1.5 items-center text-gray-600 text-xs">
+                                                        <Thermometer size={14}/>
+                                                        <span>Prev: {prova.tIni}° ➜ {prova.tFim ? `${prova.tFim}°` : '?'}</span>
+                                                    </div>
+                                                    {prova.tReal && (
+                                                        <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded w-fit ml-5 border border-blue-100">
+                                                            Real Final: {prova.tReal}°C
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
-                                            
+
+                                            <div className="text-right text-xs text-gray-600 space-y-1">
+                                                <div className="flex gap-1.5 justify-end text-gray-500 font-medium">
+                                                    <Clock size={14} className="mt-0.5"/> 
+                                                    {prova.tempo ? `${Math.floor(prova.tempo/60)}h${prova.tempo%60}min` : '--'}
+                                                </div>
+
+                                                <div className="flex gap-1.5 justify-end">
+                                                    <Wheat size={14}/> {prova.farinha}kg Farinha
+                                                </div>
+                                                <div className="flex gap-1.5 justify-end font-bold text-purple-700 bg-purple-100 px-1 rounded">
+                                                    <FlaskConical size={14} className="mt-0.5"/> {prova.fermento}g Fermento
+                                                </div>
+                                                <div className="flex gap-1.5 justify-end">
+                                                    <Droplets size={14} /> {prova.emulsificante}ml Emulsif.
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="text-right text-xs text-gray-600 space-y-1">
-                                            <div className="flex gap-1.5">
-                                                <Wheat size={16}/> {prova.farinha}kg Farinha
-                                            </div>
-                                            <div className="flex gap-1.5 font-bold text-purple-700">
-                                                <FlaskConical size={16}/> {prova.fermento}g Fermento
-                                            </div>
-                                            <div className="flex gap-1.5">
-                                                <Droplets size={16} /> {prova.emulsificante}ml Emulsif.
-                                            </div>
+                                    {(prova.obs || prova.comentario) && (
+                                        <div className="border-t border-purple-100 pt-2 mt-1 space-y-1">
+                                            {prova.obs && (
+                                                <p className="text-[10px] text-gray-500 flex gap-1 items-start">
+                                                    <FileText size={12} className="shrink-0 mt-0.5"/>
+                                                    <span className="italic">"{prova.obs}"</span>
+                                                </p>
+                                            )}
+                                            {prova.comentario && (
+                                                <p className="text-[10px] text-blue-600 flex gap-1 items-start">
+                                                    <MessageSquare size={12} className="shrink-0 mt-0.5"/>
+                                                    <span className="font-medium">Aval: "{prova.comentario}"</span>
+                                                </p>
+                                            )}
                                         </div>
-                                    </div>
+                                    )}
+
+                                </div>
                                 ))}
                             </div>
                         </div>

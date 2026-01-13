@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Calendar, Clock } from "lucide-react";
+import { ArrowRight, Calendar, Clock, Clock10, Flame, Wheat } from "lucide-react";
 
 interface Producao {
     id: number;
@@ -65,16 +65,44 @@ export default function ListaPendentes(){
                             <div key={prod.id} className="bg-white p-5 rounded-xl shadow-sm border-l-4 border-yellow-400 hover:shadow-md transition-all">
                                 <div className="flex justify-between items-center">
                                     {/* Informações resumidas */}
-                                    <div>
-                                        <h3 className="font-bold text-lg text-gray-800">Fornada #{prod.id}</h3>
-                                        <div className="flex gap-4 mt-2 text-sm text-gray-600">
-                                            <div className="flex items-center gap-1">
-                                                <Calendar size={16} />
-                                                {formatarData(prod.dataProducao)}
+                                    <div className="w-full">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <h3 className="font-bold text-lg text-gray-800">Fornada #{prod.id}</h3>
+                                            <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded">
+                                                {new Date(prod.dataProducao).toLocaleDateString('pt-BR')}
+                                            </span>
+                                        </div>
+                                        {/* Com detalhes extras */}
+                                        <div className="flex gap-4">
+                                            <div className="text-sm text-gray-600 space-y-1">
+                                                <p className="flex gap-1 items-center">
+                                                    <Wheat size={16}/>
+                                                    <span className="font-medium">Farinha:</span>
+                                                    {prod.farinhaKg}kg
+                                                </p>
+                                                <p className="flex gap-1 items-center">
+                                                    <Clock size={16}/>
+                                                    <span className="font-medium">Início:</span>
+                                                    {new Date(prod.horaInicio).toLocaleTimeString('pt-BR', {
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                    })}
+                                                </p>
                                             </div>
-                                            <div className="flex items-center gap-1">
-                                                <Clock size={16}/>
-                                                {Math.floor(prod.tempoFermentacaoMinutos / 60)}h {prod.tempoFermentacaoMinutos % 60}m
+                                            <div className="text-sm text-gray-600 space-y-1">
+                                                <p className="flex gap-1 items-center">
+                                                    <Flame size={16}/>
+                                                    <span className="font-medium">Temp. Fermentação:</span>
+                                                    {prod.tempoFermentacaoMinutos / 60}h {prod.tempoFermentacaoMinutos % 60}m
+                                                </p>
+                                                <p className="flex gap-1 items-center">
+                                                    <Clock10 size={16}/>
+                                                    <span className="font-medium">Fim:</span>
+                                                    {new Date(prod.horaFim).toLocaleTimeString('pt-BR', {
+                                                        hour: '2-digit',
+                                                        minute: '2-digit',
+                                                    })}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>

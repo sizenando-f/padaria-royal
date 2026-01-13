@@ -4,7 +4,11 @@ import { UpdateProducaoDto } from './dto/update-producao.dto';
 import { PrismaService } from 'src/prisma/prisma.service';  // Importa o Prisma Service
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-
+import { Readable } from 'stream';
+import { parse } from 'csv-parse';
+import { Parser } from 'json2csv';
+import * as fs from 'fs';
+import { normalize } from 'path';
 
 @Injectable()
 export class ProducaoService {
@@ -65,6 +69,7 @@ export class ProducaoService {
   async findOne(id: number) {
     const producao = await this.prisma.producao.findUnique({
       where: {id},
+      include: {avaliacao: true}
     });
 
     if(!producao) {
@@ -86,9 +91,11 @@ export class ProducaoService {
     })
   }
 
-
-  update(id: number, updateProducaoDto: UpdateProducaoDto) {
-    return `This action updates a #${id} producao`;
+  async update(id: number, data: UpdateProducaoDto) {
+    return await this.prisma.producao.update({
+      where: { id },
+      data: data,
+    });
   }
 
   async remove(id: number) {
@@ -106,63 +113,74 @@ export class ProducaoService {
 
   async getPrevisaoPorHorario(inicioIso: string, fimIso: string) {
     try {
-      const apiKey = this.configService.get<string>('OPENWEATHER_API_KEY');
-      // Mudar posteriormente para variável de ambiente
-      const cidade = 'Rio Brilhante,BR';
+      const lat = this.configService.get<string>('CIDADE_LAT');
+      const lon = this.configService.get<string>('CIDADE_LON');
 
-      if(!apiKey) throw new Error('API Key não configurada');
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m&timezone=auto&forecast_days=3&timeformat=unixtime`;
 
-      // Rota forecast que traz dados a cada 3 horas para os próximos 5 dias
-      const url = `https://api.openweathermap.org/data/2.5/forecast?q=${cidade}&appid=${apiKey}&units=metric&lang=pt_br`;
+      this.logger.log(`Buscando clima (Auto) em: ${url}`);
 
       const response = await axios.get(url);
-      const listaPrevisoes = response.data.list;
+      
+      const times: number[] = response.data.hourly.time; 
+      const temps: number[] = response.data.hourly.temperature_2m;
 
-      // Converte as datas para segundos para comparar
-      const targetInicio = new Date(inicioIso).getTime() / 1000;
-      const targetFim = new Date(fimIso).getTime() / 1000;
+      const targetInicioSeconds = Math.floor(new Date(inicioIso).getTime() / 1000);
+      const targetFimSeconds = Math.floor(new Date(fimIso).getTime() / 1000);
 
-      // Função para achar a previsão mais próxima da hora desejada
-      const encontrarMaisProxima = (targetTime: number) => {
-        // Reduz lista para achar qual tem a menor diferença
-        return listaPrevisoes.reduce((prev, curr) => {
-          return (Math.abs(curr.dt - targetTime) < Math.abs(prev.dt - targetTime) ? curr : prev);
-        });
+      const findClosestTemp = (targetSec: number) => {
+        let menorDiff = Infinity;
+        let indexEncontrado = -1;
+
+        for (let i = 0; i < times.length; i++) {
+          const diff = Math.abs(times[i] - targetSec);
+          if (diff < menorDiff) {
+            menorDiff = diff;
+            indexEncontrado = i;
+          }
+        }
+
+        if (indexEncontrado === -1) return null;
+        
+        // Proteção extra: Se a API devolver null, retornamos null explicitamente
+        const temperatura = temps[indexEncontrado];
+        if (temperatura === null || temperatura === undefined) return null;
+
+        return {
+          temp: temperatura,
+          time: times[indexEncontrado]
+        };
       };
 
-      const previsaoInicio = encontrarMaisProxima(targetInicio);
-      const previsaoFim = encontrarMaisProxima(targetFim);
+      const dadoIni = findClosestTemp(targetInicioSeconds);
+      const dadoFim = findClosestTemp(targetFimSeconds);
 
-      // Margem de erro
-      const tresHorasEmSegundos = 3 * 60 * 60;
-
-      const diffInicio = Math.abs(previsaoInicio.dt - targetInicio);
-
-      if(diffInicio > tresHorasEmSegundos * 2){
-        // Para caso a previsão estiver muito longe
-        return {
-          tempInicial: null,
-          tempFinal: null,
-          aviso: "Data fora do alcance de previsão (Passado ou +5 dias)"
-        };
+      // Verificação reforçada
+      if (!dadoIni || !dadoFim) {
+         return { tempInicial: null, tempFinal: null, aviso: "Sem dados meteorológicos para este horário." };
       }
+
+      this.logger.log(`[Clima] Encontrado: ${dadoIni.temp}°C e ${dadoFim.temp}°C`);
 
       return {
-        tempInicial: Math.round(previsaoInicio.main.temp),
-        tempFinal: Math.round(previsaoFim.main.temp),
-        climaDescricao: previsaoInicio.weather[0].description
-      }
+        tempInicial: Math.round(dadoIni.temp),
+        tempFinal: Math.round(dadoFim.temp),
+        fonte: "Open-Meteo (Best Match)"
+      };
+
     } catch (error) {
-      this.logger.error(`Erro ao buscar previsão: ${error.message}`);
+      this.logger.error(`Erro Open-Meteo: ${error.message}`);
       return null;
     }
   }
 
-  async calcularSugestao(farinhaInput: number, tempAtual?: number, tempFinal?: number){
+  async calcularSugestao(farinhaInput: number, tempAtual?: number, tempFinal?: number, minutosAlvo?: number){
     // Para pegar todas as prodoções de sucesso com as duas temperaturas
    const historico = await this.prisma.producao.findMany({
     where: {
-      avaliacao: {status: 'EXCELENTE'}, // Só o melhor
+      avaliacao: {
+        nota: { gte: 4 } // Maior ou igual a 4 
+      }, 
       tempAmbienteInicial: {not: null}, // Com temperatura inicial
       tempAmbienteFinal: {not: null},   // Com temperatura final
       farinhaKg: {gt: 0}
@@ -173,7 +191,16 @@ export class ProducaoService {
       fermentoGrama: true,
       emulsificanteMl: true,
       tempAmbienteInicial: true,
-      tempAmbienteFinal: true
+      tempAmbienteFinal: true,
+      tempoFermentacaoMinutos: true,
+      observacoes: true,
+      avaliacao: {
+        select: {
+          nota: true,
+          comentario: true,
+          tempAmbienteFinalReal: true
+        }
+      }
     }
    });
 
@@ -198,8 +225,14 @@ export class ProducaoService {
       // Distância Euclidiana simplificada: |Delta Inicial| + |Delta Final|
       const diffIni = Math.abs(tIni - tempAtual);
       const diffFim = tempFinal ? Math.abs(tFim - tempFinal) : 0;
+      const distanciaTemp = diffIni + diffFim;  // Quanto menor, melhor
 
-      const distanciaTotal = diffIni + diffFim;
+      let distanciaTempo = 0;
+      if(minutosAlvo && p.tempoFermentacaoMinutos) {
+        distanciaTempo = Math.abs(p.tempoFermentacaoMinutos - minutosAlvo) / 60;
+      }
+
+      const distanciaTotal = distanciaTemp + distanciaTempo;
 
       // O peso é o inverso da distância, quanto menor a distância, maior o peso 
       const peso = 1 / (distanciaTotal + 0.1); // Adiciona +1 pra evitar divisão por 0 caso a temperatura for idêntica
@@ -214,7 +247,7 @@ export class ProducaoService {
     // Ordena pelos mais próximos
     comDistancia.sort((a, b) => a.distancia - b.distancia);
 
-    // Pega os top 20 mais parecidos
+    // Pega os top 5 mais parecidos
     selecionados = comDistancia.slice(0, 20);
    } else {
       // Peso igual pra todos como fallback
@@ -243,18 +276,182 @@ export class ProducaoService {
    const mediaProporcao = somaPesos > 0 ? somaPonderada / somaPesos : 0;
    const fermentoSugerido = Math.round(mediaProporcao * farinhaInput);
 
+   const topProvas = selecionados.slice(0, 5);
+
    return {
     fermento:  fermentoSugerido,
-    mensagem: `Cálculo realizado com base nas ${selecionados.length} fornadas mais similares encontradas.`,
+    mensagem: `IA analisou ${selecionados.length} fornadas similares (considerando Clima e Tempo de Fermentação).`,
     // Retorna completo para a prova
-    provas: selecionados.map(s => ({
+    provas: topProvas.map(s => ({
       id: s.id,
       tIni: Number(s.tempAmbienteInicial),
       tFim: s.tempAmbienteFinal ? Number(s.tempAmbienteFinal) : null,
+      tReal: s.avaliacao?.tempAmbienteFinalReal ? Number(s.avaliacao.tempAmbienteFinalReal) : null,
+      nota: s.avaliacao?.nota,
+      tempo: s.tempoFermentacaoMinutos,
       farinha: Number(s.farinhaKg),
       fermento: Number(s.fermentoGrama),
-      emulsificante: Number(s.emulsificanteMl)
+      emulsificante: Number(s.emulsificanteMl),
+      obs: s.observacoes,
+      comentario: s.avaliacao?.comentario
     }))
    }
   };
+
+  async importarDados(buffer: Buffer){
+    const bufferString = buffer.toString('utf-8');
+
+    const stream = Readable.from(bufferString);
+
+    const parser = stream.pipe(parse({
+      delimiter: ';', 
+      columns: true, // Usa a primeira linha como cabeçalho
+      trim: true,    // Remove espaços em branco
+      bom: true,     // Remove caracteres invisíveis do Excel
+      relax_column_count: true, // Ignora erros de colunas vazias no final
+      skip_empty_lines: true
+    }))
+
+    let importados = 0;
+    let erros = 0;
+
+    const normalizeKey = (obj: any, keyPart: string) => {
+      const key = Object.keys(obj).find(k => k.toLowerCase().includes(keyPart.toLowerCase()));
+      return key ? obj[key] : null;
+    };
+
+    for await (const row of parser){
+      try{
+        // Pegando dados de forma segura
+        const rawData = row['Data/Hora'] || row['data/hora'];
+        if(!rawData) continue;
+
+        const tempIni = normalizeKey(row, 'inicial'); 
+        const tempFimPrev = normalizeKey(row, 'final prevista');
+        const tempFimReal = normalizeKey(row, 'final real');
+
+        // Ingredientes
+        const farinhaStr = normalizeKey(row, 'quilos farinha');
+        const fermentoStr = normalizeKey(row, 'gramas fermento');
+        const emulsifStr = normalizeKey(row, 'ml emulsificante');
+        const qualidadeStr = normalizeKey(row, 'qualidade');
+
+        // Conversões
+
+        // Converte a data para ISO
+        const [dataPart, horaPart] = rawData.split(' ');
+        if(!dataPart || !horaPart) continue;
+
+        const [dia, mes, ano] = dataPart.split('/');
+
+        // Data ISO para o bd
+        const dataISO = `${ano}-${mes}-${dia}T${horaPart}:00.000Z`;
+
+        // Mapear a nota
+        const mapNota: Record<string, number> = {
+          'excelente': 5,
+          'bom': 4,
+          'razoavel': 3,
+          'regular': 3,
+          'ruim': 2,
+          'pessimo': 1,
+          'péssimo': 1,
+        };
+
+        const notaStr = qualidadeStr ? qualidadeStr.toLowerCase().trim() : 'bom';
+        const nota = mapNota[notaStr] || 4;
+
+        // Converte trocando virgula por ponto
+        const parseNum = (val: string) => val ? parseFloat(val.replace(',', '.').trim()) : 0;
+        const fermento = parseNum(fermentoStr);
+        const farinha = parseNum(farinhaStr);
+
+        // Pula pra evitar sujeira
+        if(farinha <= 0) continue;
+
+        // Calcula o tempo
+        const tempoHorasStr = normalizeKey(row, 'tempo ferment');
+        const minutos = tempoHorasStr ? Math.round(parseNum(tempoHorasStr) * 60) : 0;
+
+        const obs = normalizeKey(row, 'observa');
+        const coment = normalizeKey(row, 'coment');
+
+        // Insere no banco
+        await this.prisma.producao.create({
+          data: {
+            dataProducao: `${ano}-${mes}-${dia}T00:00:00.000Z`,
+            horaInicio: dataISO,
+            // Calcula hora fim baseado no tempo de fermentação
+            horaFim: new Date(new Date(dataISO).getTime() + minutos * 60000).toISOString(),
+            tempoFermentacaoMinutos: minutos,
+            farinhaKg: farinha,
+            fermentoGrama: fermento,
+            emulsificanteMl: parseNum(emulsifStr),
+            tempAmbienteInicial: parseNum(tempIni),
+            tempAmbienteFinal: parseNum(tempFimPrev),
+            observacoes: obs || null,
+            avaliacao: {
+              create: {
+                nota: nota,
+                tempAmbienteFinalReal: tempFimReal ? parseNum(tempFimReal) : null,
+                comentario: coment || null
+              }
+            }
+          }
+        });
+
+        importados++;
+
+      } catch (error){
+        console.error(`Erro ao importar linha ${importados + erros + 1}`, error.message);
+        erros++;
+      }
+    }
+    return {
+      mensagem: `Processamento finalizado. Importados: ${importados}. Erros/Ignorados: ${erros}`
+    };
+  }
+
+  async exportarDados(){
+    const dados = await this.prisma.producao.findMany({
+      include: {
+        avaliacao: true
+      },
+      orderBy: {
+        id: 'desc'
+      }
+    });
+
+    const dadosFormatados = dados.map(p => {
+      const notaLabels = {
+        5: 'excelente',
+        4: 'bom',
+        3: 'regular',
+        2: 'ruim',
+        1: 'pessimo'
+      };
+
+      return {
+        'Fornada': `#${p.id}`,
+        'Data/Hora': new Date(p.horaInicio).toLocaleString('pt-BR'),
+        'Temperatura Inicial (°C)': p.tempAmbienteInicial,
+        'Temperatura Final Prevista (°C)': p.tempAmbienteFinal,
+        'Temperatura Final Real (°C)': p.avaliacao?.tempAmbienteFinalReal || '',
+        'Tempo Fermentação (h)': (p.tempoFermentacaoMinutos / 60).toFixed(1).replace('.', ','),
+        'Quilos Farinha': Number(p.farinhaKg).toFixed(1).replace('.', ','),
+        'ML Emulsificante': p.emulsificanteMl,
+        'Gramas Fermento': p.fermentoGrama,
+        'Fermento por KG': (Number(p.fermentoGrama) / Number(p.farinhaKg)).toFixed(1).replace('.', ','),
+        'Qualidade': p.avaliacao ? notaLabels[p.avaliacao.nota] : 'pendente',
+        'Status Avaliação': p.avaliacao ? 'Avaliado' : 'Pendente',
+        'Observações': p.observacoes || '',
+        'Comentários Avaliação': p.avaliacao?.comentario || ''
+      };
+    });
+
+    const json2csvParser = new Parser({
+      delimiter: ';'
+    });
+    return json2csvParser.parse(dadosFormatados);
+  }
 }

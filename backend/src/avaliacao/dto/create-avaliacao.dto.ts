@@ -1,4 +1,4 @@
-import { IsInt, Min, Max, IsOptional, IsNotEmpty, IsString, isString } from "class-validator";
+import { IsInt, Min, Max, IsOptional, IsNotEmpty, IsString, isString, IsNumber } from "class-validator";
 
 export class CreateAvaliacaoDto {
     @IsInt()
@@ -10,9 +10,9 @@ export class CreateAvaliacaoDto {
     @Max(5)
     nota: number;   // Nota de 1 a 5 estrelas
 
-    @IsString()
-    @IsNotEmpty()
-    status: string; // RUIM, REGULAR, BOM, EXCELENTE
+    @IsOptional()
+    @IsNumber()
+    tempAmbienteFinalReal?: number;
 
     @IsString()
     @IsOptional()
