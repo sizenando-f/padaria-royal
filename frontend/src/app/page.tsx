@@ -1,108 +1,199 @@
 'use client';
 
 import Link from 'next/link';
-import { 
-  PlusCircle, 
-  ClipboardCheck, 
-  History, 
-  ChefHat, 
-  Award,
-  TrendingUpDown
-} from 'lucide-react';
 import { useEffect, useState } from 'react';
-import GraficoQualidade from './components/GraficoQualidade';
-
-interface DashboardStats {
-  totalProducoes: number;
-  mediaNota: string;
-  distribuicao: {name: string; value: number}[];
-}
+import { 
+  Plus, History, ClipboardCheck, ChefHat, 
+  AlertTriangle, TrendingUp, Star, Award
+} from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 export default function Home() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
+  // --- CONFIGURAÇÃO DE USUÁRIO (Futuro Login) ---
+  const [nomeUsuario, setNomeUsuario] = useState('Sizenando'); // Mude aqui para testar
 
+  // --- ESTADOS ---
+  const [stats, setStats] = useState<any>(null);
+  const [pendentes, setPendentes] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  // --- BUSCA DADOS ---
   useEffect(() => {
-    fetch('http://localhost:3000/avaliacao/dashboard-stats').then(res => res.json()).then(data => setStats(data)).catch(err => console.error("Erro ao carregar stats", err));
+    async function fetchData() {
+      try {
+        // 1. Busca Pendências
+        const resProd = await fetch('http://localhost:3000/producao');
+        const dataProd = await resProd.json();
+        const countPendentes = dataProd.filter((p: any) => !p.avaliacao).length;
+        setPendentes(countPendentes);
+
+        // 2. Busca Estatísticas do Gráfico
+        const resStats = await fetch('http://localhost:3000/avaliacao/dashboard');
+        const dataStats = await resStats.json();
+        setStats(dataStats);
+
+      } catch (error) {
+        console.error("Erro ao carregar dashboard", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center p-6">
+    <div className="min-h-screen bg-gray-50 p-6 pb-32">
       
-      {/* Cabeçalho */}
-      <div className="text-center mb-8 mt-4">
-        <div className="flex justify-center mb-3">
-          <div className="bg-orange-100 p-3 rounded-full">
-            <ChefHat size={40} className="text-orange-600" />
+      {/* CABEÇALHO PERSONALIZADO */}
+      <header className="mb-8 flex justify-between items-center animate-fade-in">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Olá, {nomeUsuario}! 👋</h1>
+          <p className="text-sm text-gray-500">Vamos produzir excelência hoje?</p>
+        </div>
+        <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-orange-600 shadow-sm border border-gray-100">
+          <ChefHat size={24} />
+        </div>
+      </header>
+
+      {/* 1. BOTÃO DE AÇÃO PRINCIPAL (Destacado) */}
+      <Link href="/producao/novo" className="block group mb-6">
+        <div className="bg-linear-to-r from-orange-500 to-orange-600 rounded-4xl p-6 text-white shadow-xl shadow-orange-200 transform transition-all active:scale-95 group-hover:shadow-orange-300 relative overflow-hidden">
+          {/* Efeito de fundo */}
+          <div className="absolute top-0 right-0 p-4 opacity-10">
+             <Plus size={120} />
+          </div>
+
+          <div className="relative z-10 flex justify-between items-start mb-6">
+            <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-md border border-white/10">
+              <Plus size={28} />
+            </div>
+            <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md border border-white/10">
+              Agora
+            </span>
+          </div>
+          <div className="relative z-10">
+            <h2 className="text-3xl font-bold mb-1">Iniciar Produção</h2>
+            <p className="text-orange-100 text-sm font-medium opacity-90">Registrar nova fornada</p>
           </div>
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Padaria Royal</h1>
-        <p className="text-gray-500">Painel de Controle</p>
+      </Link>
+
+      {/* 2. GRÁFICO DE DESEMPENHO (Novo) */}
+      <div className="bg-white p-6 rounded-4xl shadow-sm border border-gray-100 mb-6">
+         <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-gray-800 flex items-center gap-2">
+              <Award className="text-yellow-500" size={20}/> Qualidade Geral
+            </h3>
+            {stats && stats.media > 0 && (
+                <span className="text-xs font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded-lg">
+                    {stats.total} avaliações
+                </span>
+            )}
+         </div>
+
+         {loading ? (
+             <div className="h-40 flex items-center justify-center text-gray-400 text-sm">Carregando dados...</div>
+         ) : stats && stats.media > 0 ? (
+             <div className="flex items-center">
+                 {/* Lado Esquerdo: Gráfico */}
+                 <div className="w-1/2 h-32 relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                            <Pie
+                                data={stats.distribuicao}
+                                innerRadius={35}
+                                outerRadius={55}
+                                paddingAngle={5}
+                                dataKey="value"
+                                stroke="none"
+                            >
+                                {stats.distribuicao.map((entry: any, index: number) => (
+                                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                                ))}
+                            </Pie>
+                            <Tooltip 
+                                contentStyle={{backgroundColor: '#fff', borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)'}}
+                                itemStyle={{fontSize: '12px', fontWeight: 'bold'}}
+                            />
+                        </PieChart>
+                    </ResponsiveContainer>
+                    {/* Nota no meio do gráfico */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <span className="text-xl font-bold text-gray-700">{stats.media}</span>
+                    </div>
+                 </div>
+
+                 {/* Lado Direito: Legenda / Resumo */}
+                 <div className="w-1/2 pl-2">
+                    <div className="flex flex-col gap-1">
+                        <span className="text-xs text-gray-400 font-bold uppercase tracking-wide">Média (1-5)</span>
+                        <div className="text-3xl font-bold text-gray-900 flex items-end gap-1">
+                            {stats.media}
+                            <span className="text-sm text-gray-400 mb-1 font-medium">/ 5.0</span>
+                        </div>
+                        <div className="flex gap-1 mt-1">
+                            {[1,2,3,4,5].map((star) => (
+                                <Star 
+                                    key={star} 
+                                    size={12} 
+                                    className={`${star <= Math.round(Number(stats.media)) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'}`} 
+                                />
+                            ))}
+                        </div>
+                    </div>
+                 </div>
+             </div>
+         ) : (
+             <div className="h-32 flex flex-col items-center justify-center text-gray-400 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                 <p className="text-sm">Sem dados suficientes.</p>
+                 <p className="text-xs opacity-70">Avalie produções para ver o gráfico.</p>
+             </div>
+         )}
       </div>
 
-      {/* === ÁREA DE KPIs e GRÁFICOS === */}
-      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      {/* 3. ATALHOS DE STATUS */}
+      <div className="grid grid-cols-2 gap-4">
         
-        {/* KPI 1: Nota Média */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center items-center">
-          <div className="flex items-center gap-2 text-gray-500 mb-2">
-            <Award size={20} className="text-orange-500" />
-            <span className="font-semibold text-sm uppercase">Qualidade Média</span>
+        {/* Pendências */}
+        <Link href="/avaliacao" className="bg-white p-5 rounded-4xl shadow-sm border border-gray-100 active:scale-95 transition-transform">
+          <div className="flex justify-between items-start mb-3">
+            <div className={`p-3 rounded-2xl ${pendentes > 0 ? 'bg-yellow-50 text-yellow-600' : 'bg-green-50 text-green-600'}`}>
+              {pendentes > 0 ? <AlertTriangle size={22} /> : <ClipboardCheck size={22} />}
+            </div>
+            {pendentes > 0 && (
+              <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm shadow-red-200">
+                {pendentes}
+              </span>
+            )}
           </div>
-          <div className="text-5xl font-bold text-gray-800">{stats?.mediaNota || '--'}</div>
-          <span className="text-xs text-gray-400 mt-2">de 5.0 estrelas</span>
-        </div>
-
-        {/* GRÁFICO: Distribuição */}
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 md:col-span-2 flex flex-col">
-          <h3 className="text-gray-500 font-semibold text-sm uppercase mb-2 ml-2 flex items-center gap-2">
-            <TrendingUpDown size={18} /> Distribuição de Qualidade
-          </h3>
-          <div className="flex-1">
-             {/* Renderiza o gráfico apenas se tiver dados */}
-             {stats && <GraficoQualidade dados={stats.distribuicao} />}
-          </div>
-        </div>
-      </div>
-
-      {/* Grid de Navegação (Mantido igual, apenas ajustado margens) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
-        <Link 
-          href="/producao/novo"
-          className="group bg-white p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all border border-gray-100 hover:border-orange-200 flex flex-col items-center text-center"
-        >
-          <div className="bg-orange-50 p-3 rounded-xl mb-4 group-hover:bg-orange-600 transition-colors">
-            <PlusCircle size={28} className="text-orange-600 group-hover:text-white transition-colors" />
-          </div>
-          <h2 className="text-lg font-bold text-gray-800">Nova Produção</h2>
+          <h3 className="font-bold text-gray-800">Avaliações</h3>
+          <p className="text-[11px] text-gray-500 mt-1 font-medium leading-tight">
+            {pendentes > 0 ? 'Fornadas aguardando sua análise.' : 'Tudo analisado!'}
+          </p>
         </Link>
 
-        <Link 
-          href="/avaliacao"
-          className="group bg-white p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all border border-gray-100 hover:border-yellow-200 flex flex-col items-center text-center"
-        >
-          <div className="bg-yellow-50 p-3 rounded-xl mb-4 group-hover:bg-yellow-500 transition-colors">
-            <ClipboardCheck size={28} className="text-yellow-600 group-hover:text-white transition-colors" />
+        {/* Histórico */}
+        <Link href="/producao/historico" className="bg-white p-5 rounded-4xl shadow-sm border border-gray-100 active:scale-95 transition-transform">
+          <div className="flex justify-between items-start mb-3">
+            <div className="bg-blue-50 text-blue-600 p-3 rounded-2xl">
+              <History size={22} />
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-             <h2 className="text-lg font-bold text-gray-800">Avaliações Pendentes</h2>
-             {/* Badge de contador se precisar */}
-          </div>
-        </Link>
-
-        <Link 
-          href="/producao/historico"
-          className="group bg-white p-6 rounded-2xl shadow-sm hover:shadow-xl transition-all border border-gray-100 hover:border-blue-200 flex flex-col items-center text-center"
-        >
-          <div className="bg-blue-50 p-3 rounded-xl mb-4 group-hover:bg-blue-600 transition-colors">
-            <History size={28} className="text-blue-600 group-hover:text-white transition-colors" />
-          </div>
-          <h2 className="text-lg font-bold text-gray-800">Histórico Geral</h2>
+          <h3 className="font-bold text-gray-800">Histórico</h3>
+          <p className="text-[11px] text-gray-500 mt-1 font-medium leading-tight">
+            Consulte dados de produções passadas.
+          </p>
         </Link>
       </div>
 
-      <footer className="mt-12 text-gray-400 text-sm">
-        Padaria Royal v2.1 • Desenvolvido por Sizenando França
-      </footer>
+      {/* DICA DE SISTEMA (RODAPÉ) */}
+      <div className="mt-6 flex gap-3 items-center px-2 opacity-60">
+        <TrendingUp size={16} className="text-gray-500" />
+        <p className="text-[10px] text-gray-500 font-medium">
+            Dica: Avalie como "Excelente" para ensinar a IA.
+        </p>
+      </div>
+
     </div>
   );
 }

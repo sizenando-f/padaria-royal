@@ -17,7 +17,7 @@ export class AvaliacaoController {
     return this.avaliacaoService.findAll();
   }
 
-  @Get('dashboard-stats')
+  @Get('dashboard')
   getStats() {
     return this.avaliacaoService.getDashboardStats();
   }
