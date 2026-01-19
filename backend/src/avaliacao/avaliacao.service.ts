@@ -58,7 +58,7 @@ export class AvaliacaoService {
   }
 
   async getDashboardStats() {
-    // 1. Total de avaliações
+    // Total de avaliações
     const total = await this.prisma.avaliacao.count();
 
     if (total === 0) {
@@ -69,15 +69,15 @@ export class AvaliacaoService {
         };
     }
 
-    // 2. Média Geral (Average)
+    // Média Geral
     const agregacao = await this.prisma.avaliacao.aggregate({
       _avg: { nota: true }
     });
     
-    // Arredonda para 1 casa decimal (ex: 4.8)
+    // Arredonda para 1 casa decimal
     const media = agregacao._avg.nota ? Number(agregacao._avg.nota).toFixed(1) : '0.0';
 
-    // 3. Distribuição (Quantos Excellent, Quantos Bons...)
+    // Distribuição (Quantos Excelentes, Quantos Bons...)
     const grupos = await this.prisma.avaliacao.groupBy({
       by: ['nota'],
       _count: { nota: true }

@@ -153,7 +153,7 @@ export default function RevisaoAvaliacao() {
 
         <div className="space-y-6">
             
-            {/* 1. DADOS TÉCNICOS (Edição) */}
+            {/* Dados Técnicos */}
             <div className="bg-white p-6 rounded-4xl shadow-sm border border-gray-100">
                 <div className="flex items-center gap-2 mb-4 text-orange-600 font-bold border-b border-orange-100 pb-2">
                     <AlertTriangle size={20} />
@@ -200,7 +200,7 @@ export default function RevisaoAvaliacao() {
                 </div>
             </div>
 
-            {/* 2. TEMPERATURA REAL (Destaque) */}
+            {/* Temperatura Real */}
             <div className="bg-linear-to-br from-blue-600 to-blue-700 p-6 rounded-4xl shadow-xl shadow-blue-200 text-white relative overflow-hidden group">
                 <Thermometer size={120} className="absolute -right-6 -bottom-6 text-white opacity-10 group-hover:scale-110 transition-transform duration-500" />
                 
@@ -218,12 +218,9 @@ export default function RevisaoAvaliacao() {
                     />
                     <span className="text-2xl font-medium text-blue-200 mb-3">°C</span>
                 </div>
-                <p className="text-xs text-blue-200 mt-2 opacity-80 font-medium bg-blue-800/30 inline-block px-2 py-1 rounded-lg">
-                    💡 Dica: Meça com termômetro interno
-                </p>
             </div>
 
-            {/* 3. NOTA (Botões Grandes) */}
+            {/* Nota */}
             <div>
                 <h3 className="font-bold text-gray-900 mb-3 ml-2 text-sm uppercase tracking-wide opacity-70">Classificação</h3>
                 <div className="flex flex-col gap-2">
@@ -249,7 +246,7 @@ export default function RevisaoAvaliacao() {
                 </div>
             </div>
 
-            {/* 4. COMENTÁRIO */}
+            {/* Comentário*/}
             <div className="bg-white p-5 rounded-4xl border border-gray-100 shadow-sm focus-within:ring-2 focus-within:ring-orange-100 transition-all">
                 <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Comentários Adicionais</label>
                 <textarea 
@@ -260,7 +257,7 @@ export default function RevisaoAvaliacao() {
                 />
             </div>
 
-            {/* BOTÃO FINAL */}
+            {/* Botão final */}
             <button 
                 onClick={handleFinalizar} 
                 disabled={salvando} 

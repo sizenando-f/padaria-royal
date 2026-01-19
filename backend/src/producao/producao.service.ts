@@ -212,7 +212,6 @@ export class ProducaoService {
     };
    }
 
-   // VERIFICAR
    let selecionados: any[] = [];
 
    // Cálculo com pesos
@@ -247,7 +246,7 @@ export class ProducaoService {
     // Ordena pelos mais próximos
     comDistancia.sort((a, b) => a.distancia - b.distancia);
 
-    // Pega os top 5 mais parecidos
+    // Pega os top 20 mais parecidos
     selecionados = comDistancia.slice(0, 20);
    } else {
       // Peso igual pra todos como fallback

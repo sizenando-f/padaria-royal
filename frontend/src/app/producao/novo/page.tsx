@@ -9,7 +9,7 @@ import {
 import Toast from "@/app/components/Toast";
 
 export default function NovaProducao(){
-    // --- ESTADOS ---
+    // Estados
     const [loading, setLoading] = useState(false);
     const [sugerindo, setSugerindo] = useState(false);
     const [provasIA, setProvasIA] = useState<any[] | null>(null);
@@ -209,7 +209,7 @@ export default function NovaProducao(){
 
             <form onSubmit={handleSubmit} className="w-full max-w-lg space-y-6 pb-24">
                 
-                {/* 1. CARTÃO DE TEMPO */}
+                {/* Card de tempo */}
                 <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100">
                     <div className="flex items-center gap-2 mb-4 text-gray-800 font-bold">
                         <Clock className="text-orange-500" size={20} />
@@ -255,7 +255,7 @@ export default function NovaProducao(){
                     </div>
                 </div>
 
-                {/* 2. CARTÃO DE CLIMA */}
+                {/* Card de clima */}
                 <div className="bg-linear-to-br from-blue-50 to-white p-5 rounded-3xl shadow-sm border border-blue-100 relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-10">
                         <CloudSun size={100} className="text-blue-500"/>
@@ -308,7 +308,7 @@ export default function NovaProducao(){
                     </div>
                 </div>
 
-                {/* 3. CARTÃO DE INGREDIENTES & IA (COM CORREÇÃO DE RESPONSIVIDADE) */}
+                {/* Card de igrendientes e IA */}
                 <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100">
                     <div className="flex items-center gap-2 mb-4 text-gray-800 font-bold">
                         <Wheat className="text-yellow-500" size={20} />
@@ -316,7 +316,7 @@ export default function NovaProducao(){
                     </div>
 
                     <div className="space-y-5">
-                        {/* FARINHA - CORRIGIDO AQUI */}
+                        {/* Farinha */}
                         <div>
                             <label className="text-xs font-bold text-gray-400 uppercase tracking-wide ml-1">Farinha (Kg)</label>
                             <div className="flex gap-2 mt-1">
@@ -328,13 +328,11 @@ export default function NovaProducao(){
                                     placeholder="Ex: 10"
                                     value={formData.farinhaKg}
                                     onChange={handleChange}
-                                    /* CORREÇÃO: min-w-0 para permitir encolher e flex-1 */
                                     className="flex-1 min-w-0 bg-gray-50 border border-gray-200 text-gray-900 text-xl font-medium rounded-2xl focus:ring-2 focus:ring-yellow-400 p-3 outline-none"
                                 />
                                 <button 
                                     type="button" 
                                     onClick={pedirSugestao}
-                                    /* CORREÇÃO: shrink-0 para não amassar e w-auto */
                                     className="shrink-0 w-auto bg-purple-600 text-white px-4 rounded-2xl shadow-lg shadow-purple-200 hover:bg-purple-700 active:scale-95 transition-all flex flex-col items-center justify-center"
                                 >
                                     {sugerindo ? <Loader2 className="animate-spin" size={20}/> : <Wand2 size={20}/>}
@@ -343,7 +341,7 @@ export default function NovaProducao(){
                             </div>
                         </div>
 
-                        {/* RESULTADOS DA IA DETALHADOS */}
+                        {/* Resultados inteligentes */}
                         {provasIA && (
                             <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100 animate-fade-in">
                                 <div className="flex items-center gap-2 text-purple-900 font-bold mb-3 text-sm border-b border-purple-200 pb-2">
@@ -454,7 +452,7 @@ export default function NovaProducao(){
                     </div>
                 </div>
 
-                {/* 4. OBSERVAÇÕES */}
+                {/* Observações */}
                 <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100">
                     <label className="text-gray-800 font-bold flex items-center gap-2 mb-2">
                         <Info size={20} className="text-gray-400" /> Observações
@@ -469,7 +467,7 @@ export default function NovaProducao(){
                     ></textarea>
                 </div>
 
-                {/* BOTÃO FINAL FLUTUANTE */}
+                {/* Botão final */}
                 <button 
                     type="submit"
                     disabled={loading}

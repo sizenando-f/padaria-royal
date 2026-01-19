@@ -27,7 +27,6 @@ export default function ListaPendentes(){
             try{
                 // Busca todas as produções e filtra no front ou usa rota específica se tiver
                 // Assumindo que sua rota /producao retorna tudo, filtramos aqui ou usamos rota dedicada
-                // Vou usar a rota padrão /producao e filtrar, ou a /pendentes se você criou ela
                 const response = await fetch('http://localhost:3000/producao'); 
                 const data = await response.json();
                 
@@ -57,7 +56,7 @@ export default function ListaPendentes(){
         <div className="min-h-screen bg-gray-50 p-4 pb-24 md:p-8">
             <div className="max-w-xl mx-auto">
                 
-                {/* CABEÇALHO */}
+                {/* Cabeçalho */}
                 <div className="flex items-center gap-4 mb-6">
                     <button onClick={() => router.push('/')} className="bg-white p-3 rounded-full border border-gray-200 shadow-sm text-gray-700 active:bg-gray-100">
                         <ArrowLeft size={20} />
@@ -68,7 +67,7 @@ export default function ListaPendentes(){
                     </div>
                 </div>
 
-                {/* RESUMO DE PENDÊNCIAS */}
+                {/* Resumo das pendências */}
                 {!loading && pendentes.length > 0 && (
                     <div className="bg-orange-100 border border-orange-200 text-orange-800 p-4 rounded-3xl mb-6 flex items-center gap-3">
                         <div className="bg-orange-200 p-2 rounded-full">
@@ -87,7 +86,7 @@ export default function ListaPendentes(){
                         <p className="text-sm">Buscando pendências...</p>
                     </div>
                 ) : pendentes.length === 0 ? (
-                    // ESTADO VAZIO (TUDO OK)
+                    // Se está vazio, ok
                     <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in">
                         <div className="bg-green-100 text-green-600 p-6 rounded-full mb-4 shadow-sm">
                             <CheckCircle2 size={48} strokeWidth={1.5} />
@@ -101,7 +100,7 @@ export default function ListaPendentes(){
                         </button>
                     </div>
                 ) : (
-                    // LISTA DE CARDS
+                    // Lista de cards
                     <div className="space-y-4">
                         {pendentes.map((prod) => (
                             <Link 
@@ -129,7 +128,7 @@ export default function ListaPendentes(){
                                     </div>
                                 </div>
 
-                                {/* GRID DE DETALHES */}
+                                {/* Detalhes Técnicos */}
                                 <div className="bg-gray-50 rounded-2xl p-3 grid grid-cols-2 gap-4 mb-4">
                                     <div className="space-y-1">
                                         <span className="text-[10px] uppercase font-bold text-gray-400">Farinha</span>

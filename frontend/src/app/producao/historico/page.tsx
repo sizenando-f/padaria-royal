@@ -25,7 +25,7 @@ export default function HistoricoProducao() {
     try {
         const res = await fetch('http://localhost:3000/producao');
         const data = await res.json();
-        // Ordena por ID decrescente (mais recentes primeiro) se a API não garantir
+        // Ordena por ID decrescente (mais recentes primeiro)
         const ordenado = data.sort((a: any, b: any) => b.id - a.id);
         setProducoes(ordenado);
     } catch (error) {
@@ -78,7 +78,7 @@ export default function HistoricoProducao() {
   const formatHora = (iso: string) => new Date(iso).toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
   const formatData = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
 
-  // Helper para renderizar Badge de Nota
+  // Para renderizar Badge de Nota
   const renderBadgeNota = (avaliacao: any) => {
     if(!avaliacao) return <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-bold">Pendente</span>;
     
@@ -103,7 +103,7 @@ export default function HistoricoProducao() {
       {toast && <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
       
       <div className="w-full max-w-2xl">
-        {/* HEADER */}
+        {/* Cabeçalho */}
         <div className="flex flex-col gap-4 mb-6">
             <div className="flex items-center gap-3 pt-4">
                 <button onClick={() => router.push('/')} className="bg-white p-3 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 active:scale-95 transition-all">
@@ -115,7 +115,7 @@ export default function HistoricoProducao() {
                 </div>
             </div>
 
-            {/* BARRA DE FERRAMENTAS (IMPORT/EXPORT) */}
+            {/* Barra de ferramentas (import/export) */}
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 <button onClick={handleExportar} className="flex items-center gap-2 bg-white px-4 py-3 rounded-2xl border border-gray-200 text-xs font-bold text-gray-700 shadow-sm active:bg-gray-50 whitespace-nowrap">
                     <Download size={16} /> Exportar CSV
@@ -129,7 +129,7 @@ export default function HistoricoProducao() {
             </div>
         </div>
 
-        {/* LISTA DE CARDS */}
+        {/* Lista de cards */}
         {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-2">
                 <Loader2 className="animate-spin text-orange-500" size={32} />
@@ -159,7 +159,7 @@ export default function HistoricoProducao() {
                             </div>
                         </div>
 
-                        {/* AÇÕES (Editar/Excluir) */}
+                        {/* Ações (editar/excluir) */}
                         <div className="flex gap-1">
                             <button 
                                 onClick={() => router.push(`/avaliacao/${prod.id}`)} 
@@ -178,9 +178,9 @@ export default function HistoricoProducao() {
                         </div>
                     </div>
                     
-                    {/* GRID DE DETALHES TÉCNICOS */}
+                    {/* Detalhes Técnicos */}
                     <div className="grid grid-cols-2 gap-3 mb-4">
-                        {/* Coluna 1: Ingredientes */}
+                        {/* Ingredientes */}
                         <div className="bg-gray-50 p-3 rounded-2xl space-y-2">
                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide block mb-1">Receita</span>
                             
@@ -198,7 +198,7 @@ export default function HistoricoProducao() {
                             </div>
                         </div>
 
-                        {/* Coluna 2: Clima e Tempo */}
+                        {/* Clima e Tempo */}
                         <div className="bg-blue-50/50 p-3 rounded-2xl space-y-2 border border-blue-50">
                             <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wide block mb-1">Processo</span>
                             
@@ -224,7 +224,7 @@ export default function HistoricoProducao() {
                         </div>
                     </div>
 
-                    {/* RODAPÉ: OBSERVAÇÕES E COMENTÁRIOS */}
+                    {/* Observações e comentários */}
                     {(prod.observacoes || prod.avaliacao?.comentario) && (
                         <div className="border-t border-gray-100 pt-3 flex flex-col gap-2">
                             {prod.observacoes && (
