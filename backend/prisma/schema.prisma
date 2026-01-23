@@ -33,6 +33,10 @@ model Producao {
 
   // Relacionamento inverso (O prisma cria isso pra facilitar a busca)
   avaliacao Avaliacao?
+
+  // Relação com as produções criadas
+  criadoPorId Int?
+  criadoPor Usuario? @relation(fields: [criadoPorId], references: [id])
 }
 
 model Avaliacao {
@@ -46,4 +50,14 @@ model Avaliacao {
   comentario String?
 
   tempAmbienteFinalReal Decimal?
+}
+
+model Usuario {
+  id    Int @id @default(autoincrement())
+  nome  String
+  email String @unique
+  senha String
+  cargo String
+
+  producoes Producao[]
 }
