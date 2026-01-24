@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import MobileNav from "./components/MobileNav";
+import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({
-  subsets: ['latin']
+  subsets: ["latin"],
 });
 
 const geistSans = Geist({
@@ -29,14 +30,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-br">
-      <body
-        className={`${inter.className} bg-gray-50 text-gray-900`}
-      >
-        <main className="pb-24 md:pb-8">
-          {children}
-        </main>
-
-        <MobileNav />
+      <body className={`${inter.className} bg-gray-50 text-gray-900`}>
+        <AuthProvider>
+          <main className="pb-24 md:pb-8">{children}</main>
+          {/* Menu só aparece quando logado */}
+          <MobileNav />
+        </AuthProvider>
       </body>
     </html>
   );
