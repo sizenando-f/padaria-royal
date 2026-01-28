@@ -41,13 +41,29 @@ export default function HistoricoProducao() {
     carregarDados();
   }, []);
 
+  // Para pegar o header
+  const getHeaders = () => {
+    const token = localStorage.getItem("royal_token");
+    return { Authorization: `Bearer ${token}` };
+  };
+
   async function carregarDados() {
     try {
-      const res = await fetch("http://localhost:3000/producao");
+      const res = await fetch("http://localhost:3000/producao", {
+        headers: getHeaders(),
+      });
+
+      if (res.status === 401) {
+        router.push("/login");
+        return;
+      }
+
       const data = await res.json();
-      // Ordena por ID decrescente (mais recentes primeiro)
-      const ordenado = data.sort((a: any, b: any) => b.id - a.id);
-      setProducoes(ordenado);
+      if (Array.isArray(data)) {
+        // Ordena por ID decrescente (mais recentes primeiro)
+        const ordenado = data.sort((a: any, b: any) => b.id - a.id);
+        setProducoes(ordenado);
+      }
     } catch (error) {
       showToast("Erro ao carregar dados.", "error");
     } finally {
@@ -59,23 +75,52 @@ export default function HistoricoProducao() {
     setToast({ msg, type });
   };
 
-  const handleExportar = () => {
-    window.location.href = "http://localhost:3000/producao/exportar";
-    showToast("Download iniciado!", "success");
+  // Blob
+  const handleExportar = async () => {
+    try {
+      const res = await fetch("http://localhost:3000/producao/exportar", {
+        method: "GET",
+        headers: getHeaders(), // Envia o token
+      });
+
+      if (!res.ok) throw new Error("Erro na exportação");
+
+      // Transforma em arquivo virtual
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      // Cria link invisível e clica nele
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `producao_royal_${new Date().toISOString().split("T")[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      showToast("Download concluído!", "success");
+    } catch (error) {
+      showToast("Erro ao exportar", "error");
+    }
   };
 
   const handleImportar = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files?.length) return;
     setImportando(true);
+
     const formData = new FormData();
     formData.append("file", e.target.files[0]);
 
     try {
+      const token = localStorage.getItem("royal_token");
       const res = await fetch("http://localhost:3000/producao/importar", {
         method: "POST",
         body: formData,
+        headers: { Authorization: `Bearer ${token}` },
       });
+
       const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
       showToast(data.mensagem || "Importação concluída!", "success");
       setTimeout(() => window.location.reload(), 1500);
     } catch (error) {
@@ -91,7 +136,9 @@ export default function HistoricoProducao() {
     try {
       const res = await fetch(`http://localhost:3000/producao/${id}`, {
         method: "DELETE",
+        headers: getHeaders(),
       });
+
       if (!res.ok) throw new Error();
       setProducoes((prev) => prev.filter((p) => p.id !== id));
       showToast("Produção excluída.", "success");

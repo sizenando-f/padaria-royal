@@ -10,10 +10,12 @@ import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true}),
-    PrismaModule, 
-    ProducaoModule, 
-    AvaliacaoModule, AuthModule
+    // Para o .env ficar disponível em todo sistema
+    ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
+    ProducaoModule,
+    AvaliacaoModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

@@ -21,7 +21,26 @@ export class ProducaoService {
   ) {}
 
   // Para adicionar nova produção
-  async create(data: CreateProducaoDto) {
+  async create(data: CreateProducaoDto, usuarioId?: number) {
+    // Valida os campos
+    if (Number(data.farinhaKg) <= 0) {
+      throw new BadRequestException('A quantidade de farinha é obrigatória.');
+    }
+    if (Number(data.fermentoGrama) <= 0) {
+      throw new BadRequestException(
+        'Não é possível iniciar produção sem fermento.',
+      );
+    }
+    if (Number(data.emulsificanteMl) <= 0) {
+      throw new BadRequestException('Quantidade de emulsificante inválida.');
+    }
+    if (
+      Number(data.tempAmbienteInicial) <= 0 ||
+      Number(data.tempAmbienteFinal) <= 0
+    ) {
+      throw new BadRequestException('Temperatura inválida.');
+    }
+
     // Define a data baseado nas informações recebidas da requisição
     const inicio = new Date(data.horaInicio);
     const fim = new Date(data.horaFim);
@@ -42,6 +61,7 @@ export class ProducaoService {
 
     return await this.prisma.producao.create({
       data: {
+        dataProducao: new Date(data.horaInicio), // Usa data real do ínicio
         horaInicio: inicio,
         horaFim: fim,
         tempoFermentacaoMinutos: minutos,
@@ -51,6 +71,9 @@ export class ProducaoService {
         tempAmbienteInicial: data.tempAmbienteInicial,
         tempAmbienteFinal: data.tempAmbienteFinal,
         observacoes: data.observacoes,
+
+        // Para saber quem fez
+        criadoPorId: usuarioId || null,
       },
     });
   }

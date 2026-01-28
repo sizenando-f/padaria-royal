@@ -29,15 +29,35 @@ export default function Home() {
   useEffect(() => {
     async function fetchData() {
       try {
-        // 1. Busca Pendências
-        const resProd = await fetch("http://localhost:3000/producao");
-        const dataProd = await resProd.json();
-        const countPendentes = dataProd.filter((p: any) => !p.avaliacao).length;
-        setPendentes(countPendentes);
+        const token = localStorage.getItem("royal_token");
+        if (!token) return;
 
-        // 2. Busca Estatísticas do Gráfico
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        };
+
+        // Busca Pendências
+        const resProd = await fetch("http://localhost:3000/producao", {
+          headers,
+        });
+        if (resProd.status === 401) {
+          logout();
+          return;
+        } // Desloga se o token venceu
+
+        const dataProd = await resProd.json();
+        if (Array.isArray(dataProd)) {
+          const countPendentes = dataProd.filter(
+            (p: any) => !p.avaliacao,
+          ).length;
+          setPendentes(countPendentes);
+        }
+
+        // Busca Estatísticas do Gráfico usando Token
         const resStats = await fetch(
           "http://localhost:3000/avaliacao/dashboard",
+          { headers },
         );
         const dataStats = await resStats.json();
         setStats(dataStats);
@@ -48,7 +68,7 @@ export default function Home() {
       }
     }
     fetchData();
-  }, []);
+  }, [logout]);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 pb-32">
