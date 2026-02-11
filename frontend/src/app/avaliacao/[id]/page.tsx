@@ -121,7 +121,7 @@ export default function RevisaoAvaliacao() {
         }),
       });
 
-      // 2. Salva/Atualiza Avaliação
+      // Salva/Atualiza Avaliação
       const payloadAvaliacao = {
         producaoId: Number(params.id),
         nota: nota,

@@ -56,9 +56,6 @@ export class ProducaoService {
     const diffMs = fim.getTime() - inicio.getTime();
     const minutos = Math.floor(diffMs / 60000);
 
-    // Futuramente chamaremos a API de clima aqui
-    // Por enquanto valor enviado vai ser nulo
-
     return await this.prisma.producao.create({
       data: {
         dataProducao: new Date(data.horaInicio), // Usa data real do ínicio
