@@ -7,8 +7,6 @@ import axios from 'axios';
 import { Readable } from 'stream';
 import { parse } from 'csv-parse';
 import { Parser } from 'json2csv';
-// import * as fs from 'fs';
-// import { normalize } from 'path';
 
 @Injectable()
 export class ProducaoService {
@@ -129,6 +127,55 @@ export class ProducaoService {
     // Apaga de vez
     return await this.prisma.producao.delete({
       where: { id },
+    });
+  }
+
+  async filtrar(params: any){
+    const where: any = {};
+
+    if(params.dataInicio || params.dataFim) {
+      where.dataProducao = {};
+      if(params.dataInicio) where.dataProducao.gte = new Date(params.dataInicio);
+
+      if(params.dataFim) {
+        const fim = new Date(params.dataFim);
+        fim.setHours(23, 59, 59, 999);
+        where.dataProducao.lte = fim;
+      }
+    }
+
+    const addRange = (campo: string, min?: string, max?: string) => {
+      if(!min && !max) return;
+      where[campo] = {};
+      if (min) where[campo].gte = Number(min);
+      if (max) where[campo].lte = Number(max);
+    };
+
+    addRange('farinhaKg', params.farinhaMin, params.farinhaMax);
+    addRange('fermentoGrama', params.fermentoMin, params.fermentoMax);
+    addRange('emulsificanteMl', params.emulsificanteMin, params.emulsificanteMax);
+    addRange('tempoFermentacaoMinutos', params.tempoMin, params.tempoMax);
+    addRange('tempAmbienteInicial', params.tempIniMin, params.tempIniMax);
+    addRange('tempAmbienteFinal', params.tempFimPrevMin, params.tempFimPrevMax);
+  
+    if(params.nota || params.tempRealMin || params.tempRealMax) {
+      where.avaliacao = {};
+
+      if(params.nota) {
+        where.avaliacao.nota = Number(params.nota);
+      }
+
+      if(params.tempRealMin || params.tempRealMax) {
+        where.avaliacao.tempAmbienteFinalReal = {};
+        if(params.tempRealMin) where.avaliacao.tempAmbienteFinalReal.gte = Number(params.tempRealMin);
+        if(params.tempRealMax) where.avaliacao.tempAmbienteFinalReal.lte = Number(params.tempRealMax);
+      }
+    }
+
+    return await this.prisma.producao.findMany({
+      where,
+      include: { avaliacao: true },
+      orderBy: { id: 'desc' }
     });
   }
 

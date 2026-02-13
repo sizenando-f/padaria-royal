@@ -20,6 +20,10 @@ import {
   AlertTriangle,
   CheckCircle2,
   MessageSquare,
+  Key,
+  Filter,
+  X,
+  ThermometerSun,
 } from "lucide-react";
 import Toast from "@/app/components/Toast";
 import { useAuth } from "@/context/AuthContext";
@@ -37,6 +41,19 @@ export default function HistoricoProducao() {
     type: "success" | "error";
   } | null>(null);
 
+  // Filtro
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
+  const [filtros, setFiltros] = useState({
+    dataInicio: '', dataFim: '',
+    nota: '',
+    farinhaMin: '', farinhaMax: '',
+    tempRealMin: '', tempRealMax: '',
+    fermentoMin: '', fermentoMax: '',
+    emulsificanteMin: '', emulsificanteMax: '',
+    tempoHoraMin: '', tempoHoraMax: '',
+    tempPrevMin: '', tempPrevMax: ''
+  });
+
   useEffect(() => {
     carregarDados();
   }, []);
@@ -47,9 +64,14 @@ export default function HistoricoProducao() {
     return { Authorization: `Bearer ${token}` };
   };
 
-  async function carregarDados() {
+  async function carregarDados(queryParams = '') {
+    setLoading(true);
+    
     try {
-      const res = await fetch("http://localhost:3000/producao", {
+      const url = queryParams ? `http://localhost:3000/producao/filtrar?${queryParams}`
+      : 'http://localhost:3000/producao';
+
+      const res = await fetch(url, {
         headers: getHeaders(),
       });
 
@@ -61,14 +83,45 @@ export default function HistoricoProducao() {
       const data = await res.json();
       if (Array.isArray(data)) {
         // Ordena por ID decrescente (mais recentes primeiro)
-        const ordenado = data.sort((a: any, b: any) => b.id - a.id);
-        setProducoes(ordenado);
+        const lista = queryParams ? data : data.sort((a: any, b: any) => b.id - a.id);
+        setProducoes(lista);
       }
     } catch (error) {
       showToast("Erro ao carregar dados.", "error");
     } finally {
       setLoading(false);
     }
+  }
+
+  const handleAplicarFiltros = () => {
+    const params = new URLSearchParams();
+
+    Object.entries(filtros).forEach(([Key, value]) => {
+      if(value) params.append(Key, value);
+    });
+
+    // Conversão: Horas -> Minutos para o Backend
+    if(filtros.tempoHoraMin) params.append('tempoMin', String(Number(filtros.tempoHoraMin) * 60));
+    if(filtros.tempoHoraMax) params.append('tempoMax', String(Number(filtros.tempoHoraMax) * 60));
+
+    carregarDados(params.toString());
+    setMostrarFiltros(false);
+    showToast('Filtros aplicados', 'success');
+  };
+
+  const limparFiltros = () => {
+    setFiltros({
+        dataInicio: '', dataFim: '',
+        nota: '',
+        farinhaMin: '', farinhaMax: '',
+        tempRealMin: '', tempRealMax: '',
+        fermentoMin: '', fermentoMax: '',
+        emulsificanteMin: '', emulsificanteMax: '',
+        tempoHoraMin: '', tempoHoraMax: '',
+        tempPrevMin: '', tempPrevMax: ''
+      });
+      carregarDados();
+      setMostrarFiltros(false);
   }
 
   const showToast = (msg: string, type: "success" | "error") => {
@@ -161,40 +214,19 @@ export default function HistoricoProducao() {
 
   // Para renderizar Badge de Nota
   const renderBadgeNota = (avaliacao: any) => {
-    if (!avaliacao)
-      return (
-        <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-bold">
-          Pendente
-        </span>
-      );
-
-    const map: any = {
-      5: {
-        label: "Excelente",
-        color: "bg-green-100 text-green-700 border-green-200",
-      },
-      4: { label: "Bom", color: "bg-blue-100 text-blue-700 border-blue-200" },
-      3: {
-        label: "Regular",
-        color: "bg-yellow-100 text-yellow-700 border-yellow-200",
-      },
-      2: {
-        label: "Ruim",
-        color: "bg-orange-100 text-orange-700 border-orange-200",
-      },
-      1: { label: "Péssimo", color: "bg-red-100 text-red-700 border-red-200" },
-    };
-    const style = map[avaliacao.nota] || map[3];
-
-    return (
-      <span
-        className={`text-[10px] px-2 py-0.5 rounded-full font-bold border flex items-center gap-1 ${style.color}`}
-      >
-        {avaliacao.nota >= 4 && <Star size={10} fill="currentColor" />}{" "}
-        {style.label}
-      </span>
-    );
+    if(!avaliacao) return <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full font-bold">Pendente</span>;
+    const map: any = { 5: 'bg-green-100 text-green-700', 4: 'bg-blue-100 text-blue-700', 3: 'bg-yellow-100 text-yellow-700', 2: 'bg-orange-100 text-orange-700', 1: 'bg-red-100 text-red-700' };
+    const label: any = { 5: 'Excelente', 4: 'Bom', 3: 'Regular', 2: 'Ruim', 1: 'Péssimo' };
+    return <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border flex items-center gap-1 ${map[avaliacao.nota] || map[3]}`}><Star size={10} fill="currentColor"/> {label[avaliacao.nota]}</span>;
   };
+
+  const opcoesQualidade = [
+    { valor: 5, label: 'Excelente', color: 'bg-green-100 text-green-700 border-green-200' },
+    { valor: 4, label: 'Bom', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+    { valor: 3, label: 'Regular', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+    { valor: 2, label: 'Ruim', color: 'bg-orange-100 text-orange-700 border-orange-200' },
+    { valor: 1, label: 'Péssimo', color: 'bg-red-100 text-red-700 border-red-200' },
+  ]
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 pb-24 md:pb-10 flex justify-center">
@@ -223,6 +255,20 @@ export default function HistoricoProducao() {
               </p>
             </div>
           </div>
+          {/* Botão de filtro */}
+          <button
+            onClick={() => setMostrarFiltros(true)}
+            className="bg-white p-3 rounded-2xl border border-gray-200 text-blue-600 shadow-sm hover:bg-blue-50 active:scale-95 transition-all relative cursor-pointer"
+          >
+            <div className="flex gap-2">
+              <Filter size={20} />
+              <span className="text-sm font-bold ">Filtros Avançados</span>
+            </div>
+            {/* Bolinha para mostrar se filtro está ativo */}
+            {Object.values(filtros).some(x => x !== '') && (
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+            )}
+          </button>
 
           {/* Barra de ferramentas (import/export) */}
           {isGerente && (
@@ -252,6 +298,113 @@ export default function HistoricoProducao() {
             </div>
           )}
         </div>
+
+        {/* Filtros */}
+        {mostrarFiltros && (
+          <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex justify-end animate-fade-in">
+            <div className="w-full max-w-md bg-white h-full shadow-2xl p-6 overflow-y-auto animate-slide-in-right">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <Filter size={20} className="text-blue-600" /> Filtros Avançados
+                </h2>
+                <button onClick={() => setMostrarFiltros(false)} className="p-2 bg-gray-100 rounded-full text-gray-500"><X size={20}/></button>
+              </div>
+
+              <div className="space-y-6 pb-20">
+                {/* Data */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase">Período</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input type="date" className="bg-gray-50 border p-3 rounded-xl text-sm" value={filtros.dataInicio} onChange={e => setFiltros({...filtros, dataInicio: e.target.value})}/>
+                    <input type="date" className="bg-gray-50 border p-3 rounded-xl text-sm" value={filtros.dataFim} onChange={e => setFiltros({...filtros, dataFim: e.target.value})}/>
+                  </div>
+                </div>
+
+                {/* Qualidade */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase">Qualidade</label>
+                  <div className="flex flex-wrap gap-2">
+                    {opcoesQualidade.map(op => (
+                      <button key={op.valor} onClick={() => setFiltros({...filtros, nota: filtros.nota === String(op.valor) ? '' : String(op.valor)})}
+                      className={`px-3 py-2 rounded-xl cursor-pointer text-xs font-bold border transition-all ${filtros.nota === String(op.valor) ? op.color + ' ring-2 ring-offset-1 ring-gray-200' : 'bg-white border-gray-200 text-gray-500'}`}
+                      >
+                        {op.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tempo de Fermentação */}
+                <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase flex items-center gap-1"><Clock size={14}/> Tempo (Horas)</label>
+                    <div className="flex items-center gap-2">
+                      <input type="number" placeholder="Min" className="w-full bg-gray-50 border p-3 rounded-xl text-sm" value={filtros.tempoHoraMin} onChange={e => setFiltros({...filtros, tempoHoraMin: e.target.value})}/>
+                      <span className="text-gray-300">-</span>
+                      <input type="number" placeholder="Max" className="w-full bg-gray-50 border p-3 rounded-xl text-sm" value={filtros.tempoHoraMax} onChange={e => setFiltros({...filtros, tempoHoraMax: e.target.value})}/>
+                    </div>
+                </div>
+
+                <hr className="border-gray-100"/>
+
+                {/* Insumo */}
+                <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase">Farinha (Kg)</label>
+                    <div className="flex items-center gap-2">
+                      <input type="number" placeholder="Min" className="w-full bg-gray-50 border p-3 rounded-xl text-sm" value={filtros.farinhaMin} onChange={e => setFiltros({...filtros, farinhaMin: e.target.value})}/>
+                      <span className="text-gray-300">-</span>
+                      <input type="number" placeholder="Max" className="w-full bg-gray-50 border p-3 rounded-xl text-sm" value={filtros.farinhaMax} onChange={e => setFiltros({...filtros, farinhaMax: e.target.value})}/>
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase">Fermento (g)</label>
+                    <div className="flex items-center gap-2">
+                      <input type="number" placeholder="Min" className="w-full bg-gray-50 border p-3 rounded-xl text-sm" value={filtros.fermentoMin} onChange={e => setFiltros({...filtros, fermentoMin: e.target.value})}/>
+                      <span className="text-gray-300">-</span>
+                      <input type="number" placeholder="Max" className="w-full bg-gray-50 border p-3 rounded-xl text-sm" value={filtros.fermentoMax} onChange={e => setFiltros({...filtros, fermentoMax: e.target.value})}/>
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase">Emulsificante (ml)</label>
+                    <div className="flex items-center gap-2">
+                      <input type="number" placeholder="Min" className="w-full bg-gray-50 border p-3 rounded-xl text-sm" value={filtros.emulsificanteMin} onChange={e => setFiltros({...filtros, emulsificanteMin: e.target.value})}/>
+                      <span className="text-gray-300">-</span>
+                      <input type="number" placeholder="Max" className="w-full bg-gray-50 border p-3 rounded-xl text-sm" value={filtros.emulsificanteMax} onChange={e => setFiltros({...filtros, emulsificanteMax: e.target.value})}/>
+                    </div>
+                </div>
+
+                <hr className="border-gray-100"/>
+
+                {/* Temperatura Prevista */}
+                <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase flex items-center gap-1"><ThermometerSun size={14} />Temp. Prevista (°C)</label>
+                    <div className="flex items-center gap-2">
+                      <input type="number" placeholder="Min" className="w-full bg-gray-50 border p-3 rounded-xl text-sm" value={filtros.tempPrevMin} onChange={e => setFiltros({...filtros, tempPrevMin: e.target.value})}/>
+                      <span className="text-gray-200">-</span>
+                      <input type="number" placeholder="Max" className="w-full bg-gray-50 border p-3 rounded-xl text-sm" value={filtros.tempPrevMax} onChange={e => setFiltros({...filtros, tempPrevMax: e.target.value})}/>
+                    </div>
+                </div>
+
+                {/* Temperatura Real */}
+                <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 space-y-2">
+                    <label className="text-xs font-bold text-blue-500 uppercase flex items-center gap-1"><Thermometer size={14} />Temp. Final Real (°C)</label>
+                    <div className="flex items-center gap-2">
+                      <input type="number" placeholder="Min" className="w-full bg-white border border-blue-100 p-3 rounded-xl text-sm" value={filtros.tempRealMin} onChange={e => setFiltros({...filtros, tempRealMin: e.target.value})}/>
+                      <span className="text-blue-200">-</span>
+                      <input type="number" placeholder="Max" className="w-full bg-white border border-blue-100 p-3 rounded-xl text-sm" value={filtros.tempRealMax} onChange={e => setFiltros({...filtros, tempRealMax: e.target.value})}/>
+                    </div>
+                </div>
+                
+                {/* Botões */}
+                <div className="pt-4 flex gap-3">
+                    <button onClick={limparFiltros} className="flex-1 py-4 text-gray-500 font-bold text-sm hover:bg-gray-50 rounded-2xl cursor-pointer">Limpar</button>
+                    <button onClick={handleAplicarFiltros} className="flex-2 bg-blue-600 text-white py-4 rounded-2xl font-bold text-sm shadow-lg shadow-blue-200 hover:bg-blue-700 cursor-pointer">Aplicar Filtros</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Lista de cards */}
         {loading ? (

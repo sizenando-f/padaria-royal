@@ -41,6 +41,11 @@ export class ProducaoController {
     return this.producaoService.importarDados(file.buffer);
   }
 
+  @Get('filtrar')
+  async filtrar(@Query() query: any) {
+    return this.producaoService.filtrar(query);
+  }
+
   @Get('exportar')
   async exportar(@Res() res: Response) {
     const csv = await this.producaoService.exportarDados();
