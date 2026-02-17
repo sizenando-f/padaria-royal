@@ -17,6 +17,7 @@ import {
   Thermometer,
   Star,
   Droplets,
+  AlertTriangle,
 } from "lucide-react";
 import Toast from "@/app/components/Toast";
 
@@ -27,6 +28,9 @@ export default function NovaProducao() {
   const [provasIA, setProvasIA] = useState<any[] | null>(null);
   const [mensagemIA, setMensagemIA] = useState("");
   const [buscandoClima, setBuscandoClima] = useState(false);
+
+  // Para guardar sugestão original da IA
+  const [sugestaoFermento, setSugestaoFermento] = useState<number | null>(null);
 
   const [toast, setToast] = useState<{
     msg: string;
@@ -185,6 +189,7 @@ export default function NovaProducao() {
 
     setSugerindo(true);
     setProvasIA(null);
+    setSugestaoFermento(null);
 
     try {
       const token = localStorage.getItem("royal_token");
@@ -214,6 +219,7 @@ export default function NovaProducao() {
         ...prev,
         fermentoGrama: String(data.fermento),
       }));
+      setSugestaoFermento(data.fermento); // Para comparação
       setProvasIA(data.provas);
       setMensagemIA(data.mensagem);
     } catch (error) {
@@ -595,12 +601,25 @@ export default function NovaProducao() {
                     name="fermentoGrama"
                     value={formData.fermentoGrama}
                     onChange={handleChange}
-                    className={`w-full mt-1 bg-gray-50 border text-gray-900 text-lg rounded-2xl focus:ring-2 p-3 outline-none font-bold transition-all ${provasIA ? "border-purple-300 ring-2 ring-purple-100 text-purple-900" : "border-gray-200 focus:ring-purple-400"}`}
+                    className={`w-full mt-1 border text-lg rounded-2xl p-3 outline-none font-bold transition-all ${
+                      sugestaoFermento && Number(formData.fermentoGrama) !== sugestaoFermento ? "bg-yellow-50 border-yellow-400 text-yellow-800 focus:ring-yellow-400 ring-2 ring-yellow-100"
+                      : provasIA ? "bg-purple-50 border-purple-300 text-purple-900 focus:ring-purple-400"
+                      : "bg-gray-50 border-gray-200 text-gray-900 focus:ring-2 focus:ring-orange-500"
+                    }`
+                  }
                   />
-                  {provasIA && (
+                  {provasIA && !sugestaoFermento && (
                     <span className="absolute right-3 top-4 text-[10px] font-bold text-purple-500 uppercase">
                       Sugerido
                     </span>
+                  )}
+
+                  {/* Alerta */}
+                  {sugestaoFermento && Number(formData.fermentoGrama) !== sugestaoFermento && (
+                    <div className="absolute right-3 top-2 flex items-center gap-1 text-yellow-600 animate-pulse">
+                      <AlertTriangle size={14} />
+                      <span className="text-[10px] font-bold">Era {sugestaoFermento}g</span>
+                    </div>
                   )}
                 </div>
               </div>
