@@ -1,11 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request, UseGuards } from '@nestjs/common';
 import { AvaliacaoService } from './avaliacao.service';
 import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
 import { UpdateAvaliacaoDto } from './dto/update-avaliacao.dto';
+import { BackupService } from 'src/backup/backup.service';
+import { AuthGuard } from 'src/auth/auth.guard';
 
+@UseGuards(AuthGuard)
 @Controller('avaliacao')
 export class AvaliacaoController {
-  constructor(private readonly avaliacaoService: AvaliacaoService) {}
+  constructor(
+    private readonly avaliacaoService: AvaliacaoService,
+    private readonly backupService: BackupService
+  ) {}
 
   @Post()
   create(@Body() createAvaliacaoDto: CreateAvaliacaoDto) {
@@ -18,7 +24,12 @@ export class AvaliacaoController {
   }
 
   @Get('dashboard')
-  getStats() {
+  async dashboard(@Request() req) {
+    // Se for gerente, verifica se precisa de backup
+    if(req.user && req.user.cargo === 'GERENTE'){
+      this.backupService.verificarEExecutarBackup().catch(err => console.error(err));
+    }
+
     return this.avaliacaoService.getDashboardStats();
   }
 

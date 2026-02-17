@@ -7,6 +7,7 @@ import { ProducaoModule } from './producao/producao.module';
 import { AvaliacaoModule } from './avaliacao/avaliacao.module';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
+import { BackupModule } from './backup/backup.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { AuthModule } from './auth/auth.module';
     ProducaoModule,
     AvaliacaoModule,
     AuthModule,
+    BackupModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
