@@ -53,11 +53,22 @@ model Avaliacao {
 }
 
 model Usuario {
+  // Informações pessoais
   id    Int @id @default(autoincrement())
   nome  String
   email String @unique
   senha String
   cargo String
 
+  // Campos de controle permitido
+  podeRegistrar     Boolean @default(true)
+  podeAvaliar       Boolean @default(true)
+  podeVerHistorico  Boolean @default(true)
+
+  // Para permissão de uso
+  horarioEntrada    String?
+  horarioSaida      String?
+
   producoes Producao[]
+  criadoEm  DateTime @default(now())
 }
