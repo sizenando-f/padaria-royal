@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -13,7 +13,9 @@ import {
   Loader2,
   ArrowLeft,
   CheckCircle2,
+  Trash2,
 } from "lucide-react";
+import Toast from "../components/Toast";
 
 interface Producao {
   id: number;
@@ -28,6 +30,7 @@ export default function ListaPendentes() {
   const router = useRouter();
   const [pendentes, setPendentes] = useState<Producao[]>([]);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<{msg: string; type: "success" | "error"} | null>(null);
 
   useEffect(() => {
     async function fetchPendentes() {
@@ -61,6 +64,31 @@ export default function ListaPendentes() {
     fetchPendentes();
   }, [router]);
 
+  async function handleExcluir(id: number, e: React.MouseEvent) {
+    e.preventDefault();
+    // Impede que ao clicar na lixeira abra a avaliação
+    e.stopPropagation();
+
+    if(!confirm(`Tem certeza qeu deseja apagar a produção #${id}?`)) return;
+
+    try {
+      const token = localStorage.getItem('royal_token');
+      const res = await fetch(`http://localhost:3000/producao/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+      });
+
+      if(!res.ok) throw new Error("Erro ao excluir!");
+
+      setPendentes(prev => prev.filter(p => p.id !== id));
+      setToast({msg: "Produção removida", type: 'success'});
+    } catch (error) {
+      setToast({msg: 'Erro ao excluir item', type: 'error'});
+    }
+  }
+
   const formatarHora = (isoString: string) => {
     return new Date(isoString).toLocaleTimeString("pt-BR", {
       hour: "2-digit",
@@ -68,8 +96,15 @@ export default function ListaPendentes() {
     });
   };
 
+  if(loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <Loader2 className="animate-spin text-orange-500"/>
+    </div>
+  )
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 pb-24 md:p-8">
+      {toast && <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
       <div className="max-w-xl mx-auto">
         {/* Cabeçalho */}
         <div className="flex items-center gap-4 mb-6">
@@ -151,9 +186,18 @@ export default function ListaPendentes() {
                       </div>
                     </div>
                   </div>
-                  <div className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-xs font-bold">
-                    Pendente
+                  <div className="flex items-center gap-2">
+                    <div className="bg-gray-100 text-gray-500 px-3 py-1 rounded-full text-xs font-bold">
+                      Pendente
+                    </div>
+                    <button onClick={(e) => handleExcluir(prod.id, e)}
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors z-10 cursor-pointer"
+                      title="Apagar produção"
+                      >
+                        <Trash2 size={18} />
+                    </button>
                   </div>
+                  
                 </div>
 
                 {/* Detalhes Técnicos */}

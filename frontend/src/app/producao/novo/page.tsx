@@ -479,7 +479,20 @@ export default function NovaProducao() {
                 </div>
 
                 <div className="space-y-3">
-                  {provasIA.map((prova) => (
+                  {provasIA.map((prova) => {
+                    // Calcula o tempo alvo do usuário
+                    let tempoAlvo = 0;
+                    if(formData.horaInicio && formData.horaFim) {
+                      const d1 = new Date(formData.horaInicio);
+                      const d2 = new Date(formData.horaFim);
+                      tempoAlvo = Math.floor((d2.getTime() - d1.getTime()) / 60000);
+                    }
+
+                   // Verifica se o tempo da sugestão é muito diferente  
+                    const diferencaTempo = Math.abs(prova.tempo - tempoAlvo);
+                    const tempoDivergente = diferencaTempo > 30; // Tolerância de 30 minutos
+
+                    return (
                     <div
                       key={prova.id}
                       className="bg-white p-3 rounded-xl border border-purple-100 shadow-sm flex flex-col gap-2 relative overflow-hidden"
@@ -520,11 +533,12 @@ export default function NovaProducao() {
                         </div>
 
                         <div className="space-y-1 pl-1">
-                          <div className="flex items-center gap-1">
-                            <Clock size={12} className="text-orange-400" />
+                          <div className={`flex items-center gap-1 rounded px-1 -ml-1 ${tempoDivergente ? 'bg-orange-100 text-orange-700 font-bold' : ''}`}>
+                            <Clock size={12} className={`${tempoDivergente ? "text-orange-600" : "text-orange-400"}`} />
                             <span>
                               {Math.floor(prova.tempo / 60)}h{prova.tempo % 60}m
                             </span>
+                            {tempoDivergente && <Info size={10}/>}
                           </div>
                           <div className="flex justify-between gap-1">
                             <div
@@ -573,7 +587,7 @@ export default function NovaProducao() {
                         </div>
                       )}
                     </div>
-                  ))}
+                  )})}
                 </div>
               </div>
             )}
