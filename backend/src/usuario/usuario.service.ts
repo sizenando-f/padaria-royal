@@ -18,6 +18,7 @@ export class UsuarioService {
                 cargo: true,
                 podeRegistrar: true,
                 podeAvaliar: true,
+                podeVerHistorico: true,
                 horarioEntrada: true,
                 horarioSaida: true,
                 criadoEm: true
