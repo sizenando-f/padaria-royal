@@ -8,6 +8,7 @@ import { AvaliacaoModule } from './avaliacao/avaliacao.module';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { BackupModule } from './backup/backup.module';
+import { UsuarioModule } from './usuario/usuario.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { BackupModule } from './backup/backup.module';
     AvaliacaoModule,
     AuthModule,
     BackupModule,
+    UsuarioModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
