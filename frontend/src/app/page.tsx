@@ -160,13 +160,20 @@ export default function Home() {
           {/* Botão para sair */}
           <button
             onClick={logout}
-            className="p-2.5 bg-white rounded-full text-gray-400 shadow-sm border border-gray-100 hover:text-red-500"
+            className="p-2.5 bg-white rounded-full text-gray-400 shadow-sm border border-gray-100 hover:text-red-500 transition-colors" title="Sair do sistema"
           >
             <LogOut size={18} />
           </button>
-          <div className="p-2.5 bg-white rounded-full text-orange-600 shadow-sm border border-gray-100">
-            <ChefHat size={22} />
-          </div>
+          {/* Ícone de Perfil / Gestão */}
+          {user?.cargo === "GERENTE" ? (
+            <Link href="/usuarios" className="p-2.5 bg-white rounded-full text-orange-600 shadow-sm border border-gray-100 hover:scale-105 transition-all cursor-pointer" title="Gestão de Equipe">
+              <ChefHat size={22} />
+            </Link>
+          ) : (
+            <div className="p-2.5 bg-white rounded-full text-orange-600 shadow-sm border border-gray-100 ">
+              <ChefHat size={22} />
+            </div>
+          )}
         </div>
       </header>
 

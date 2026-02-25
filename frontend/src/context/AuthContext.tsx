@@ -11,9 +11,15 @@ import {
 
 // Define molde do usuário
 interface User {
+  id: number;
   nome: string;
   email: string;
   cargo: "GERENTE" | "PADEIRO";
+  permissoes?: {
+    registrar: boolean;
+    avaliar: boolean;
+    historico: boolean;
+  }
 }
 
 // Define o contexto do login
