@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request, UseGuards, UnauthorizedException } from '@nestjs/common';
 import { AvaliacaoService } from './avaliacao.service';
 import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
 import { UpdateAvaliacaoDto } from './dto/update-avaliacao.dto';
@@ -14,7 +14,11 @@ export class AvaliacaoController {
   ) {}
 
   @Post()
-  create(@Body() createAvaliacaoDto: CreateAvaliacaoDto) {
+  create(@Body() createAvaliacaoDto: CreateAvaliacaoDto, @Request() req) {
+    if(req.user.cargo !== 'GERENTE' && !req.user.permissoes.avaliar){
+      throw new UnauthorizedException('Você não tem permissão para avaliar produções.')
+    }
+
     return this.avaliacaoService.create(createAvaliacaoDto);
   }
 

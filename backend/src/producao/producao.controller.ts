@@ -12,6 +12,7 @@ import {
   Res,
   UseGuards,
   Request,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ProducaoService } from './producao.service';
 import { CreateProducaoDto } from './dto/create-producao.dto';
@@ -27,9 +28,12 @@ export class ProducaoController {
 
   @Post()
   create(@Body() createProducaoDto: CreateProducaoDto, @Request() req) {
+    if(req.user.cargo !== 'GERENTE' && !req.user.permissoes.registrar){
+      throw new UnauthorizedException('Você não tem permissão para lançar produções.');
+    }
+    
     // Contém ID od usuário
     const usuarioId = req.user.sub;
-
     // Passa o ID para registrar no LOG
     return this.producaoService.create(createProducaoDto, usuarioId);
   }
@@ -101,12 +105,21 @@ export class ProducaoController {
   update(
     @Param('id') id: string,
     @Body() updateProducaoDto: UpdateProducaoDto,
+    @Request() req,
   ) {
+    if(req.user.cargo !== 'GERENTE' && !req.user.permissoes.editar){
+      throw new UnauthorizedException('Você não tem permissão para editar produções.');
+    }
+
     return this.producaoService.update(+id, updateProducaoDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id') id: string, @Request() req) {
+    if(req.user.cargo !== 'GERENTE' && !req.user.permissoes.excluir){
+      throw new UnauthorizedException('Você não tem permissão para excluir produções.');
+    }
+
     return this.producaoService.remove(+id);
   }
 }

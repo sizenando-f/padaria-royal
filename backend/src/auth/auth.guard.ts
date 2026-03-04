@@ -29,6 +29,21 @@ export class AuthGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: secret,
       });
+
+      if(payload.cargo !== 'GERENTE' && payload.horarioEntrada && payload.horarioSaida){
+        const agora = new Date();
+
+        const horaAtual = agora.toLocaleTimeString('pt-BR', {
+          timeZone: 'America/Campo_Grande',
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+
+        if(horaAtual < payload.horarioEntrada || horaAtual > payload.horarioSaida){
+          throw new UnauthorizedException(`Fora do horário de expediente. (Permitido: ${payload.horarioEntrada} às ${payload.horarioSaida})`);
+        }
+      }
+
       // Anexa dados do usuário no objeto da requisição para controller acessar via req.user
       request['user'] = payload;
     } catch {

@@ -59,6 +59,19 @@ export class UsuarioService {
         });
     }
 
+    async update(id: number, data: any){
+        if(data.senha && data.senha.trim() !== ""){
+            data.senha = await bcrypt.hash(data.senha, 10);
+        } else {
+            delete data.senha;
+        }
+
+        return await this.prisma.usuario.update({
+            where: { id },
+            data,
+        });
+    }
+
     // Remove usuário
     async remove(id: number){
         return await this.prisma.usuario.delete({

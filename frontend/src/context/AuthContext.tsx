@@ -19,6 +19,8 @@ interface User {
     registrar: boolean;
     avaliar: boolean;
     historico: boolean;
+    editar: boolean;
+    excluir: boolean;
   }
 }
 

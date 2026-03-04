@@ -64,6 +64,8 @@ model Usuario {
   podeRegistrar     Boolean @default(true)
   podeAvaliar       Boolean @default(true)
   podeVerHistorico  Boolean @default(true)
+  podeEditar        Boolean @default(true)
+  podeExcluir       Boolean @default(true)
 
   // Para permissão de uso
   horarioEntrada    String?

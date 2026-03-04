@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Request, UnauthorizedException, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Patch, Post, Request, UnauthorizedException, UseGuards } from "@nestjs/common";
 import { AuthGuard } from "src/auth/auth.guard";
 import { UsuarioService } from "./usuario.service";
 
@@ -26,6 +26,15 @@ export class UsuarioController {
         }
 
         return this.usuarioService.create(createUsuarioDto);
+    }
+
+    @Patch(':id')
+    update(@Param('id') id: string, @Body() updateData: any, @Request() req){
+        if(req.user.cargo !== 'GERENTE'){
+            throw new UnauthorizedException('Acesso restrito a gerentes.');
+        }
+
+        return this.usuarioService.update(+id, updateData);
     }
 
     @Delete(":id")

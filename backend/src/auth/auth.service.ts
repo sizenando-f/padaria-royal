@@ -45,11 +45,15 @@ export class AuthService {
       sub: usuario.id,
       nome: usuario.nome,
       cargo: usuario.cargo,
+      horarioEntrada: usuario.horarioEntrada,
+      horarioSaida: usuario.horarioSaida,
       // As permissões são enviadas para o front esconder botões
       permissoes: {
         registrar: usuario.podeRegistrar,
         avaliar: usuario.podeAvaliar,
-        historico: usuario.podeVerHistorico
+        historico: usuario.podeVerHistorico,
+        editar: usuario.podeEditar,
+        excluir: usuario.podeExcluir,
       }
     };
 

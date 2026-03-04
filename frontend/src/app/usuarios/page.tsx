@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { ArrowLeft, CheckCircle2, Clock, Loader2, ShieldCheck, Trash2, UserPlus, Users, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, Loader2, Pencil, ShieldCheck, Trash2, UserPlus, Users, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Toast from "../components/Toast";
@@ -17,17 +17,15 @@ export default function GestaoUsuario() {
     // Modal de novo usuário
     const [modalAberto, setModalAberto] = useState(false);
     const [salvando, setSalvando] = useState(false);
+    const [usuarioEditando, setUsuarioEditando] = useState<number | null>(null);
+
     const [formData, setFormData] = useState({
-        nome: "",
-        email: "",
-        senha: "",
-        cargo: "PADEIRO",
-        podeRegistrar: true,
-        podeAvaliar: true,
-        podeVerHistorico: true,
-        horarioEntrada: "05:00",
-        horarioSaida: "19:00"
+        nome: "", email: "", senha: "", cargo: "PADEIRO",
+        podeRegistrar: true, podeAvaliar: true, podeVerHistorico: true,
+        podeEditar: true, podeExcluir: true,
+        horarioEntrada: "05:00", horarioSaida: "19:00"
     });
+
 
     const getHeaders = () => ({
         "Authorization": `Bearer ${localStorage.getItem('royal_token')}`,
@@ -95,13 +93,31 @@ export default function GestaoUsuario() {
         }
     }
 
+    function abrirModalEdicao(u: any){
+        setUsuarioEditando(u.id);
+        setFormData({
+            nome: u.nome, email: u.email, senha: "", cargo: u.cargo,
+            podeRegistrar: u.podeRegistrar, podeAvaliar: u.podeAvaliar,
+            podeVerHistorico: u.podeVerHistorico, podeEditar: u.podeEditar || false,
+            podeExcluir: u.podeExcluir || false,
+            horarioEntrada: u.horarioEntrada || "05:00",
+            horarioSaida: u.horarioSaida || "19:00"
+        });
+        setModalAberto(true);
+    }
+
     async function handleSalvar(e: React.FormEvent){
         e.preventDefault();
         setSalvando(true);
 
         try {
-            const res = await fetch("http://localhost:3000/usuario", {
-                method: "POST",
+            const url = usuarioEditando ? `http://localhost:3000/usuario/${usuarioEditando}`
+            : "http://localhost:3000/usuario";
+
+            const method = usuarioEditando ? "PATCH" : "POST";
+
+            const res = await fetch(url, {
+                method: method,
                 headers: getHeaders(),
                 body: JSON.stringify(formData)
             });
@@ -118,15 +134,10 @@ export default function GestaoUsuario() {
 
             // Reseta o formulário
             setFormData({
-                nome: "",
-                email: "",
-                senha: "",
-                cargo: "PADEIRO",
-                podeRegistrar: true,
-                podeAvaliar: true,
-                podeVerHistorico: true,
-                horarioEntrada: "05:00",
-                horarioSaida: "19:00"
+                nome: "", email: "", senha: "", cargo: "PADEIRO",
+                podeRegistrar: true, podeAvaliar: true, podeVerHistorico: true,
+                podeEditar: true, podeExcluir: true,
+                horarioEntrada: "05:00", horarioSaida: "19:00"
             });
         } catch (error: any) {
             setToast({
@@ -135,6 +146,7 @@ export default function GestaoUsuario() {
             });
         } finally {
             setSalvando(false);
+            setUsuarioEditando(null);
         }
     }
 
@@ -189,11 +201,19 @@ export default function GestaoUsuario() {
                                     </div>
                                 </div>
                                 {user?.id !== u.id && (
-                                    <button onClick={() => handleExcluir(u.id, u.nome)}
+                                    <div className="flex gap-2">
+                                        <button onClick={() => abrirModalEdicao(u)}
+                                        className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-full transition-colors" title="Editar usuário"    
+                                        >
+                                            <Pencil size={18}/>
+                                        </button>
+                                        <button onClick={() => handleExcluir(u.id, u.nome)}
                                         className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors" title="Remover acesso"
-                                    >
-                                        <Trash2 size={18}/>
-                                    </button>
+                                        >
+                                            <Trash2 size={18}/>
+                                        </button>
+                                    </div>
+                                    
                                 )}
                             </div>
 
@@ -256,7 +276,10 @@ export default function GestaoUsuario() {
                                 <h2 className="font-bold text-lg text-gray-900 flex items-center gap-2">
                                     <UserPlus size={20} className="text-orange-500"/> Novo Funcionário
                                 </h2>
-                                <button onClick={() => setModalAberto(false)} className="p-2 bg-white rounded-full text-gray-400 hover:bg-gray-100 border border-gray-200">
+                                <button onClick={() => {
+                                    setModalAberto(false);
+                                    setUsuarioEditando(null)
+                                    }} className="p-2 bg-white rounded-full text-gray-400 hover:bg-gray-100 border border-gray-200">
                                     <X size={18}/>
                                 </button>
                             </div>
@@ -345,6 +368,18 @@ export default function GestaoUsuario() {
                                                     <input type="checkbox" className="w-4 h-4 text-orange-600 rounded" checked={formData.podeVerHistorico} onChange={e => setFormData({...formData, podeVerHistorico: e.target.checked})}/>
                                                     <span className="text-sm font-bold text-gray-700">
                                                         Visualizar Histórico Geral
+                                                    </span>
+                                                </label>
+                                                <label className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100 cursor-pointer">
+                                                    <input type="checkbox" className="w-4 h-4 text-orange-600 rounded" checked={formData.podeEditar} onChange={e => setFormData({...formData, podeEditar: e.target.checked})}/>
+                                                    <span className="text-sm font-bold text-gray-700">
+                                                        Editar Produções
+                                                    </span>
+                                                </label>
+                                                <label className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100 cursor-pointer">
+                                                    <input type="checkbox" className="w-4 h-4 text-orange-600 rounded" checked={formData.podeExcluir} onChange={e => setFormData({...formData, podeExcluir: e.target.checked})}/>
+                                                    <span className="text-sm font-bold text-gray-700">
+                                                        Excluir Produção
                                                     </span>
                                                 </label>
                                             </div>
