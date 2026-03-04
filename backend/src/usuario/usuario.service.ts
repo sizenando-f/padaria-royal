@@ -19,6 +19,8 @@ export class UsuarioService {
                 podeRegistrar: true,
                 podeAvaliar: true,
                 podeVerHistorico: true,
+                podeEditar: true,
+                podeExcluir: true,
                 horarioEntrada: true,
                 horarioSaida: true,
                 criadoEm: true
@@ -53,6 +55,8 @@ export class UsuarioService {
                 podeRegistrar: data.podeRegistrar,
                 podeAvaliar: data.podeAvaliar,
                 podeVerHistorico: data.podeVerHistorico,
+                podeEditar: data.podeEditar,
+                podeExcluir: data.podeExcluir,
                 horarioEntrada: data.horarioEntrada || null,
                 horarioSaida: data.horarioSaida || null,
             },

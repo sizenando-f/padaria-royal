@@ -54,7 +54,14 @@ export default function HistoricoProducao() {
     tempPrevMin: '', tempPrevMax: ''
   });
 
+  const { user } = useAuth();
+
   useEffect(() => {
+    if(user && user.cargo !== 'GERENTE' && !user.permissoes?.historico) {
+      router.push("/");
+      return;
+    }
+
     carregarDados();
   }, []);
 
@@ -441,13 +448,15 @@ export default function HistoricoProducao() {
 
                   {/* Ações (editar/excluir) */}
                   <div className="flex gap-1">
-                    <button
-                      onClick={() => router.push(`/avaliacao/${prod.id}`)}
-                      className="p-2 text-blue-500 hover:bg-blue-50 rounded-full transition-colors"
-                      title="Editar / Avaliar"
-                    >
-                      <Edit size={18} />
-                    </button>
+                    {(user?.cargo === 'GERENTE' || user?.permissoes?.editar) && (
+                      <button
+                        onClick={() => router.push(`/avaliacao/${prod.id}`)}
+                        className="p-2 text-blue-500 hover:bg-blue-50 rounded-full transition-colors"
+                        title="Editar / Avaliar"
+                      >
+                        <Edit size={18} />
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDelete(prod.id)}
                       className="p-2 text-red-400 hover:bg-red-50 rounded-full transition-colors"

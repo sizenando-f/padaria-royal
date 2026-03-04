@@ -295,17 +295,20 @@ export default function Home() {
           </p>
         </Link>
 
-        <Link href="/producao/historico" className="bg-white p-4 rounded-4xl shadow-sm border border-gray-100 active:scale-95 transition-transform">
+        {(user?.cargo === 'GERENTE' || user?.permissoes?.historico) && (
+          <Link href="/producao/historico" className="bg-white p-4 rounded-4xl shadow-sm border border-gray-100 active:scale-95 transition-transform">
           <div className="flex justify-between items-start mb-2">
-            <div className="bg-blue-50 text-blue-600 p-2.5 rounded-2xl">
-              <History size={20} />
+              <div className="bg-blue-50 text-blue-600 p-2.5 rounded-2xl">
+                <History size={20} />
+              </div>
             </div>
-          </div>
-          <h3 className="font-bold text-gray-800 text-sm">Histórico</h3>
-          <p className="text-[10px] text-gray-500 mt-0.5 font-medium">
-            Ver todas.
-          </p>
+            <h3 className="font-bold text-gray-800 text-sm">Histórico</h3>
+            <p className="text-[10px] text-gray-500 mt-0.5 font-medium">
+              Ver todas.
+            </p>
         </Link>
+        )}
+        
       </div>
     </div>
   );

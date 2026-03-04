@@ -106,6 +106,21 @@ export default function GestaoUsuario() {
         setModalAberto(true);
     }
 
+    function abrirModalNovo(){
+        setUsuarioEditando(null);
+
+        setFormData({
+            nome: "", email: "", senha: "", cargo: "PADEIRO",
+            podeRegistrar: false, podeAvaliar: false,
+            podeVerHistorico: false, podeEditar: false,
+            podeExcluir: false,
+            horarioEntrada: "05:00",
+            horarioSaida: "19:00"
+        });
+
+        setModalAberto(true);
+    }
+
     async function handleSalvar(e: React.FormEvent){
         e.preventDefault();
         setSalvando(true);
@@ -175,7 +190,7 @@ export default function GestaoUsuario() {
                         </div>
                     </div>
                     <button
-                        onClick={() => setModalAberto(true)}
+                        onClick={abrirModalNovo}
                         className="bg-orange-600 text-white px-4 py-2.5 rounded-2xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-orange-200 hover:bg-orange-700 active:scale-95 transition-all"
                     >
                         <UserPlus size={18}/> Novo Acesso
@@ -245,6 +260,16 @@ export default function GestaoUsuario() {
                                                 Histórico
                                             </span>
                                             }
+                                            {u.podeEditar && 
+                                            <span className="bg-yellow-50 text-yellow-700 text-[10px] font-bold px-2 py-1 rounded-md border border-yellow-100">
+                                                Editar
+                                            </span>
+                                            }
+                                            {u.podeExcluir && 
+                                            <span className="bg-red-50 text-red-700 text-[10px] font-bold px-2 py-1 rounded-md border border-red-100">
+                                                Excluir
+                                            </span>
+                                            }
                                             {!u.podeRegistrar && !u.podeAvaliar && !u.podeVerHistorico &&
                                             <span className="text-xs text-gray-400">
                                                 Sem Permissões
@@ -306,8 +331,8 @@ export default function GestaoUsuario() {
                                         <label className="text-xs font-bold text-gray-500 uppercase ml-1 block mb-1">
                                             Senha
                                         </label>
-                                        <input required type="password" className="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl text-sm outline-none focus:border-orange-400" value={formData.senha} 
-                                        onChange={e => setFormData({...formData, senha: e.target.value})} 
+                                        <input required={!usuarioEditando} type="password" className="w-full bg-gray-50 border border-gray-200 p-3 rounded-xl text-sm outline-none focus:border-orange-400" value={formData.senha} 
+                                        onChange={e => setFormData({...formData, senha: e.target.value})} placeholder={usuarioEditando ? "Deixe vazio para manter a senha" : ""}
                                         />
                                     </div>
                                 </div>
@@ -390,7 +415,7 @@ export default function GestaoUsuario() {
                                 <button disabled={salvando} type="submit" className="w-full bg-orange-600 text-white py-4 rounded-xl font-bold text-sm shadow-lg shadow-orange-200 hover:bg-orange-700 active:scale-95 transition-all flex justify-center items-center gap-2 mt-4">
                                     {salvando ? <Loader2 size={18} className="animate-spin"/> :
                                     <CheckCircle2 size={18}/>}
-                                    {salvando ? "Salvando..." : "Cadastrar Usuário"}
+                                    {salvando ? "Salvando..." : usuarioEditando ? "Salvar Alterações" : "Cadastrar Usuário"}
                                 </button>
                             </form>
                         </div>

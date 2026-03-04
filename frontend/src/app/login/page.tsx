@@ -30,12 +30,12 @@ export default function LoginPage() {
 
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.message || "Erro ao entrar");
+      if (!res.ok) throw new Error(data.message || "Erro ao fazer login");
 
       login(data.access_token, data.usuario);
     } catch (error: any) {
       setToast({
-        msg: "Email ou senha inválidos.",
+        msg: error.message,
         type: "error",
       });
       setLoading(false);
