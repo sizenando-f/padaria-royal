@@ -29,11 +29,6 @@ export class AvaliacaoController {
 
   @Get('dashboard')
   async dashboard(@Request() req) {
-    // Se for gerente, verifica se precisa de backup
-    if(req.user && req.user.cargo === 'GERENTE'){
-      this.backupService.verificarEExecutarBackup().catch(err => console.error(err));
-    }
-
     return this.avaliacaoService.getDashboardStats();
   }
 

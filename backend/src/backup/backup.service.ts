@@ -17,7 +17,7 @@ export class BackupService {
         private configService: ConfigService
     ){}
 
-    @Cron('0 0 18 * * *')   // Para rodar todos os dias as 18:00
+    @Cron('0 0 19 * * *')   // Para rodar todos os dias as 18:00
     async verificarEExecutarBackup() {
         const hoje = new Date().toLocaleDateString('pt-BR');
 
