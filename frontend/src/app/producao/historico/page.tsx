@@ -30,7 +30,7 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function HistoricoProducao() {
   const router = useRouter();
-  const { isGerente } = useAuth();
+  const { user, isGerente } = useAuth();
 
   const [producoes, setProducoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,16 +54,18 @@ export default function HistoricoProducao() {
     tempPrevMin: '', tempPrevMax: ''
   });
 
-  const { user } = useAuth();
 
   useEffect(() => {
-    if(user && user.cargo !== 'GERENTE' && !user.permissoes?.historico) {
-      router.push("/");
-      return;
+    // Trava de segurança
+    if(user){
+      if(!isGerente && !user.permissoes?.historico) {
+        router.push("/");
+        return;
+      }
     }
 
     carregarDados();
-  }, []);
+  }, [user, isGerente, router]);
 
   // Para pegar o header
   const getHeaders = () => {
