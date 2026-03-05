@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "src/prisma/prisma.service";
 import * as nodemailer from 'nodemailer';
 import { Parser } from "json2csv";
+import { Cron } from "@nestjs/schedule";
 
 @Injectable()
 export class BackupService {
@@ -16,6 +17,7 @@ export class BackupService {
         private configService: ConfigService
     ){}
 
+    @Cron('0 0 18 * * *')   // Para rodar todos os dias as 18:00
     async verificarEExecutarBackup() {
         const hoje = new Date().toLocaleDateString('pt-BR');
 

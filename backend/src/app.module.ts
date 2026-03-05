@@ -10,11 +10,13 @@ import { AuthModule } from './auth/auth.module';
 import { BackupModule } from './backup/backup.module';
 import { UsuarioModule } from './usuario/usuario.module';
 import { AdminModule } from './admin/admin.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     // Para o .env ficar disponível em todo sistema
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     ProducaoModule,
     AvaliacaoModule,
