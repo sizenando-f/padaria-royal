@@ -56,10 +56,7 @@ export class BackupService {
                 return {
                     // Esses cabeçalhos iguais aos que o 'importarDados'
                     'Fornada': `#${p.id}`,
-                    'Data/Hora': (() => {
-                        const d = new Date(p.horaInicio);
-                        return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`;
-                    }),
+                    'Data/Hora': new Date(p.horaInicio).toLocaleString('pt-BR'),
                     'Temperatura Inicial (°C)': p.tempAmbienteInicial,
                     'Temperatura Final Prevista (°C)': p.tempAmbienteFinal,
                     'Temperatura Final Real (°C)': p.avaliacao?.tempAmbienteFinalReal || '',
@@ -84,7 +81,7 @@ export class BackupService {
             });
 
             // Pega do .env se não tiver
-            const emailDestino = configBanco ? configBanco.valor : this.configService.get('EMAIIL_DESTINO');
+            const emailDestino = configBanco ? configBanco.valor : this.configService.get('EMAIL_DESTINO');
 
             // Configura o envio de email
             const transporter = nodemailer.createTransport({
@@ -114,7 +111,7 @@ export class BackupService {
 
             // Marca como feito
             this.lastBackupDate = hoje;
-            this.logger.log(`Backup enviado com sucesso para ${this.configService.get('EMAIL_DESTINO')}`);
+            this.logger.log(`Backup enviado com sucesso para ${emailDestino}`);
         } catch (error) {
             this.logger.error('Falha ao enviar backup:', error);
         } finally {

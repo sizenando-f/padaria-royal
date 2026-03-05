@@ -441,11 +441,20 @@ export class ProducaoService {
       return key ? obj[key] : null;
     };
 
+    const parseNum = (val: any) => {
+      if(!val) return 0;
+      // Garante que é string e converte vírgula para ponto
+      return parseFloat(String(val).replace(',','.').trim()) || 0;
+    }
+
     for await (const row of parser) {
       try {
         // Pegando dados de forma segura
-        const rawData = row['Data/Hora'] || row['data/hora'];
-        if (!rawData) continue;
+        const rawData = normalizeKey(row, 'data');
+        if (!rawData) {
+          console.log('Linha ignorada: Coluna de Data não encontrada.', row);
+          continue;
+        }
 
         const tempIni = normalizeKey(row, 'inicial');
         const tempFimPrev = normalizeKey(row, 'final prevista');
@@ -458,15 +467,23 @@ export class ProducaoService {
         const qualidadeStr = normalizeKey(row, 'qualidade');
 
         // Conversões
-
+        const partes = String(rawData).trim().split(/[ ,]+/);
         // Converte a data para ISO
-        const [dataPart, horaPart] = rawData.split(' ');
-        if (!dataPart || !horaPart) continue;
+        
+        const dataPart = partes[0]; // "05/03/2026"
+        const horaPart = partes[1] || "00:00:00";
 
-        const [dia, mes, ano] = dataPart.split('/');
+        const dataSplitted = dataPart.split('/');
+
+        if(dataSplitted.length !== 3){
+          console.log('Linha ignorada: Formato de data inválido.', rawData);
+          continue;
+        }
+
+        const [dia, mes, ano] = dataSplitted;
 
         // Data ISO para o bd
-        const dataISO = `${ano}-${mes}-${dia}T${horaPart}:00.000Z`;
+        const dataISO = `${ano}-${mes}-${dia}T${horaPart}.000Z`;
 
         // Mapear a nota
         const mapNota: Record<string, number> = {
@@ -484,14 +501,14 @@ export class ProducaoService {
           : 'bom';
         const nota = mapNota[notaStr] || 4;
 
-        // Converte trocando virgula por ponto
-        const parseNum = (val: string) =>
-          val ? parseFloat(val.replace(',', '.').trim()) : 0;
         const fermento = parseNum(fermentoStr);
         const farinha = parseNum(farinhaStr);
 
         // Pula pra evitar sujeira
-        if (farinha <= 0) continue;
+        if (farinha <= 0){
+          console.log('Linha ignorada: Farinha menor ou igual a zero.', farinhaStr);
+          continue;
+        }
 
         // Calcula o tempo
         const tempoHorasStr = normalizeKey(row, 'tempo ferment');
@@ -518,15 +535,17 @@ export class ProducaoService {
             tempAmbienteInicial: parseNum(tempIni),
             tempAmbienteFinal: parseNum(tempFimPrev),
             observacoes: obs || null,
-            avaliacao: {
-              create: {
-                nota: nota,
-                tempAmbienteFinalReal: tempFimReal
-                  ? parseNum(tempFimReal)
-                  : null,
-                comentario: coment || null,
+            ...(qualidadeStr && qualidadeStr.toLowerCase().trim() !== 'pendente' && {
+              avaliacao: {
+                create: {
+                  nota: nota,
+                  tempAmbienteFinalReal: tempFimReal
+                    ? parseNum(tempFimReal)
+                    : null,
+                  comentario: coment || null,
+                },
               },
-            },
+            })
           },
         });
 
