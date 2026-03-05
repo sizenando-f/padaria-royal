@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateProducaoDto } from './dto/create-producao.dto';
 import { UpdateProducaoDto } from './dto/update-producao.dto';
 import { PrismaService } from 'src/prisma/prisma.service'; // Importa o Prisma Service
@@ -110,21 +110,55 @@ export class ProducaoService {
     });
   }
 
-  async update(id: number, data: UpdateProducaoDto) {
+  async update(id: number, data: UpdateProducaoDto, usuario: any) {
+    const producao = await this.prisma.producao.findUnique({ where: { id }});
+
+    if(!producao){
+      throw new NotFoundException('Produção não encontrada.');
+    }
+
+    // Regra dos 3 dias para padeiros
+    if(usuario.cargo !== 'GERENTE'){
+      const dataProducao = new Date(producao.horaInicio);
+      const hoje = new Date();
+
+      const diferencaMs = hoje.getTime() - dataProducao.getTime();
+      const diferencaDias = diferencaMs / (1000 * 60 * 60 * 24);
+
+      if(diferencaDias > 3){
+        throw new UnauthorizedException('O prazo de tolerância expirou. Padeiros só podem editar produções de até 3 dias atrás.');
+      }
+    }
+
     return await this.prisma.producao.update({
       where: { id },
       data: data,
     });
   }
 
-  async remove(id: number) {
+  async remove(id: number, usuario: any) {
     // Verifica se existe
     const existe = await this.prisma.producao.findUnique({ where: { id } });
     if (!existe) {
       throw new Error('Produção não encontrada');
     }
 
-    // Apaga de vez
+    // Registra o log
+    await this.prisma.logExclusao.create({
+      data: {
+        usuarioNome: usuario.nome,
+        producaoId: id 
+      }
+    });
+
+    // Apaga avaliações vinculadas
+    await this.prisma.avaliacao.deleteMany({
+      where: {
+        producaoId: id
+      }
+    })
+
+    // Apaga a produção
     return await this.prisma.producao.delete({
       where: { id },
     });

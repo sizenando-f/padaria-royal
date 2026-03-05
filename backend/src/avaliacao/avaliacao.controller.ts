@@ -43,8 +43,12 @@ export class AvaliacaoController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAvaliacaoDto: UpdateAvaliacaoDto) {
-    return this.avaliacaoService.update(+id, updateAvaliacaoDto);
+  update(@Param('id') id: string, @Body() updateAvaliacaoDto: UpdateAvaliacaoDto, @Request() req) {
+    if(req.user.cargo !== 'GERENTE' && !req.user.permissoes.editar){
+      throw new UnauthorizedException('Você não tem permissão para editar avaliações.');
+    }
+    
+    return this.avaliacaoService.update(+id, updateAvaliacaoDto, req.user);
   }
 
   @Delete(':id')

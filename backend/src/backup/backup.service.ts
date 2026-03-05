@@ -76,6 +76,16 @@ export class BackupService {
             const json2csvParser = new Parser({ delimiter: ';' });
             const csvContent = json2csvParser.parse(dadosFormatados);
 
+            // Busca email no banco de dados
+            const configBanco = await this.prisma.configuracao.findUnique({
+                where: {
+                    chave: 'EMAIL_BACKUP'
+                }
+            });
+
+            // Pega do .env se não tiver
+            const emailDestino = configBanco ? configBanco.valor : this.configService.get('EMAIIL_DESTINO');
+
             // Configura o envio de email
             const transporter = nodemailer.createTransport({
                 service: 'gmail',
@@ -87,7 +97,7 @@ export class BackupService {
 
             const mailOptions = {
                 from: `"Sistema Royal" <${this.configService.get('EMAIL_USER')}>`,
-                to: this.configService.get('EMAIL_DESTINO'),
+                to: emailDestino,
                 subject: `Backup Diário - ${hoje} - Padaria Royal`,
                 text: `Olá gerente, \n\nSegue em anexo o backup completo dos dados do sistema referente ao dia ${hoje}.\n\nGuarde este arquivo em segurança. Pode ser usado para restaurar dados via importação.`,
                 attachments: [

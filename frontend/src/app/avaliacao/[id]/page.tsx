@@ -104,8 +104,8 @@ export default function RevisaoAvaliacao() {
 
     setSalvando(true);
     try {
-      // 1. Atualiza dados da produção (PATCH)
-      await fetch(`http://localhost:3000/producao/${params.id}`, {
+      // Atualiza dados da produção (PATCH)
+      const resProducao = await fetch(`http://localhost:3000/producao/${params.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -120,6 +120,11 @@ export default function RevisaoAvaliacao() {
             : null,
         }),
       });
+
+      if(!resProducao.ok){
+        const errData = await resProducao.json();
+        throw new Error(errData.message || "Erro ao atualizar os dados da fornada.");
+      }
 
       // Salva/Atualiza Avaliação
       const payloadAvaliacao = {

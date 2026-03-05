@@ -111,7 +111,7 @@ export class ProducaoController {
       throw new UnauthorizedException('Você não tem permissão para editar produções.');
     }
 
-    return this.producaoService.update(+id, updateProducaoDto);
+    return this.producaoService.update(+id, updateProducaoDto, req.user);
   }
 
   @Delete(':id')
@@ -120,6 +120,6 @@ export class ProducaoController {
       throw new UnauthorizedException('Você não tem permissão para excluir produções.');
     }
 
-    return this.producaoService.remove(+id);
+    return this.producaoService.remove(+id, req.user);
   }
 }

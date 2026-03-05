@@ -74,3 +74,19 @@ model Usuario {
   producoes Producao[]
   criadoEm  DateTime @default(now())
 }
+
+// Para guardar os logs de quem apagou
+model LogExclusao {
+  id            Int @id @default(autoincrement())
+  usuarioNome   String                    // Nome de quem apagou
+  producaoId    Int                       // ID da fornada apagada
+  dataExclusao  DateTime  @default(now()) // Data e hora
+}
+
+// Guardar informações globais do sistema
+model Configuracao {
+  id    Int @id @default(autoincrement())
+  chave String  @unique // Ex: "Email_Backup"
+  valor String          // Ex: "gerente@email.com"
+
+}

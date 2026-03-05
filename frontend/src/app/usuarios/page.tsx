@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { ArrowLeft, CheckCircle2, Clock, Loader2, Pencil, ShieldCheck, Trash2, UserPlus, Users, X } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, Loader2, Pencil, Settings, ShieldCheck, Trash2, UserPlus, Users, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Toast from "../components/Toast";
@@ -189,12 +189,21 @@ export default function GestaoUsuario() {
                             <p className="text-xs text-gray-500 font-medium">Gestão de acessos e permissões</p>
                         </div>
                     </div>
-                    <button
-                        onClick={abrirModalNovo}
-                        className="bg-orange-600 text-white px-4 py-2.5 rounded-2xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-orange-200 hover:bg-orange-700 active:scale-95 transition-all"
-                    >
-                        <UserPlus size={18}/> Novo Acesso
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={abrirModalNovo}
+                            className="bg-orange-600 text-white px-4 py-2.5 rounded-2xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-orange-200 hover:bg-orange-700 active:scale-95 transition-all"
+                        >
+                            <UserPlus size={18}/> Novo Acesso
+                        </button>
+                        <button
+                            onClick={() => router.push("/painel")}
+                            className="bg-gray-600 text-white px-4 py-2.5 rounded-2xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-gray-200 hover:bg-gray-700 active:scale-95 transition-all"
+                        >
+                            <Settings size={18}/> Painel
+                        </button>
+                    </div>
+                    
                 </div>
 
                 {/* Lista de usuários */}

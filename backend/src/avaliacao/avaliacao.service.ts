@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateAvaliacaoDto } from './dto/create-avaliacao.dto';
 import { UpdateAvaliacaoDto } from './dto/update-avaliacao.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -42,14 +42,32 @@ export class AvaliacaoService {
     return `This action returns a #${id} avaliacao`;
   }
 
-  async update(id: number, data: UpdateAvaliacaoDto) {
+  async update(id: number, data: UpdateAvaliacaoDto, usuario: any) {
+    const avaliacao = await this.prisma.avaliacao.findUnique({
+      where: { id },
+      include: { producao: true } // Data da produção
+    });
+
+    if(!avaliacao) {
+      throw new NotFoundException('Avaliação não encontrada.');
+    }
+
+    // Regra dos 3 dias
+    if(usuario.cargo !== 'GERENTE'){
+      const dataProducao = new Date(avaliacao.producao.horaInicio);
+      const hoje = new Date();
+
+      const diferencaMs = hoje.getTime() - dataProducao.getTime();
+      const diferencaDias = diferencaMs / (1000 * 60 * 60 * 24);
+
+      if(diferencaDias > 3){
+        throw new UnauthorizedException('O prazo expirou. Só é possível editar avaliações de até 3 dias atrás.')
+      }
+    }
+
     return await this.prisma.avaliacao.update({
       where: { id },
-      data: {
-        nota: data.nota,
-        tempAmbienteFinalReal: data.tempAmbienteFinalReal,
-        comentario: data.comentario,
-      },
+      data: data,
     });
   }
 
