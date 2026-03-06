@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { AlertTriangle, ArrowLeft, History, Loader2, Mail, Save } from "lucide-react";
+import { AlertTriangle, ArrowLeft, History, Loader2, Mail, Save, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Toast from "../components/Toast";
@@ -15,6 +15,11 @@ export default function PainelGerencial() {
     const [loading, setLoading] = useState(true);
     const [salvandoEmail, setSalvandoEmail] = useState(false);
     const [toast, setToast] = useState<{msg: string, type: "success"|"error"} | null>(null);
+
+    // Estados para a zona de perigo
+    const [modalResetAberto, setModalResetAberto] = useState(false);
+    const [fraseConfirmacao, setFraseConfirmacao] = useState("");
+    const [apagando, setApagando] = useState(false);
 
     const getHeaders = () => ({
         "Authorization": `Bearer ${localStorage.getItem('royal_token')}`,
@@ -80,6 +85,34 @@ export default function PainelGerencial() {
         }
     }
 
+    async function handleApagarHistorico(){
+        if(fraseConfirmacao !== "quero-apagar-meu-historico") return;
+
+        setApagando(true);
+        try{
+            const res = await fetch("http://localhost:3000/admin/historico/reset", {
+                method: "DELETE",
+                headers: getHeaders()
+            });
+
+            if(!res.ok) throw new Error("Erro ao apagar histórico.");
+
+            setToast({
+                msg: "Histórico obliterado com sucesso! IDs resetados.",
+                type: "success"
+            });
+            setModalResetAberto(false);
+            setFraseConfirmacao(""); // Limpa o input
+        } catch(error){
+            setToast({
+                msg: "Falha ao apagar o sistema",
+                type: "error"
+            });
+        } finally{
+            setApagando(false);
+        }
+    }
+
     if(loading) return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50">
             <Loader2 className="animate-spin text-orange-500" size={32}/>
@@ -129,6 +162,85 @@ export default function PainelGerencial() {
                         </button>
                     </form>
                 </div>
+
+                {/* ZONA DE PERIGO */}
+                <div className="bg-red-50 p-6 rounded-4xl shadow-sm border border-red-200 mt-8">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="p-3 bg-red-100 text-red-600 rounded-2xl">
+                            <AlertTriangle size={24} />
+                        </div>
+                        <div>
+                            <h2 className="font-bold text-red-900 text-lg">Zona de Perigo</h2>
+                            <p className="text-xs text-red-700">Ações irreversíveis do sistema</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-white p-4 rounded-2xl border border-red-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div>
+                            <h3 className="text-sm font-bold text-gray-900">Apagar Todo o Histórico</h3>
+                            <p className="text-xs text-gray-500 mt-1">Isso apagará todas as produções, avaliações. Não há volta</p>
+                        </div>
+                        <button onClick={() => setModalResetAberto(true)}
+                            className="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-4 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap"
+                            >
+                            Resetar Sistema
+                        </button>
+                    </div>
+                </div>
+
+                {modalResetAberto && (
+                    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-center items-center p-4 animate-fade-in">
+                        <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 animate-slide-up">
+                            <div className="flex items-center gap-3 text-red-600 mb-4">
+                                <AlertTriangle size={28}/>
+                                <h2 className="font-bold text-xl text-gray-900">Você tem certeza absoluta?</h2>
+                            </div>
+                            
+                            <p className="text-sm text-gray-600 mb-4">
+                                Esta ação vai apagar permanentemente todas as fornadas e notas registradas na base de dados.
+                            </p>
+                            
+                            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6">
+                                <p className="text-xs text-gray-500 font-bold mb-2 uppercase">
+                                    Para confirmar, digite abaixo:
+                                </p>
+                                <code className="block bg-white border border-gray-200 p-2 rounded-lg text-red-600 font-mono text-sm text-center font-bold mb-3 select-all">
+                                    quero-apagar-meu-historico
+                                </code>
+                                <input type="text" 
+                                className="w-full bg-white border border-gray-300 p-3 rounded-lg text-sm outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 font-mono"
+                                value={fraseConfirmacao}
+                                onChange={e => setFraseConfirmacao(e.target.value)}
+                                placeholder="Digite a frase exata..."
+                                autoComplete="off"
+                                />
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button onClick={() => {
+                                    setModalResetAberto(false);
+                                    setFraseConfirmacao("");
+                                }}
+                                className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleApagarHistorico}
+                                    disabled={fraseConfirmacao !== "quero-apagar-meu-historico" || apagando}
+                                    className={`flex-1 py-3 rounded-xl font-bold text-sm flex justify-center items-center gap-2 transition-all ${
+                                        fraseConfirmacao === "quero-apagar-meu-historico"
+                                        ? "bg-red-600 text-white hover::bg-red-700 shadow-lg shadow-red-200"
+                                        : "bg-red-100 text-red-300 cursor-not-allowed"
+                                    }`}
+                                >
+                                    {apagando ? <Loader2 size={18} className="animate-spin"/> : <Trash2 size={18}/>}
+                                    Apagar Tudo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Logs */}
                 <div className="bg-white p-6 rounded-4xl shadow-sm border border-gray-100">

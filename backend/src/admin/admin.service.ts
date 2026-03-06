@@ -42,4 +42,21 @@ export class AdminService {
             },
         });
     }
+
+    async apagarHistoricoTotal(){
+        try{
+            // Apaga e força o contador voltar a 1
+            await this.prisma.$executeRawUnsafe(`TRUNCATE TABLE "Producao" RESTART IDENTITY CASCADE;`);
+        
+            // Reseta os logs
+            await this.prisma.$executeRawUnsafe(`TRUNCATE TABLE "LogExclusao" RESTART IDENTITY CASCADE;`);
+        
+            return {
+                message: "Histórico completamente apagado e IDs resetados para 1."
+            };
+        } catch (error){
+            throw new Error("Falha ao resetar o banco de dados.");
+        }
+    }
+
 }

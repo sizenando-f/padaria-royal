@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Request, UnauthorizedException, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Patch, Request, UnauthorizedException, UseGuards } from "@nestjs/common";
 import { AuthGuard } from "src/auth/auth.guard";
 import { AdminService } from "./admin.service";
 
@@ -27,5 +27,11 @@ export class AdminController {
     updateEmail(@Body() body: { email: string}, @Request() req){
         this.verificarGerente(req);
         return this.adminService.updateEmailBackup(body.email);
+    }
+
+    @Delete('historico/reset')
+    async resetarHistorico(@Request() req){
+        this.verificarGerente(req);
+        return this.adminService.apagarHistoricoTotal();
     }
 }
