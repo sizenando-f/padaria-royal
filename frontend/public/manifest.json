@@ -1,0 +1,16 @@
+{
+    "name": "Padaria Royal MRP",
+    "short_name": "Royal MRP",
+    "description": "Sistema de Controle de Produção e Qualidade",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#f9fafb",
+    "theme_color": "#f97316",
+    "icons": [
+        {
+            "src": "/favicon.icon",
+            "sizes": "64x64",
+            "type": "image/x-icon"
+        }
+    ]
+}

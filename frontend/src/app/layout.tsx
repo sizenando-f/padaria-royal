@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import MobileNav from "./components/MobileNav";
@@ -19,9 +19,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Padaria Royal",
-  description: "Sistema MRP de Gerenciamento de Produção e Predição de Insumos",
+  title: "Padaria Royal - MRP",
+  description: "Sistema de Controle de Produção e Qualidade",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Royal MRP"
+  },
 };
+
+export const viewport: Viewport = {
+  themeColor: "#f97316",
+}
 
 export default function RootLayout({
   children,
