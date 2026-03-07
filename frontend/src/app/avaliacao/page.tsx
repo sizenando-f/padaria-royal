@@ -40,7 +40,7 @@ export default function ListaPendentes() {
 
         // Busca todas as produções e filtra no front ou usa rota específica se tiver
         // Assumindo que sua rota /producao retorna tudo, filtramos aqui ou usamos rota dedicada
-        const response = await fetch("http://localhost:3000/producao", {
+        const response = await fetch("hhttps://padaria-royal-api.onrender.com/producao", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.status === 401) {
@@ -73,7 +73,7 @@ export default function ListaPendentes() {
 
     try {
       const token = localStorage.getItem('royal_token');
-      const res = await fetch(`http://localhost:3000/producao/${id}`, {
+      const res = await fetch(`hhttps://padaria-royal-api.onrender.com/producao/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`

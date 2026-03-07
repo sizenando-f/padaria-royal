@@ -51,7 +51,7 @@ export default function RevisaoAvaliacao() {
     async function fetchProducao() {
       try {
         const response = await fetch(
-          `http://localhost:3000/producao/${params.id}`,
+          `hhttps://padaria-royal-api.onrender.com/producao/${params.id}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("royal_token")}`,
@@ -105,7 +105,7 @@ export default function RevisaoAvaliacao() {
     setSalvando(true);
     try {
       // Atualiza dados da produção (PATCH)
-      const resProducao = await fetch(`http://localhost:3000/producao/${params.id}`, {
+      const resProducao = await fetch(`hhttps://padaria-royal-api.onrender.com/producao/${params.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -135,8 +135,8 @@ export default function RevisaoAvaliacao() {
       };
 
       const url = avaliacaoId
-        ? `http://localhost:3000/avaliacao/${avaliacaoId}`
-        : "http://localhost:3000/avaliacao";
+        ? `hhttps://padaria-royal-api.onrender.com/avaliacao/${avaliacaoId}`
+        : "hhttps://padaria-royal-api.onrender.com/avaliacao";
 
       const method = avaliacaoId ? "PATCH" : "POST";
 

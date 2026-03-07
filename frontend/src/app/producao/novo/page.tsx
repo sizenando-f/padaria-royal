@@ -113,7 +113,7 @@ export default function NovaProducao() {
       }).toString();
 
       const res = await fetch(
-        `http://localhost:3000/producao/clima-previsao?${query}`,
+        `hhttps://padaria-royal-api.onrender.com/producao/clima-previsao?${query}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -194,7 +194,7 @@ export default function NovaProducao() {
     try {
       const token = localStorage.getItem("royal_token");
 
-      let url = `http://localhost:3000/producao/sugestao?farinha=${farinha}`;
+      let url = `hhttps://padaria-royal-api.onrender.com/producao/sugestao?farinha=${farinha}`;
       if (tIni) url += `&temp=${tIni}`;
       if (tFim) url += `&tempFim=${tFim}`;
       if (minutosAlvo) url += `&minutos=${minutosAlvo}`;
@@ -266,7 +266,7 @@ export default function NovaProducao() {
           : null,
       };
 
-      const res = await fetch("http://localhost:3000/producao", {
+      const res = await fetch("hhttps://padaria-royal-api.onrender.com/producao", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -44,7 +44,7 @@ export default function GestaoUsuario() {
 
     async function carregarUsuarios() {
         try {
-            const res = await fetch("http://localhost:3000/usuario",
+            const res = await fetch("hhttps://padaria-royal-api.onrender.com/usuario",
                 {
                     headers: getHeaders()
                 }
@@ -70,7 +70,7 @@ export default function GestaoUsuario() {
         if(!confirm(`Tem certeza que deseja demitir/excluir o acesso de ${nome}?`)) return;
 
         try {
-            const res = await fetch(`http://localhost:3000/usuario/${id}`, {
+            const res = await fetch(`hhttps://padaria-royal-api.onrender.com/usuario/${id}`, {
                 method: "DELETE",
                 headers: getHeaders()
             });
@@ -126,8 +126,8 @@ export default function GestaoUsuario() {
         setSalvando(true);
 
         try {
-            const url = usuarioEditando ? `http://localhost:3000/usuario/${usuarioEditando}`
-            : "http://localhost:3000/usuario";
+            const url = usuarioEditando ? `hhttps://padaria-royal-api.onrender.com/usuario/${usuarioEditando}`
+            : "hhttps://padaria-royal-api.onrender.com/usuario";
 
             const method = usuarioEditando ? "PATCH" : "POST";
 
