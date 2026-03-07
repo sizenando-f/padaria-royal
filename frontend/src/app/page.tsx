@@ -205,7 +205,7 @@ export default function Home() {
       {/* Seção de BI */}
       {loading ? (
         <div className="py-10 text-center text-gray-400 text-sm">Carregando indicadores...</div>
-      ) : stats ? (
+      ) : stats && stats.geral && stats.mes ? (
         <div className="space-y-4 mb-6">
           {/* Dois donuts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -274,7 +274,13 @@ export default function Home() {
                 </div>
             </div>
         </div>
-      ) : null}
+      ) : (
+        <div className="py-10 mb-6 text-center text-gray-400 text-sm bg-white rounded-4xl border border-dashed border-gray-200 shadow-sm flex flex-col items-center justify-center gap-2">
+          <TrendingUp size={32} className="text-gray-300"/>
+          <p className="font-bold text-gray-500">Dashboard Vazio</p>
+          <p>Faça sua primeira fornada e avalie para gerar as estatísticas!</p>
+        </div>
+      )}
 
       {/* Atalhos */}
       <div className="grid grid-cols-2 gap-4">

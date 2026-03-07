@@ -7,7 +7,7 @@ async function bootstrap() {
 
   // Libera o Frontend
   app.enableCors({
-    origin: 'http://localhost:3001',  // Só deixa o nosso front entrar
+    origin: '*', 
     methods: 'GET, HEAD, PUT, PATCH, POST, DELETE',
     credentials: true,
   })
@@ -19,6 +19,6 @@ async function bootstrap() {
     forbidNonWhitelisted: true,   // Dá erro se mandarem campo extra
   }))
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 3000, '0.0.0.0');
 }
 bootstrap();

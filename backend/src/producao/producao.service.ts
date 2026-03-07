@@ -442,7 +442,7 @@ export class ProducaoService {
     };
 
     const parseNum = (val: any) => {
-      if(!val) return 0;
+      if(!val || String(val).toUpperCase().trim() === 'N/A') return 0;
       // Garante que é string e converte vírgula para ponto
       return parseFloat(String(val).replace(',','.').trim()) || 0;
     }
@@ -466,12 +466,19 @@ export class ProducaoService {
         const emulsifStr = normalizeKey(row, 'ml emulsificante');
         const qualidadeStr = normalizeKey(row, 'qualidade');
 
+        // Para adaptar do sistema antigo
+        const statusStr = normalizeKey(row, 'status');
+
         // Conversões
         const partes = String(rawData).trim().split(/[ ,]+/);
         // Converte a data para ISO
         
         const dataPart = partes[0]; // "05/03/2026"
-        const horaPart = partes[1] || "00:00:00";
+        let horaPart = partes[1] || "00:00:00";
+
+        if (horaPart.split(':').length === 2){
+          horaPart += ':00';
+        }
 
         const dataSplitted = dataPart.split('/');
 
@@ -484,6 +491,12 @@ export class ProducaoService {
 
         // Data ISO para o bd
         const dataISO = `${ano}-${mes}-${dia}T${horaPart}.000Z`;
+        const parsedDate = new Date(dataISO);
+
+        if(isNaN(parsedDate.getTime())){
+          console.log('Linha ignorada: Data resultante inválida.', dataISO);
+          continue;
+        }
 
         // Mapear a nota
         const mapNota: Record<string, number> = {
@@ -519,6 +532,11 @@ export class ProducaoService {
         const obs = normalizeKey(row, 'observa');
         const coment = normalizeKey(row, 'coment');
 
+        const ehPendente = 
+            (statusStr && statusStr.toLowerCase().trim() === 'pendente') ||
+            (qualidadeStr && qualidadeStr.toLowerCase().trim() === 'n/a') ||
+            (qualidadeStr && qualidadeStr.toLowerCase().trim() === 'pendente');
+
         // Insere no banco
         await this.prisma.producao.create({
           data: {
@@ -534,15 +552,16 @@ export class ProducaoService {
             emulsificanteMl: parseNum(emulsifStr),
             tempAmbienteInicial: parseNum(tempIni),
             tempAmbienteFinal: parseNum(tempFimPrev),
-            observacoes: obs || null,
-            ...(qualidadeStr && qualidadeStr.toLowerCase().trim() !== 'pendente' && {
+            observacoes: obs && String(obs).toUpperCase() !== 'N/A' ? obs : null,
+
+            ...(!ehPendente && {
               avaliacao: {
                 create: {
                   nota: nota,
-                  tempAmbienteFinalReal: tempFimReal
+                  tempAmbienteFinalReal: tempFimReal && String(tempFimReal).toUpperCase() !== 'N/A'
                     ? parseNum(tempFimReal)
                     : null,
-                  comentario: coment || null,
+                  comentario: coment && String(coment).toUpperCase() !== 'N/A' ? coment : null,
                 },
               },
             })
