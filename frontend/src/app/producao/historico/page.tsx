@@ -77,8 +77,8 @@ export default function HistoricoProducao() {
     setLoading(true);
     
     try {
-      const url = queryParams ? `hhttps://padaria-royal-api.onrender.com/producao/filtrar?${queryParams}`
-      : 'hhttps://padaria-royal-api.onrender.com/producao';
+      const url = queryParams ? `https://padaria-royal-api.onrender.com/producao/filtrar?${queryParams}`
+      : 'https://padaria-royal-api.onrender.com/producao';
 
       const res = await fetch(url, {
         headers: getHeaders(),
@@ -140,7 +140,7 @@ export default function HistoricoProducao() {
   // Blob
   const handleExportar = async () => {
     try {
-      const res = await fetch("hhttps://padaria-royal-api.onrender.com/producao/exportar", {
+      const res = await fetch("https://padaria-royal-api.onrender.com/producao/exportar", {
         method: "GET",
         headers: getHeaders(), // Envia o token
       });
@@ -174,7 +174,7 @@ export default function HistoricoProducao() {
 
     try {
       const token = localStorage.getItem("royal_token");
-      const res = await fetch("hhttps://padaria-royal-api.onrender.com/producao/importar", {
+      const res = await fetch("https://padaria-royal-api.onrender.com/producao/importar", {
         method: "POST",
         body: formData,
         headers: { Authorization: `Bearer ${token}` },
@@ -196,7 +196,7 @@ export default function HistoricoProducao() {
     if (!confirm("Tem certeza que deseja excluir a fornada #" + id + "?"))
       return;
     try {
-      const res = await fetch(`hhttps://padaria-royal-api.onrender.com/producao/${id}`, {
+      const res = await fetch(`https://padaria-royal-api.onrender.com/producao/${id}`, {
         method: "DELETE",
         headers: getHeaders(),
       });

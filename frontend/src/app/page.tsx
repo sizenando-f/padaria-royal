@@ -44,7 +44,7 @@ export default function Home() {
         };
 
         // Busca Pendências
-        const resProd = await fetch("hhttps://padaria-royal-api.onrender.com/producao", {
+        const resProd = await fetch("https://padaria-royal-api.onrender.com/producao", {
           headers,
         });
         if (resProd.status === 401) {
@@ -62,7 +62,7 @@ export default function Home() {
 
         // Busca Estatísticas do Gráfico usando Token
         const resStats = await fetch(
-          "hhttps://padaria-royal-api.onrender.com/avaliacao/dashboard",
+          "https://padaria-royal-api.onrender.com/avaliacao/dashboard",
           { headers },
         );
         const dataStats = await resStats.json();

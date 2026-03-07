@@ -37,14 +37,14 @@ export default function PainelGerencial() {
     async function carregarDados() {
         try {
             // Busca o email atual
-            const resEmail = await fetch("hhttps://padaria-royal-api.onrender.com/admin/config/email",
+            const resEmail = await fetch("https://padaria-royal-api.onrender.com/admin/config/email",
                 { headers: getHeaders()}
             );
             const dataEmail = await resEmail.json();
             if(dataEmail.email) setEmailBackup(dataEmail.email);
 
             // Busca os logs
-            const resLogs = await fetch("hhttps://padaria-royal-api.onrender.com/admin/logs", { headers: getHeaders()});
+            const resLogs = await fetch("https://padaria-royal-api.onrender.com/admin/logs", { headers: getHeaders()});
             const dataLogs = await resLogs.json();
             setLogs(dataLogs);
 
@@ -63,7 +63,7 @@ export default function PainelGerencial() {
         setSalvandoEmail(true);
 
         try {
-            const res = await fetch("hhttps://padaria-royal-api.onrender.com/admin/config/email", {
+            const res = await fetch("https://padaria-royal-api.onrender.com/admin/config/email", {
                 method: "PATCH",
                 headers: getHeaders(),
                 body: JSON.stringify({ email: emailBackup })
@@ -90,7 +90,7 @@ export default function PainelGerencial() {
 
         setApagando(true);
         try{
-            const res = await fetch("hhttps://padaria-royal-api.onrender.com/admin/historico/reset", {
+            const res = await fetch("https://padaria-royal-api.onrender.com/admin/historico/reset", {
                 method: "DELETE",
                 headers: getHeaders()
             });
