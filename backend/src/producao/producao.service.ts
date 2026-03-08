@@ -417,23 +417,20 @@ export class ProducaoService {
 
   async importarDados(buffer: Buffer) {
     const bufferString = buffer.toString('utf-8');
-
     const stream = Readable.from(bufferString);
 
     const parser = stream.pipe(
       parse({
         delimiter: ';',
-        columns: true, // Usa a primeira linha como cabeçalho
-        trim: true, // Remove espaços em branco
-        bom: true, // Remove caracteres invisíveis do Excel
-        relax_column_count: true, // Ignora erros de colunas vazias no final
+        columns: true,
+        trim: true,
+        bom: true,
+        relax_column_count: true,
         skip_empty_lines: true,
       }),
     );
 
-    let importados = 0;
-    let erros = 0;
-
+    // Helpers
     const normalizeKey = (obj: any, keyPart: string) => {
       const key = Object.keys(obj).find((k) =>
         k.toLowerCase().includes(keyPart.toLowerCase()),
@@ -442,143 +439,173 @@ export class ProducaoService {
     };
 
     const parseNum = (val: any) => {
-      if(!val || String(val).toUpperCase().trim() === 'N/A') return 0;
-      // Garante que é string e converte vírgula para ponto
-      return parseFloat(String(val).replace(',','.').trim()) || 0;
-    }
+      if (!val || String(val).toUpperCase().trim() === 'N/A') return 0;
+      return parseFloat(String(val).replace(',', '.').trim()) || 0;
+    };
+
+    // Lê todo o CSV e monta os dados em memória
+    type DadosLinha = {
+      dataProducao: string;
+      horaInicio: string;
+      horaFim: string;
+      tempoFermentacaoMinutos: number;
+      farinhaKg: number;
+      fermentoGrama: number;
+      emulsificanteMl: number;
+      tempAmbienteInicial: number;
+      tempAmbienteFinal: number;
+      observacoes: string | null;
+      ehPendente: boolean;
+      nota: number;
+      tempFimReal: number | null;
+      comentario: string | null;
+    };
+
+    const linhasValidas: DadosLinha[] = [];
+    let erros = 0;
 
     for await (const row of parser) {
       try {
-        // Pegando dados de forma segura
         const rawData = normalizeKey(row, 'data');
         if (!rawData) {
           console.log('Linha ignorada: Coluna de Data não encontrada.', row);
           continue;
         }
 
-        const tempIni = normalizeKey(row, 'inicial');
+        const tempIni     = normalizeKey(row, 'inicial');
         const tempFimPrev = normalizeKey(row, 'final prevista');
         const tempFimReal = normalizeKey(row, 'final real');
 
-        // Ingredientes
-        const farinhaStr = normalizeKey(row, 'quilos farinha');
-        const fermentoStr = normalizeKey(row, 'gramas fermento');
-        const emulsifStr = normalizeKey(row, 'ml emulsificante');
-        const qualidadeStr = normalizeKey(row, 'qualidade');
+        const farinhaStr    = normalizeKey(row, 'quilos farinha');
+        const fermentoStr   = normalizeKey(row, 'gramas fermento');
+        const emulsifStr    = normalizeKey(row, 'ml emulsificante');
+        const qualidadeStr  = normalizeKey(row, 'qualidade');
+        const statusStr     = normalizeKey(row, 'status');
 
-        // Para adaptar do sistema antigo
-        const statusStr = normalizeKey(row, 'status');
+        const partes    = String(rawData).trim().split(/[ ,]+/);
+        const dataPart  = partes[0];
+        let horaPart    = partes[1] || '00:00:00';
 
-        // Conversões
-        const partes = String(rawData).trim().split(/[ ,]+/);
-        // Converte a data para ISO
-        
-        const dataPart = partes[0]; // "05/03/2026"
-        let horaPart = partes[1] || "00:00:00";
-
-        if (horaPart.split(':').length === 2){
-          horaPart += ':00';
-        }
+        if (horaPart.split(':').length === 2) horaPart += ':00';
 
         const dataSplitted = dataPart.split('/');
-
-        if(dataSplitted.length !== 3){
+        if (dataSplitted.length !== 3) {
           console.log('Linha ignorada: Formato de data inválido.', rawData);
           continue;
         }
 
         const [dia, mes, ano] = dataSplitted;
-
-        // Data ISO para o bd
-        const dataISO = `${ano}-${mes}-${dia}T${horaPart}.000Z`;
+        const dataISO   = `${ano}-${mes}-${dia}T${horaPart}.000Z`;
         const parsedDate = new Date(dataISO);
 
-        if(isNaN(parsedDate.getTime())){
+        if (isNaN(parsedDate.getTime())) {
           console.log('Linha ignorada: Data resultante inválida.', dataISO);
           continue;
         }
 
-        // Mapear a nota
         const mapNota: Record<string, number> = {
-          excelente: 5,
-          bom: 4,
-          razoavel: 3,
-          regular: 3,
-          ruim: 2,
-          pessimo: 1,
-          péssimo: 1,
+          excelente: 5, bom: 4, razoavel: 3,
+          regular: 3,  ruim: 2, pessimo: 1, péssimo: 1,
         };
 
-        const notaStr = qualidadeStr
-          ? qualidadeStr.toLowerCase().trim()
-          : 'bom';
-        const nota = mapNota[notaStr] || 4;
+        const notaStr = qualidadeStr ? qualidadeStr.toLowerCase().trim() : 'bom';
+        const nota    = mapNota[notaStr] || 4;
 
         const fermento = parseNum(fermentoStr);
-        const farinha = parseNum(farinhaStr);
+        const farinha  = parseNum(farinhaStr);
 
-        // Pula pra evitar sujeira
-        if (farinha <= 0){
+        if (farinha <= 0) {
           console.log('Linha ignorada: Farinha menor ou igual a zero.', farinhaStr);
           continue;
         }
 
-        // Calcula o tempo
         const tempoHorasStr = normalizeKey(row, 'tempo ferment');
-        const minutos = tempoHorasStr
-          ? Math.round(parseNum(tempoHorasStr) * 60)
-          : 0;
+        const minutos = tempoHorasStr ? Math.round(parseNum(tempoHorasStr) * 60) : 0;
 
-        const obs = normalizeKey(row, 'observa');
+        const obs    = normalizeKey(row, 'observa');
         const coment = normalizeKey(row, 'coment');
 
-        const ehPendente = 
-            (statusStr && statusStr.toLowerCase().trim() === 'pendente') ||
-            (qualidadeStr && qualidadeStr.toLowerCase().trim() === 'n/a') ||
-            (qualidadeStr && qualidadeStr.toLowerCase().trim() === 'pendente');
+        const ehPendente =
+          (statusStr    && statusStr.toLowerCase().trim()    === 'pendente') ||
+          (qualidadeStr && qualidadeStr.toLowerCase().trim() === 'n/a')      ||
+          (qualidadeStr && qualidadeStr.toLowerCase().trim() === 'pendente');
 
-        // Insere no banco
-        await this.prisma.producao.create({
-          data: {
-            dataProducao: `${ano}-${mes}-${dia}T00:00:00.000Z`,
-            horaInicio: dataISO,
-            // Calcula hora fim baseado no tempo de fermentação
-            horaFim: new Date(
-              new Date(dataISO).getTime() + minutos * 60000,
-            ).toISOString(),
-            tempoFermentacaoMinutos: minutos,
-            farinhaKg: farinha,
-            fermentoGrama: fermento,
-            emulsificanteMl: parseNum(emulsifStr),
-            tempAmbienteInicial: parseNum(tempIni),
-            tempAmbienteFinal: parseNum(tempFimPrev),
-            observacoes: obs && String(obs).toUpperCase() !== 'N/A' ? obs : null,
-
-            ...(!ehPendente && {
-              avaliacao: {
-                create: {
-                  nota: nota,
-                  tempAmbienteFinalReal: tempFimReal && String(tempFimReal).toUpperCase() !== 'N/A'
-                    ? parseNum(tempFimReal)
-                    : null,
-                  comentario: coment && String(coment).toUpperCase() !== 'N/A' ? coment : null,
-                },
-              },
-            })
-          },
+        linhasValidas.push({
+          dataProducao:           `${ano}-${mes}-${dia}T00:00:00.000Z`,
+          horaInicio:             dataISO,
+          horaFim:                new Date(new Date(dataISO).getTime() + minutos * 60000).toISOString(),
+          tempoFermentacaoMinutos: minutos,
+          farinhaKg:              farinha,
+          fermentoGrama:          fermento,
+          emulsificanteMl:        parseNum(emulsifStr),
+          tempAmbienteInicial:    parseNum(tempIni),
+          tempAmbienteFinal:      parseNum(tempFimPrev),
+          observacoes:            obs && String(obs).toUpperCase() !== 'N/A' ? obs : null,
+          ehPendente:             !!ehPendente,
+          nota,
+          tempFimReal:            tempFimReal && String(tempFimReal).toUpperCase() !== 'N/A'
+                                    ? parseNum(tempFimReal)
+                                    : null,
+          comentario:             coment && String(coment).toUpperCase() !== 'N/A' ? coment : null,
         });
 
-        importados++;
-      } catch (error) {
-        console.error(
-          `Erro ao importar linha ${importados + erros + 1}`,
-          error.message,
-        );
+      } catch (error: any) {
+        console.error(`Erro ao processar linha ${linhasValidas.length + erros + 1}`, error.message);
         erros++;
       }
     }
+
+    // Envia pro banco em lotes de 50 usando $transaction.
+    const TAMANHO_LOTE = 50;
+    let importados = 0;
+
+    for (let i = 0; i < linhasValidas.length; i += TAMANHO_LOTE) {
+      const lote = linhasValidas.slice(i, i + TAMANHO_LOTE);
+
+      try {
+        await this.prisma.$transaction(async (tx) => {
+          await Promise.all(
+            lote.map((linha) =>
+              tx.producao.create({
+                data: {
+                  dataProducao:            linha.dataProducao,
+                  horaInicio:              linha.horaInicio,
+                  horaFim:                 linha.horaFim,
+                  tempoFermentacaoMinutos: linha.tempoFermentacaoMinutos,
+                  farinhaKg:               linha.farinhaKg,
+                  fermentoGrama:           linha.fermentoGrama,
+                  emulsificanteMl:         linha.emulsificanteMl,
+                  tempAmbienteInicial:     linha.tempAmbienteInicial,
+                  tempAmbienteFinal:       linha.tempAmbienteFinal,
+                  observacoes:             linha.observacoes,
+
+                  ...(!linha.ehPendente && {
+                    avaliacao: {
+                      create: {
+                        nota:                 linha.nota,
+                        tempAmbienteFinalReal: linha.tempFimReal,
+                        comentario:            linha.comentario,
+                      },
+                    },
+                  }),
+                },
+              }),
+            ),
+          );
+        });
+
+        importados += lote.length;
+      } catch (error: any) {
+        console.error(
+          `Erro no lote ${Math.floor(i / TAMANHO_LOTE) + 1} (linhas ${i + 1}–${i + lote.length}):`,
+          error.message,
+        );
+        erros += lote.length;
+      }
+    }
+
     return {
-      mensagem: `Processamento finalizado. Importados: ${importados}. Erros/Ignorados: ${erros}`,
+      mensagem: `Importação finalizada. Importados: ${importados}. Erros/Ignorados: ${erros}`,
     };
   }
 
