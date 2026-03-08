@@ -416,6 +416,17 @@ export class ProducaoService {
   }
 
   async importarDados(buffer: Buffer) {
+    // Dispara o processamento em background sem await.
+    this.processarImportacao(buffer).catch((err) => {
+      this.logger.error('Erro fatal na importação em background: ' + err.message);
+    });
+
+    return {
+      mensagem: 'Importação iniciada! Aguarde cerca de 1 minuto e recarregue o histórico para ver os dados.',
+    };
+  }
+
+  private async processarImportacao(buffer: Buffer) {
     const bufferString = buffer.toString('utf-8');
     const stream = Readable.from(bufferString);
 
@@ -443,7 +454,7 @@ export class ProducaoService {
       return parseFloat(String(val).replace(',', '.').trim()) || 0;
     };
 
-    // Lê todo o CSV e monta os dados em memória
+    // Lê todo o CSV em memória (zero chamadas ao banco)
     type DadosLinha = {
       dataProducao: string;
       horaInicio: string;
@@ -468,29 +479,28 @@ export class ProducaoService {
       try {
         const rawData = normalizeKey(row, 'data');
         if (!rawData) {
-          console.log('Linha ignorada: Coluna de Data não encontrada.', row);
+          this.logger.warn('Linha ignorada: Coluna de Data não encontrada.');
           continue;
         }
 
         const tempIni     = normalizeKey(row, 'inicial');
         const tempFimPrev = normalizeKey(row, 'final prevista');
         const tempFimReal = normalizeKey(row, 'final real');
+        const farinhaStr  = normalizeKey(row, 'quilos farinha');
+        const fermentoStr = normalizeKey(row, 'gramas fermento');
+        const emulsifStr  = normalizeKey(row, 'ml emulsificante');
+        const qualidadeStr = normalizeKey(row, 'qualidade');
+        const statusStr   = normalizeKey(row, 'status');
 
-        const farinhaStr    = normalizeKey(row, 'quilos farinha');
-        const fermentoStr   = normalizeKey(row, 'gramas fermento');
-        const emulsifStr    = normalizeKey(row, 'ml emulsificante');
-        const qualidadeStr  = normalizeKey(row, 'qualidade');
-        const statusStr     = normalizeKey(row, 'status');
-
-        const partes    = String(rawData).trim().split(/[ ,]+/);
-        const dataPart  = partes[0];
-        let horaPart    = partes[1] || '00:00:00';
+        const partes   = String(rawData).trim().split(/[ ,]+/);
+        const dataPart = partes[0];
+        let horaPart   = partes[1] || '00:00:00';
 
         if (horaPart.split(':').length === 2) horaPart += ':00';
 
         const dataSplitted = dataPart.split('/');
         if (dataSplitted.length !== 3) {
-          console.log('Linha ignorada: Formato de data inválido.', rawData);
+          this.logger.warn(`Linha ignorada: Formato de data inválido: ${rawData}`);
           continue;
         }
 
@@ -499,23 +509,22 @@ export class ProducaoService {
         const parsedDate = new Date(dataISO);
 
         if (isNaN(parsedDate.getTime())) {
-          console.log('Linha ignorada: Data resultante inválida.', dataISO);
+          this.logger.warn(`Linha ignorada: Data inválida: ${dataISO}`);
           continue;
         }
 
         const mapNota: Record<string, number> = {
           excelente: 5, bom: 4, razoavel: 3,
-          regular: 3,  ruim: 2, pessimo: 1, péssimo: 1,
+          regular: 3,   ruim: 2, pessimo: 1, péssimo: 1,
         };
 
-        const notaStr = qualidadeStr ? qualidadeStr.toLowerCase().trim() : 'bom';
-        const nota    = mapNota[notaStr] || 4;
-
+        const notaStr  = qualidadeStr ? qualidadeStr.toLowerCase().trim() : 'bom';
+        const nota     = mapNota[notaStr] || 4;
         const fermento = parseNum(fermentoStr);
         const farinha  = parseNum(farinhaStr);
 
         if (farinha <= 0) {
-          console.log('Linha ignorada: Farinha menor ou igual a zero.', farinhaStr);
+          this.logger.warn(`Linha ignorada: Farinha <= 0: ${farinhaStr}`);
           continue;
         }
 
@@ -531,31 +540,31 @@ export class ProducaoService {
           (qualidadeStr && qualidadeStr.toLowerCase().trim() === 'pendente');
 
         linhasValidas.push({
-          dataProducao:           `${ano}-${mes}-${dia}T00:00:00.000Z`,
-          horaInicio:             dataISO,
-          horaFim:                new Date(new Date(dataISO).getTime() + minutos * 60000).toISOString(),
+          dataProducao:            `${ano}-${mes}-${dia}T00:00:00.000Z`,
+          horaInicio:              dataISO,
+          horaFim:                 new Date(new Date(dataISO).getTime() + minutos * 60000).toISOString(),
           tempoFermentacaoMinutos: minutos,
-          farinhaKg:              farinha,
-          fermentoGrama:          fermento,
-          emulsificanteMl:        parseNum(emulsifStr),
-          tempAmbienteInicial:    parseNum(tempIni),
-          tempAmbienteFinal:      parseNum(tempFimPrev),
-          observacoes:            obs && String(obs).toUpperCase() !== 'N/A' ? obs : null,
-          ehPendente:             !!ehPendente,
+          farinhaKg:               farinha,
+          fermentoGrama:           fermento,
+          emulsificanteMl:         parseNum(emulsifStr),
+          tempAmbienteInicial:     parseNum(tempIni),
+          tempAmbienteFinal:       parseNum(tempFimPrev),
+          observacoes:             obs && String(obs).toUpperCase() !== 'N/A' ? obs : null,
+          ehPendente:              !!ehPendente,
           nota,
-          tempFimReal:            tempFimReal && String(tempFimReal).toUpperCase() !== 'N/A'
-                                    ? parseNum(tempFimReal)
-                                    : null,
-          comentario:             coment && String(coment).toUpperCase() !== 'N/A' ? coment : null,
+          tempFimReal:             tempFimReal && String(tempFimReal).toUpperCase() !== 'N/A'
+                                     ? parseNum(tempFimReal)
+                                     : null,
+          comentario:              coment && String(coment).toUpperCase() !== 'N/A' ? coment : null,
         });
 
       } catch (error: any) {
-        console.error(`Erro ao processar linha ${linhasValidas.length + erros + 1}`, error.message);
+        this.logger.error(`Erro ao processar linha ${linhasValidas.length + erros + 1}: ${error.message}`);
         erros++;
       }
     }
 
-    // Envia pro banco em lotes de 50 usando $transaction.
+    // Envia pro banco em lotes de 50, SEM $transaction
     const TAMANHO_LOTE = 50;
     let importados = 0;
 
@@ -563,57 +572,56 @@ export class ProducaoService {
       const lote = linhasValidas.slice(i, i + TAMANHO_LOTE);
 
       try {
-        // Dispara a transação interativa passando a configuração de timeout no segundo parâmetro
-        await this.prisma.$transaction(
-          async (tx) => {
-            // Executa todas as criações deste lote simultaneamente dentro da transação
-            await Promise.all(
-              lote.map((linha) =>
-                tx.producao.create({
-                  data: {
-                    dataProducao:            linha.dataProducao,
-                    horaInicio:              linha.horaInicio,
-                    horaFim:                 linha.horaFim,
-                    tempoFermentacaoMinutos: linha.tempoFermentacaoMinutos,
-                    farinhaKg:               linha.farinhaKg,
-                    fermentoGrama:           linha.fermentoGrama,
-                    emulsificanteMl:         linha.emulsificanteMl,
-                    tempAmbienteInicial:     linha.tempAmbienteInicial,
-                    tempAmbienteFinal:       linha.tempAmbienteFinal,
-                    observacoes:             linha.observacoes,
+        // Promise.all sem $transaction: paralelo, sem timeout de conexão
+        const resultados = await Promise.allSettled(
+          lote.map((linha) =>
+            this.prisma.producao.create({
+              data: {
+                dataProducao:            linha.dataProducao,
+                horaInicio:              linha.horaInicio,
+                horaFim:                 linha.horaFim,
+                tempoFermentacaoMinutos: linha.tempoFermentacaoMinutos,
+                farinhaKg:               linha.farinhaKg,
+                fermentoGrama:           linha.fermentoGrama,
+                emulsificanteMl:         linha.emulsificanteMl,
+                tempAmbienteInicial:     linha.tempAmbienteInicial,
+                tempAmbienteFinal:       linha.tempAmbienteFinal,
+                observacoes:             linha.observacoes,
 
-                    ...(!linha.ehPendente && {
-                      avaliacao: {
-                        create: {
-                          nota:                  linha.nota,
-                          tempAmbienteFinalReal: linha.tempFimReal,
-                          comentario:            linha.comentario,
-                        },
-                      },
-                    }),
+                ...(!linha.ehPendente && {
+                  avaliacao: {
+                    create: {
+                      nota:                  linha.nota,
+                      tempAmbienteFinalReal:  linha.tempFimReal,
+                      comentario:            linha.comentario,
+                    },
                   },
-                })
-              )
-            );
-          },
-          {
-            timeout: 20000, // Dá 20 segundos de folga pro banco processar
-          }
+                }),
+              },
+            }),
+          ),
         );
 
-        importados += lote.length;
+        // Promise.allSettled não lança exceção - verifica cada resultado
+        const sucessos = resultados.filter((r) => r.status === 'fulfilled').length;
+        const falhas   = resultados.filter((r) => r.status === 'rejected').length;
+
+        importados += sucessos;
+        erros      += falhas;
+
+        this.logger.log(
+          `Lote ${Math.floor(i / TAMANHO_LOTE) + 1}: ${sucessos} salvos, ${falhas} erros — total ${importados}/${linhasValidas.length}`,
+        );
+
       } catch (error: any) {
-        console.error(
-          `Erro no lote ${Math.floor(i / TAMANHO_LOTE) + 1} (linhas ${i + 1}–${i + lote.length}):`,
-          error.message,
+        this.logger.error(
+          `Erro inesperado no lote ${Math.floor(i / TAMANHO_LOTE) + 1}: ${error.message}`,
         );
         erros += lote.length;
       }
     }
 
-    return {
-      mensagem: `Importação finalizada. Importados: ${importados}. Erros/Ignorados: ${erros}`,
-    };
+    this.logger.log(`Importação concluída. Importados: ${importados}. Erros/Ignorados: ${erros}`);
   }
 
   async exportarDados() {
