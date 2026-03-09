@@ -79,7 +79,7 @@ export class ProducaoService {
     const [dados, total] = await Promise.all([
       this.prisma.producao.findMany({
         include: { avaliacao: true },
-        orderBy: { id: 'desc'},
+        orderBy: { horaInicio: 'desc'},
         skip,
         take: limit,
       }),
