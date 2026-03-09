@@ -49,11 +49,7 @@ export default function ListaPendentes() {
         }
 
         const data = await response.json();
-        if (Array.isArray(data)) {
-          // Filtra apenas as que NÃO tem avaliação
-          const apenasPendentes = data.filter((p: any) => !p.avaliacao);
-          setPendentes(apenasPendentes);
-        }
+        if (Array.isArray(data)) setPendentes(data);
       } catch (error) {
         console.error("Erro:", error);
       } finally {

@@ -465,7 +465,7 @@ export default function NovaProducao() {
                   ) : (
                     <Wand2 size={20} />
                   )}
-                  <span className="text-[10px] font-bold mt-1">IA</span>
+                  <span className="text-[10px] font-bold mt-1">Sugerir</span>
                 </button>
               </div>
             </div>
