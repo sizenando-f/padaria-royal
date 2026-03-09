@@ -92,8 +92,11 @@ export class ProducaoController {
   }
 
   @Get()
-  findAll() {
-    return this.producaoService.findAll();
+  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.producaoService.findAll(
+      page ? Number(page) : 1,
+      limit ? Number(limit) : 20,
+    );
   }
 
   @Get(':id')
