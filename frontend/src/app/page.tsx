@@ -33,6 +33,13 @@ export default function Home() {
 
   // Busca os Dados
   useEffect(() => {
+    const token = localStorage.getItem("royal_token");
+    if(token) {
+      fetch("https://padaria-royal-api.onrender.com/producao/pendentes", {
+        headers: { Authorization: `Bearer ${token}`},
+      }).catch(() => {});
+    }
+
     async function fetchData() {
       try {
         const token = localStorage.getItem("royal_token");
@@ -61,7 +68,7 @@ export default function Home() {
 
         if (Array.isArray(dataPendentes)) setPendentes(dataPendentes.length);
         setStats(dataStats);
-        
+
       } catch (error) {
         console.error("Erro ao carregar dashboard", error);
       } finally {
@@ -69,7 +76,7 @@ export default function Home() {
       }
     }
     fetchData();
-  }, [logout]);
+  }, []);
 
   // Auxilair para o gráfico de rosca
   const DonutChart = ({ data, media, total, titulo, icon: Icon, colorIcon }: any) => (
