@@ -40,7 +40,7 @@ export default function ListaPendentes() {
 
         // Busca todas as produções e filtra no front ou usa rota específica se tiver
         // Assumindo que sua rota /producao retorna tudo, filtramos aqui ou usamos rota dedicada
-        const response = await fetch("https://padaria-royal-api.onrender.com/producao", {
+        const response = await fetch("https://padaria-royal-api.onrender.com/producao/pendentes", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.status === 401) {
