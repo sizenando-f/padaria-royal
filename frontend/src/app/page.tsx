@@ -43,30 +43,25 @@ export default function Home() {
           "Content-Type": "application/json",
         };
 
-        // Busca Pendências
-        const resProd = await fetch("https://padaria-royal-api.onrender.com/producao", {
-          headers,
-        });
-        if (resProd.status === 401) {
+        // As duas requisições disparam ao mesmo tempo
+        const [resPendentes, resStats] = await Promise.all([
+          fetch("https://padaria-royal-api.onrender.com/producao/pendentes", { headers }),
+          fetch("https://padaria-royal-api.onrender.com/avaliacao/dashboard", { headers }),
+        ]);
+
+        if (resPendentes.status === 401) {
           logout();
           return;
         } // Desloga se o token venceu
 
-        const dataProd = await resProd.json();
-        if (Array.isArray(dataProd)) {
-          const countPendentes = dataProd.filter(
-            (p: any) => !p.avaliacao,
-          ).length;
-          setPendentes(countPendentes);
-        }
+        const [dataPendentes, dataStats] = await Promise.all([
+          resPendentes.json(),
+          resStats.json(),
+        ]);
 
-        // Busca Estatísticas do Gráfico usando Token
-        const resStats = await fetch(
-          "https://padaria-royal-api.onrender.com/avaliacao/dashboard",
-          { headers },
-        );
-        const dataStats = await resStats.json();
+        if (Array.isArray(dataPendentes)) setPendentes(dataPendentes.length);
         setStats(dataStats);
+        
       } catch (error) {
         console.error("Erro ao carregar dashboard", error);
       } finally {
