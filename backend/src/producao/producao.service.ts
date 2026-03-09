@@ -79,7 +79,7 @@ export class ProducaoService {
     const [dados, total] = await Promise.all([
       this.prisma.producao.findMany({
         include: { avaliacao: true },
-        orderBy: { horaInicio: 'desc'},
+        orderBy: { id: 'desc'},
         skip,
         take: limit,
       }),
@@ -573,6 +573,8 @@ export class ProducaoService {
         erros++;
       }
     }
+
+    linhasValidas.reverse(); // Inverte para inserir no bd corretamente
 
     // Envia pro banco em lotes de 50, SEM $transaction
     const TAMANHO_LOTE = 50;
