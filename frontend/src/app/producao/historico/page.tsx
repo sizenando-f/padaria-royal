@@ -604,7 +604,7 @@ export default function HistoricoProducao() {
                   <ArrowLeft size={14} />
                 </button>
                 <button
-                  disabled={pagina >= 1}
+                  disabled={pagina >= totalPaginas}
                   onClick={() => {
                     const p = pagina + 1;
                     setPagina(p);
