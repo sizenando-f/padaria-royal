@@ -73,15 +73,25 @@ export class ProducaoService {
     });
   }
 
-  async findAll() {
-    return await this.prisma.producao.findMany({
-      include: {
-        avaliacao: true, // Para trazer a avaliação junto
-      },
-      orderBy: {
-        id: 'desc', // Mostra do mais recente ao mais antigo
-      },
-    });
+  async findAll(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+
+    const [dados, total] = await Promise.all([
+      this.prisma.producao.findMany({
+        include: { avaliacao: true },
+        orderBy: { id: 'desc'},
+        skip,
+        take: limit,
+      }),
+      this.prisma.producao.count(),
+    ]);
+
+    return {
+      dados,
+      total, 
+      pagina: page,
+      totalPaginas: Math.ceil(total / limit),
+    }
   }
 
   // Para encontrar uma produção específica
