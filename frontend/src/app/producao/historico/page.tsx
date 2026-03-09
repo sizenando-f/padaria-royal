@@ -597,6 +597,7 @@ export default function HistoricoProducao() {
                   onClick={() => {
                     const p = pagina - 1;
                     setPagina(p);
+                    scrollTo({top: 0, behavior: 'smooth'});
                     carregarDados('', p);
                   }}
                   className="px-4 py-2 text-sm font-bold rounded-xl border border-gray-200 bg-white text-gray-600 disabled:opacity-30 hover:bg-gray-50 transition-colors"
@@ -608,6 +609,7 @@ export default function HistoricoProducao() {
                   onClick={() => {
                     const p = pagina + 1;
                     setPagina(p);
+                    scrollTo({top: 0, behavior: 'smooth'});
                     carregarDados('', p);
                   }}
                   className="px-4 py-2 text-sm font-bold rounded-xl border border-gray-200 bg-white text-gray-600 disabled:opacity-30 hover:bg-gray-50 transition-colors"
