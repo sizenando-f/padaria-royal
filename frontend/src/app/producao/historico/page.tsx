@@ -24,6 +24,7 @@ import {
   Filter,
   X,
   ThermometerSun,
+  ArrowRight,
 } from "lucide-react";
 import Toast from "@/app/components/Toast";
 import { useAuth } from "@/context/AuthContext";
@@ -35,6 +36,11 @@ export default function HistoricoProducao() {
   const [producoes, setProducoes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [importando, setImportando] = useState(false);
+
+  const [pagina, setPagina] = useState(1);
+  const [totalPaginas, setTotalPaginas] = useState(1);
+  const [total, setTotal] = useState(0);
+  const LIMIT = 20;
 
   const [toast, setToast] = useState<{
     msg: string;
@@ -73,27 +79,38 @@ export default function HistoricoProducao() {
     return { Authorization: `Bearer ${token}` };
   };
 
-  async function carregarDados(queryParams = '') {
+  async function carregarDados(queryParams = '', paginaAtual = 1) {
     setLoading(true);
-    
+
     try {
-      const url = queryParams ? `https://padaria-royal-api.onrender.com/producao/filtrar?${queryParams}`
-      : 'https://padaria-royal-api.onrender.com/producao';
+      let url: string;
 
-      const res = await fetch(url, {
-        headers: getHeaders(),
-      });
+      if (queryParams) {
+        // Filtro usa endpoint próprio
+        url = `https://padaria-royal-api.onrender.com/producao/filtrar?${queryParams}`;
+      } else {
+        // Listagem normal com paginação
+        url = `https://padaria-royal-api.onrender.com/producao?page=${paginaAtual}&limit=${LIMIT}`;
+      }
 
-      if (res.status === 401) {
-        router.push("/login");
+      const res = await fetch(url, { headers: getHeaders() });
+
+      if (res.status === 401) { 
+        router.push("/login"); 
         return;
       }
 
       const data = await res.json();
-      if (Array.isArray(data)) {
-        // Ordena por ID decrescente (mais recentes primeiro)
-        const lista = queryParams ? data : data.sort((a: any, b: any) => b.id - a.id);
-        setProducoes(lista);
+
+      if (queryParams) {
+        setProducoes(Array.isArray(data) ? data: []);
+        setTotalPaginas(1);
+        setTotal(Array.isArray(data) ? data.length : 0);
+      } else {
+        setProducoes(data.dados ?? []);
+        setTotal(data.total ?? 0);
+        setTotalPaginas(data.totalPaginas ?? 1);
+        setPagina(data.pagina ?? 1);
       }
     } catch (error) {
       showToast("Erro ao carregar dados.", "error");
@@ -129,6 +146,7 @@ export default function HistoricoProducao() {
         tempoHoraMin: '', tempoHoraMax: '',
         tempPrevMin: '', tempPrevMax: ''
       });
+      setPagina(1);
       carregarDados();
       setMostrarFiltros(false);
   }
@@ -567,6 +585,38 @@ export default function HistoricoProducao() {
                 )}
               </div>
             ))}
+            {/* Paginação que só aparece quando o filtro não está ativo */}
+            {!loading && totalPaginas > 1 && (
+            <div className="flex items-center justify-between pt-2 pb-4">
+              <span className="text-xs text-gray-400 font-medium">
+                {total} fornadas - página {pagina} de {totalPaginas}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  disabled={pagina <= 1}
+                  onClick={() => {
+                    const p = pagina - 1;
+                    setPagina(p);
+                    carregarDados('', p);
+                  }}
+                  className="px-4 py-2 text-sm font-bold rounded-xl border border-gray-200 bg-white text-gray-600 disabled:opacity-30 hover:bg-gray-50 transition-colors"
+                >
+                  <ArrowLeft size={14} />
+                </button>
+                <button
+                  disabled={pagina >= 1}
+                  onClick={() => {
+                    const p = pagina + 1;
+                    setPagina(p);
+                    carregarDados('', p);
+                  }}
+                  className="px-4 py-2 text-sm font-bold rounded-xl border border-gray-200 bg-white text-gray-600 disabled:opacity-30 hover:bg-gray-50 transition-colors"
+                >
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+          )}
           </div>
         )}
       </div>
