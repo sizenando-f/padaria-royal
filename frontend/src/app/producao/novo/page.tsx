@@ -25,7 +25,7 @@ export default function NovaProducao() {
   // Estados
   const [loading, setLoading] = useState(false);
   const [sugerindo, setSugerindo] = useState(false);
-  const [provasIA, setProvasIA] = useState<any[] | null>(null);
+  const [provasSugestao, setProvasSugestao] = useState<any[] | null>(null);
   const [mensagemIA, setMensagemIA] = useState("");
   const [buscandoClima, setBuscandoClima] = useState(false);
 
@@ -188,7 +188,7 @@ export default function NovaProducao() {
     }
 
     setSugerindo(true);
-    setProvasIA(null);
+    setProvasSugestao(null);
     setSugestaoFermento(null);
 
     try {
@@ -220,7 +220,7 @@ export default function NovaProducao() {
         fermentoGrama: String(data.fermento),
       }));
       setSugestaoFermento(data.fermento); // Para comparação
-      setProvasIA(data.provas);
+      setProvasSugestao(data.provas);
       setMensagemIA(data.mensagem);
     } catch (error) {
       console.error(error);
@@ -471,7 +471,7 @@ export default function NovaProducao() {
             </div>
 
             {/* Resultados inteligentes */}
-            {provasIA && (
+            {provasSugestao && (
               <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100 animate-fade-in">
                 <div className="flex items-center gap-2 text-purple-900 font-bold mb-3 text-sm border-b border-purple-200 pb-2">
                   <Info size={16} />
@@ -479,7 +479,7 @@ export default function NovaProducao() {
                 </div>
 
                 <div className="space-y-3">
-                  {provasIA.map((prova) => {
+                  {provasSugestao.map((prova) => {
                     // Calcula o tempo alvo do usuário
                     let tempoAlvo = 0;
                     if(formData.horaInicio && formData.horaFim) {
@@ -617,12 +617,12 @@ export default function NovaProducao() {
                     onChange={handleChange}
                     className={`w-full mt-1 border text-lg rounded-2xl p-3 outline-none font-bold transition-all ${
                       sugestaoFermento && Number(formData.fermentoGrama) !== sugestaoFermento ? "bg-yellow-50 border-yellow-400 text-yellow-800 focus:ring-yellow-400 ring-2 ring-yellow-100"
-                      : provasIA ? "bg-purple-50 border-purple-300 text-purple-900 focus:ring-purple-400"
+                      : provasSugestao ? "bg-purple-50 border-purple-300 text-purple-900 focus:ring-purple-400"
                       : "bg-gray-50 border-gray-200 text-gray-900 focus:ring-2 focus:ring-orange-500"
                     }`
                   }
                   />
-                  {provasIA && !sugestaoFermento && (
+                  {provasSugestao && !sugestaoFermento && (
                     <span className="absolute right-3 top-4 text-[10px] font-bold text-purple-500 uppercase">
                       Sugerido
                     </span>

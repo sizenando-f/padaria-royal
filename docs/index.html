@@ -1,0 +1,1681 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Padaria Royal — Documentação Técnica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #f7f6f3;
+    --surface:   #ffffff;
+    --sidebar-bg:#18181b;
+    --sidebar-w: 272px;
+    --text:      #1c1917;
+    --muted:     #78716c;
+    --border:    #e5e2dd;
+    --accent:    #c2410c;
+    --accent-lt: #fff3ed;
+    --mono:      'IBM Plex Mono', monospace;
+    --sans:      'IBM Plex Sans', sans-serif;
+    --code-bg:   #1e1e1e;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+
+  /* ── SIDEBAR ────────────────────────────── */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--sidebar-bg);
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 2rem;
+  }
+
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 2px; }
+
+  .sidebar-header {
+    padding: 1.75rem 1.5rem 1.25rem;
+    border-bottom: 1px solid #27272a;
+  }
+
+  .sidebar-logo {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e4e0d8;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+
+  .sidebar-subtitle {
+    font-size: 11px;
+    color: #71717a;
+    margin-top: 3px;
+    font-weight: 300;
+  }
+
+  .sidebar-version {
+    display: inline-block;
+    margin-top: 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: #a16207;
+    background: rgba(161,98,7,.15);
+    border: 1px solid rgba(161,98,7,.3);
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+
+  .nav-group { padding: 1.25rem 0 0; }
+
+  .nav-group-label {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: #52525b;
+    padding: 0 1.5rem .5rem;
+  }
+
+  .nav-link {
+    display: block;
+    padding: .38rem 1.5rem;
+    color: #a1a1aa;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 400;
+    transition: color .15s, background .15s;
+    border-left: 2px solid transparent;
+  }
+
+  .nav-link:hover {
+    color: #e4e0d8;
+    background: rgba(255,255,255,.04);
+  }
+
+  .nav-link.active {
+    color: #fb923c;
+    border-left-color: #fb923c;
+    background: rgba(251,146,60,.06);
+  }
+
+  .nav-link-sub {
+    padding-left: 2.25rem;
+    font-size: 12px;
+    color: #71717a;
+  }
+
+  .nav-link-sub:hover { color: #a1a1aa; }
+
+  /* ── MAIN ───────────────────────────────── */
+  .main {
+    margin-left: var(--sidebar-w);
+    min-height: 100vh;
+    padding: 3rem 4rem 6rem;
+    max-width: calc(var(--sidebar-w) + 860px);
+  }
+
+  /* ── SECTION ────────────────────────────── */
+  .section {
+    margin-bottom: 5rem;
+    scroll-margin-top: 2rem;
+  }
+
+  .section-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: .5rem;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+  }
+
+  h2 {
+    font-size: 1.45rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 1rem;
+    padding-bottom: .6rem;
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 2rem 0 .75rem;
+  }
+
+  h4 {
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin: 1.5rem 0 .5rem;
+  }
+
+  p { margin-bottom: 1rem; color: #3c3835; }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  strong { font-weight: 600; color: var(--text); }
+
+  /* ── LEAD / INTRO ───────────────────────── */
+  .lead {
+    font-size: 1.05rem;
+    font-weight: 300;
+    color: #57534e;
+    line-height: 1.8;
+    margin-bottom: 1.5rem;
+  }
+
+  /* ── DIVIDER ────────────────────────────── */
+  hr { border: none; border-top: 1.5px solid var(--border); margin: 2.5rem 0; }
+
+  /* ── CALLOUT ────────────────────────────── */
+  .callout {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-lt);
+    padding: 1rem 1.25rem;
+    border-radius: 0 6px 6px 0;
+    margin: 1.5rem 0;
+    font-size: 14px;
+  }
+
+  .callout.info {
+    border-color: #2563eb;
+    background: #eff6ff;
+  }
+
+  .callout.warn {
+    border-color: #d97706;
+    background: #fffbeb;
+  }
+
+  .callout-title {
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: .35rem;
+    color: var(--accent);
+  }
+
+  .callout.info .callout-title { color: #1d4ed8; }
+  .callout.warn .callout-title { color: #b45309; }
+
+  /* ── CODE ───────────────────────────────── */
+  code {
+    font-family: var(--mono);
+    font-size: .85em;
+    background: #f0ede8;
+    padding: .15em .4em;
+    border-radius: 3px;
+    color: #9a3412;
+  }
+
+  pre {
+    background: var(--code-bg);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
+    overflow-x: auto;
+    margin: 1rem 0 1.5rem;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.7;
+    color: #d4d0c8;
+    position: relative;
+  }
+
+  pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+    border-radius: 0;
+  }
+
+  .pre-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: #71717a;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: .4rem;
+  }
+
+  /* Syntax colors */
+  .kw  { color: #c792ea; }
+  .str { color: #a5d6a7; }
+  .num { color: #f78c6c; }
+  .cmt { color: #546e7a; font-style: italic; }
+  .fn  { color: #82aaff; }
+  .key { color: #ffcb6b; }
+  .op  { color: #89ddff; }
+  .url { color: #80cbc4; }
+
+  /* ── TABLES ─────────────────────────────── */
+  .table-wrap { overflow-x: auto; margin: 1rem 0 1.5rem; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  thead tr {
+    background: #f0ede8;
+    border-bottom: 2px solid var(--border);
+  }
+
+  th {
+    text-align: left;
+    padding: .65rem 1rem;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--muted);
+  }
+
+  td {
+    padding: .65rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #faf9f7; }
+
+  /* ── ENDPOINT CARD ──────────────────────── */
+  .endpoint {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    margin: 1.5rem 0;
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  .endpoint-header {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .85rem 1.25rem;
+    background: #faf9f7;
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  .method {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    padding: .2em .65em;
+    border-radius: 3px;
+    letter-spacing: .04em;
+    min-width: 52px;
+    text-align: center;
+  }
+
+  .method.GET    { background: #dbeafe; color: #1d4ed8; }
+  .method.POST   { background: #dcfce7; color: #15803d; }
+  .method.PATCH  { background: #fef9c3; color: #854d0e; }
+  .method.DELETE { background: #fee2e2; color: #b91c1c; }
+
+  .endpoint-path {
+    font-family: var(--mono);
+    font-size: 13.5px;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .05em;
+    padding: .2em .65em;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+
+  .badge-auth    { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+  .badge-gerente { background: #fce7f3; color: #9d174d; border: 1px solid #fbcfe8; }
+  .badge-public  { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+
+  .endpoint-body { padding: 1.25rem; }
+
+  .endpoint-desc { color: #57534e; font-size: 14px; margin-bottom: 1rem; }
+
+  /* ── FLOW DIAGRAM ───────────────────────── */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 1.5rem 0;
+    font-size: 13.5px;
+  }
+
+  .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    position: relative;
+  }
+
+  .flow-step:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 13px;
+    top: 28px;
+    bottom: -12px;
+    width: 1.5px;
+    background: #d6d3cd;
+  }
+
+  .flow-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .flow-content {
+    padding: .2rem 0 1.5rem;
+    flex: 1;
+  }
+
+  .flow-title {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: .2rem;
+  }
+
+  .flow-text { color: #57534e; }
+
+  /* ── FORMULA BOX ────────────────────────── */
+  .formula {
+    background: #18181b;
+    border: 1px solid #3f3f46;
+    border-radius: 6px;
+    padding: 1rem 1.5rem;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: #e4e0d8;
+    margin: 1rem 0;
+    line-height: 2;
+  }
+
+  .formula .comment { color: #52525b; }
+
+  /* ── GRID CARDS ─────────────────────────── */
+  .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+
+  .card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 1.25rem;
+  }
+
+  .card-title { font-weight: 600; font-size: 14px; margin-bottom: .4rem; }
+  .card-text  { font-size: 13px; color: #57534e; }
+
+  /* ── ARCH DIAGRAM ───────────────────────── */
+  .arch {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.5px;
+    background: var(--border);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1.5rem 0;
+  }
+
+  .arch-box {
+    background: var(--surface);
+    padding: 1.25rem;
+  }
+
+  .arch-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    margin-bottom: .5rem;
+  }
+
+  .arch-title {
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: .5rem;
+    color: var(--text);
+  }
+
+  .arch-item {
+    font-size: 12px;
+    color: #57534e;
+    padding: .2rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .arch-item:last-child { border: none; }
+
+  /* ── SCHEMA ENTITY ──────────────────────── */
+  .entity {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    margin: 1rem 0;
+    overflow: hidden;
+  }
+
+  .entity-header {
+    background: var(--sidebar-bg);
+    color: #e4e0d8;
+    padding: .65rem 1.1rem;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .entity-header span { font-size: 10px; color: #71717a; font-weight: 400; }
+
+  .entity-field {
+    display: grid;
+    grid-template-columns: 160px 110px 1fr;
+    gap: .5rem;
+    padding: .5rem 1.1rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    align-items: baseline;
+  }
+
+  .entity-field:last-child { border: none; }
+  .entity-field:nth-child(even) { background: #faf9f7; }
+
+  .field-name { font-family: var(--mono); font-size: 12px; color: #9a3412; }
+  .field-type { font-family: var(--mono); font-size: 11px; color: #2563eb; }
+  .field-desc { color: #78716c; font-size: 12.5px; }
+
+  /* ── RESPONSIVE ─────────────────────────── */
+  @media (max-width: 900px) {
+    :root { --sidebar-w: 240px; }
+    .main { padding: 2rem 1.5rem 4rem; }
+    .card-grid { grid-template-columns: 1fr; }
+    .arch { grid-template-columns: 1fr; }
+    .entity-field { grid-template-columns: 130px 90px 1fr; }
+  }
+
+  @media (max-width: 650px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════════════════ -->
+<nav class="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">Padaria Royal</div>
+    <div class="sidebar-subtitle">Documentação Técnica</div>
+    <div class="sidebar-version">v1.0 — mar/2026</div>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Introdução</div>
+    <a class="nav-link" href="#visao-geral">Visão Geral</a>
+    <a class="nav-link" href="#arquitetura">Arquitetura</a>
+    <a class="nav-link" href="#modelo-dados">Modelo de Dados</a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Referência da API</div>
+    <a class="nav-link" href="#api-auth">Autenticação</a>
+    <a class="nav-link" href="#api-producao">Produção</a>
+    <a class="nav-link nav-link-sub" href="#api-producao-create">↳ Registrar fornada</a>
+    <a class="nav-link nav-link-sub" href="#api-producao-list">↳ Listar / filtrar</a>
+    <a class="nav-link nav-link-sub" href="#api-producao-sugestao">↳ Sugestão de fermento</a>
+    <a class="nav-link nav-link-sub" href="#api-producao-clima">↳ Previsão climática</a>
+    <a class="nav-link nav-link-sub" href="#api-producao-import">↳ Importar / exportar</a>
+    <a class="nav-link" href="#api-avaliacao">Avaliação</a>
+    <a class="nav-link nav-link-sub" href="#api-dashboard">↳ Dashboard</a>
+    <a class="nav-link" href="#api-usuario">Usuários</a>
+    <a class="nav-link" href="#api-admin">Admin</a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Lógica do Sistema</div>
+    <a class="nav-link" href="#algoritmo">Algoritmo de Sugestão</a>
+    <a class="nav-link" href="#regras">Regras de Negócio</a>
+    <a class="nav-link" href="#permissoes">Permissões</a>
+    <a class="nav-link" href="#autenticacao">Autenticação JWT</a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Fluxos</div>
+    <a class="nav-link" href="#fluxo-producao">Ciclo de Produção</a>
+    <a class="nav-link" href="#fluxo-sugestao">Sugestão Inteligente</a>
+    <a class="nav-link" href="#fluxo-backup">Backup Automático</a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Frontend</div>
+    <a class="nav-link" href="#frontend-rotas">Rotas</a>
+    <a class="nav-link" href="#frontend-auth">Gerenciamento de Sessão</a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Operações</div>
+    <a class="nav-link" href="#setup">Configuração Local</a>
+    <a class="nav-link" href="#variaveis">Variáveis de Ambiente</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════
+     MAIN
+═══════════════════════════════════════════════════ -->
+<main class="main">
+
+  <!-- ── VISÃO GERAL ──────────────────────── -->
+  <section class="section" id="visao-geral">
+    <div class="section-eyebrow">Introdução</div>
+    <h1>Padaria Royal</h1>
+    <p class="lead">
+      Sistema web completo para gestão de produção e controle de qualidade de fornadas. Registra os parâmetros técnicos de cada produção, coleta avaliações de qualidade e utiliza esse histórico para alimentar um mecanismo de sugestão de dosagem de fermento baseado em similaridade climática ponderada.
+    </p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-title">Backend</div>
+        <div class="card-text">API REST em NestJS com PostgreSQL via Prisma ORM. Autenticação por JWT, validação global por DTO e tarefas agendadas com <code>@nestjs/schedule</code>.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Frontend</div>
+        <div class="card-text">Interface web em Next.js 16 com App Router, React 19 e Tailwind CSS 4. Gráficos renderizados com Recharts. Sessão gerenciada via React Context.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Banco de Dados</div>
+        <div class="card-text">PostgreSQL 15 em contêiner Docker. Schema versionado com migrations do Prisma. Cinco entidades principais com relações definidas via chave estrangeira.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">API Meteorológica</div>
+        <div class="card-text">Integração com Open-Meteo para preenchimento automático de temperatura ambiente ao iniciar uma fornada. Gratuita, sem chave de API.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ARQUITETURA ───────────────────────── -->
+  <section class="section" id="arquitetura">
+    <div class="section-eyebrow">Estrutura</div>
+    <h2>Arquitetura do Sistema</h2>
+
+    <p>O projeto é organizado como um monorepo com dois serviços independentes que se comunicam via HTTP, além de um contêiner de banco de dados orquestrado pelo Docker Compose.</p>
+
+    <div class="arch">
+      <div class="arch-box">
+        <div class="arch-label">Frontend</div>
+        <div class="arch-title">Next.js 16</div>
+        <div class="arch-item">React 19 + TypeScript</div>
+        <div class="arch-item">Tailwind CSS 4</div>
+        <div class="arch-item">Recharts (gráficos)</div>
+        <div class="arch-item">Lucide React (ícones)</div>
+        <div class="arch-item">App Router / SSR</div>
+      </div>
+      <div class="arch-box">
+        <div class="arch-label">Backend</div>
+        <div class="arch-title">NestJS 11</div>
+        <div class="arch-item">TypeScript + Prisma ORM</div>
+        <div class="arch-item">JWT + bcrypt</div>
+        <div class="arch-item">class-validator (DTOs)</div>
+        <div class="arch-item">@nestjs/schedule</div>
+        <div class="arch-item">Nodemailer + json2csv</div>
+      </div>
+      <div class="arch-box">
+        <div class="arch-label">Infraestrutura</div>
+        <div class="arch-title">PostgreSQL 15</div>
+        <div class="arch-item">Docker + Docker Compose</div>
+        <div class="arch-item">Volume persistente (pgdata)</div>
+        <div class="arch-item">Porta 5432</div>
+        <div class="arch-item">Open-Meteo API</div>
+        <div class="arch-item">SMTP (backup por e-mail)</div>
+      </div>
+    </div>
+
+    <h3>Módulos do Backend</h3>
+    <p>O NestJS organiza o código em módulos por domínio. Cada módulo encapsula um controller (rotas), um service (lógica de negócio) e seus DTOs (validação de entrada).</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Módulo</th><th>Responsabilidade</th><th>Depende de</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>ProducaoModule</code></td><td>CRUD de fornadas, sugestão, clima, importação/exportação CSV</td><td>Prisma, Config</td></tr>
+          <tr><td><code>AvaliacaoModule</code></td><td>CRUD de avaliações, estatísticas de dashboard</td><td>Prisma, Backup</td></tr>
+          <tr><td><code>AuthModule</code></td><td>Login com validação de horário, emissão de JWT</td><td>Prisma, JWT</td></tr>
+          <tr><td><code>UsuarioModule</code></td><td>Gerenciamento de contas (exclusivo para gerentes)</td><td>Prisma</td></tr>
+          <tr><td><code>AdminModule</code></td><td>Logs de exclusão, configuração de e-mail, reset do sistema</td><td>Prisma</td></tr>
+          <tr><td><code>BackupModule</code></td><td>Tarefa agendada de backup CSV por e-mail</td><td>Prisma, Nodemailer</td></tr>
+          <tr><td><code>PrismaModule</code></td><td>Singleton do cliente Prisma, injetado globalmente</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── MODELO DE DADOS ───────────────────── -->
+  <section class="section" id="modelo-dados">
+    <div class="section-eyebrow">Banco de Dados</div>
+    <h2>Modelo de Dados</h2>
+
+    <p>O schema é definido em <code>backend/prisma/schema.prisma</code> e versionado através de migrations. As relações entre entidades são gerenciadas pelo Prisma com suporte a exclusão em cascata onde aplicável.</p>
+
+    <div class="callout info">
+      <div class="callout-title">Relação central</div>
+      Cada <strong>Producao</strong> pode ter no máximo uma <strong>Avaliacao</strong> (relação 1:1 com <code>@unique</code> na chave estrangeira). A exclusão de uma produção apaga automaticamente sua avaliação (<code>onDelete: Cascade</code>).
+    </div>
+
+    <!-- Producao -->
+    <div class="entity">
+      <div class="entity-header">Producao <span>Tabela principal — registros de fornadas</span></div>
+      <div class="entity-field"><span class="field-name">id</span><span class="field-type">Int @id</span><span class="field-desc">Identificador auto-incremental</span></div>
+      <div class="entity-field"><span class="field-name">dataProducao</span><span class="field-type">DateTime</span><span class="field-desc">Data da produção (derivada de horaInicio)</span></div>
+      <div class="entity-field"><span class="field-name">horaInicio</span><span class="field-type">DateTime</span><span class="field-desc">Timestamp de início da fermentação</span></div>
+      <div class="entity-field"><span class="field-name">horaFim</span><span class="field-type">DateTime</span><span class="field-desc">Timestamp de fim da fermentação</span></div>
+      <div class="entity-field"><span class="field-name">tempoFermentacaoMinutos</span><span class="field-type">Int</span><span class="field-desc">Calculado automaticamente: (horaFim − horaInicio) em minutos</span></div>
+      <div class="entity-field"><span class="field-name">farinhaKg</span><span class="field-type">Decimal(10,3)</span><span class="field-desc">Quantidade de farinha em quilos (ex: 10.500)</span></div>
+      <div class="entity-field"><span class="field-name">emulsificanteMl</span><span class="field-type">Decimal(10,2)</span><span class="field-desc">Volume de emulsificante em mililitros</span></div>
+      <div class="entity-field"><span class="field-name">fermentoGrama</span><span class="field-type">Decimal(10,2)</span><span class="field-desc">Massa de fermento em gramas</span></div>
+      <div class="entity-field"><span class="field-name">tempAmbienteInicial</span><span class="field-type">Decimal? (5,2)</span><span class="field-desc">Temperatura ambiente no início (preenchida via API ou manual)</span></div>
+      <div class="entity-field"><span class="field-name">tempAmbienteFinal</span><span class="field-type">Decimal? (5,2)</span><span class="field-desc">Temperatura ambiente prevista para o fim</span></div>
+      <div class="entity-field"><span class="field-name">observacoes</span><span class="field-type">String? @Text</span><span class="field-desc">Campo livre de anotações</span></div>
+      <div class="entity-field"><span class="field-name">criadoPorId</span><span class="field-type">Int?</span><span class="field-desc">FK → Usuario.id (quem registrou a fornada)</span></div>
+    </div>
+
+    <!-- Avaliacao -->
+    <div class="entity">
+      <div class="entity-header">Avaliacao <span>Nota de qualidade — 1:1 com Producao</span></div>
+      <div class="entity-field"><span class="field-name">id</span><span class="field-type">Int @id</span><span class="field-desc">Identificador auto-incremental</span></div>
+      <div class="entity-field"><span class="field-name">producaoId</span><span class="field-type">Int @unique</span><span class="field-desc">FK → Producao.id (garante unicidade da avaliação)</span></div>
+      <div class="entity-field"><span class="field-name">nota</span><span class="field-type">Int</span><span class="field-desc">1=Péssimo · 2=Ruim · 3=Regular · 4=Bom · 5=Excelente</span></div>
+      <div class="entity-field"><span class="field-name">comentario</span><span class="field-type">String?</span><span class="field-desc">Observação textual sobre a qualidade</span></div>
+      <div class="entity-field"><span class="field-name">tempAmbienteFinalReal</span><span class="field-type">Decimal?</span><span class="field-desc">Temperatura medida no momento da avaliação (controle de qualidade)</span></div>
+    </div>
+
+    <!-- Usuario -->
+    <div class="entity">
+      <div class="entity-header">Usuario <span>Contas de acesso ao sistema</span></div>
+      <div class="entity-field"><span class="field-name">id</span><span class="field-type">Int @id</span><span class="field-desc">Identificador auto-incremental</span></div>
+      <div class="entity-field"><span class="field-name">nome</span><span class="field-type">String</span><span class="field-desc">Nome completo do operador</span></div>
+      <div class="entity-field"><span class="field-name">email</span><span class="field-type">String @unique</span><span class="field-desc">Credencial de login</span></div>
+      <div class="entity-field"><span class="field-name">senha</span><span class="field-type">String</span><span class="field-desc">Hash bcrypt da senha</span></div>
+      <div class="entity-field"><span class="field-name">cargo</span><span class="field-type">String</span><span class="field-desc">"GERENTE" ou "PADEIRO"</span></div>
+      <div class="entity-field"><span class="field-name">podeRegistrar</span><span class="field-type">Boolean</span><span class="field-desc">Permissão para criar novas produções</span></div>
+      <div class="entity-field"><span class="field-name">podeAvaliar</span><span class="field-type">Boolean</span><span class="field-desc">Permissão para submeter avaliações</span></div>
+      <div class="entity-field"><span class="field-name">podeVerHistorico</span><span class="field-type">Boolean</span><span class="field-desc">Permissão para acessar o histórico completo</span></div>
+      <div class="entity-field"><span class="field-name">podeEditar</span><span class="field-type">Boolean</span><span class="field-desc">Permissão para editar registros</span></div>
+      <div class="entity-field"><span class="field-name">podeExcluir</span><span class="field-type">Boolean</span><span class="field-desc">Permissão para excluir registros</span></div>
+      <div class="entity-field"><span class="field-name">horarioEntrada</span><span class="field-type">String?</span><span class="field-desc">Horário mínimo de login permitido (ex: "06:00")</span></div>
+      <div class="entity-field"><span class="field-name">horarioSaida</span><span class="field-type">String?</span><span class="field-desc">Horário máximo de login permitido (ex: "14:00")</span></div>
+    </div>
+
+    <!-- LogExclusao -->
+    <div class="entity">
+      <div class="entity-header">LogExclusao <span>Auditoria imutável de exclusões</span></div>
+      <div class="entity-field"><span class="field-name">id</span><span class="field-type">Int @id</span><span class="field-desc">Identificador auto-incremental</span></div>
+      <div class="entity-field"><span class="field-name">usuarioNome</span><span class="field-type">String</span><span class="field-desc">Nome de quem executou a exclusão</span></div>
+      <div class="entity-field"><span class="field-name">producaoId</span><span class="field-type">Int</span><span class="field-desc">ID da fornada excluída (sem FK — preservado mesmo se a produção não existe mais)</span></div>
+      <div class="entity-field"><span class="field-name">dataExclusao</span><span class="field-type">DateTime</span><span class="field-desc">Timestamp da operação (default: now())</span></div>
+    </div>
+
+    <!-- Configuracao -->
+    <div class="entity">
+      <div class="entity-header">Configuracao <span>Chave-valor para configurações globais</span></div>
+      <div class="entity-field"><span class="field-name">id</span><span class="field-type">Int @id</span><span class="field-desc">Identificador auto-incremental</span></div>
+      <div class="entity-field"><span class="field-name">chave</span><span class="field-type">String @unique</span><span class="field-desc">Identificador da configuração (ex: "Email_Backup")</span></div>
+      <div class="entity-field"><span class="field-name">valor</span><span class="field-type">String</span><span class="field-desc">Valor armazenado</span></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       REFERÊNCIA DA API
+  ══════════════════════════════════════════ -->
+  <section class="section" id="api-auth">
+    <div class="section-eyebrow">API</div>
+    <h2>Autenticação</h2>
+    <p>Todos os endpoints, exceto o login, exigem um token JWT no cabeçalho <code>Authorization: Bearer &lt;token&gt;</code>. O token é emitido com prazo de expiração definido em <code>JWT_SECRET</code>.</p>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method POST">POST</span>
+        <span class="endpoint-path">/auth/login</span>
+        <span class="badge badge-public">Público</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Autentica um usuário e retorna o token JWT. Padeiros são bloqueados fora do horário configurado. Gerentes não têm restrição de horário.</div>
+
+        <h4>Corpo da requisição</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Campo</th><th>Tipo</th><th>Obrigatório</th><th>Descrição</th></tr></thead>
+            <tbody>
+              <tr><td><code>email</code></td><td>string</td><td>Sim</td><td>E-mail cadastrado</td></tr>
+              <tr><td><code>senha</code></td><td>string</td><td>Sim</td><td>Senha em texto plano (comparada com o hash bcrypt)</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>Resposta — 200 OK</h4>
+        <pre><code>{
+  <span class="key">"access_token"</span>: <span class="str">"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."</span>,
+  <span class="key">"usuario"</span>: {
+    <span class="key">"nome"</span>:  <span class="str">"João Silva"</span>,
+    <span class="key">"email"</span>: <span class="str">"joao@padaria.com"</span>,
+    <span class="key">"cargo"</span>: <span class="str">"PADEIRO"</span>,
+    <span class="key">"permissoes"</span>: {
+      <span class="key">"registrar"</span>: <span class="kw">true</span>,
+      <span class="key">"avaliar"</span>:   <span class="kw">true</span>,
+      <span class="key">"historico"</span>: <span class="kw">false</span>,
+      <span class="key">"editar"</span>:    <span class="kw">true</span>,
+      <span class="key">"excluir"</span>:   <span class="kw">false</span>
+    }
+  }
+}</code></pre>
+
+        <h4>Erros possíveis</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Código</th><th>Situação</th></tr></thead>
+            <tbody>
+              <tr><td><code>401</code></td><td>Credenciais inválidas (e-mail não encontrado ou senha incorreta)</td></tr>
+              <tr><td><code>401</code></td><td>Login fora do horário permitido para o usuário</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── API PRODUCAO ──────────────────────── -->
+  <section class="section" id="api-producao">
+    <h2>Produção</h2>
+    <p>Recurso principal do sistema. Gerencia o ciclo completo de uma fornada desde o registro até a exportação.</p>
+
+    <!-- POST /producao -->
+    <div id="api-producao-create">
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method POST">POST</span>
+        <span class="endpoint-path">/producao</span>
+        <span class="badge badge-auth">JWT</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Registra uma nova fornada. O tempo de fermentação em minutos é calculado automaticamente pelo backend. Requer permissão <code>registrar</code>.</div>
+        <h4>Corpo da requisição</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Campo</th><th>Tipo</th><th>Obrigatório</th><th>Descrição</th></tr></thead>
+            <tbody>
+              <tr><td><code>horaInicio</code></td><td>string (ISO 8601)</td><td>Sim</td><td>Timestamp de início da fermentação</td></tr>
+              <tr><td><code>horaFim</code></td><td>string (ISO 8601)</td><td>Sim</td><td>Timestamp de fim (deve ser posterior ao início)</td></tr>
+              <tr><td><code>farinhaKg</code></td><td>number</td><td>Sim</td><td>Quantidade de farinha em kg (> 0)</td></tr>
+              <tr><td><code>fermentoGrama</code></td><td>number</td><td>Sim</td><td>Massa de fermento em gramas (> 0)</td></tr>
+              <tr><td><code>emulsificanteMl</code></td><td>number</td><td>Sim</td><td>Volume de emulsificante em ml (> 0)</td></tr>
+              <tr><td><code>tempAmbienteInicial</code></td><td>number</td><td>Sim</td><td>Temperatura no início (> 0)</td></tr>
+              <tr><td><code>tempAmbienteFinal</code></td><td>number</td><td>Sim</td><td>Temperatura prevista para o fim (> 0)</td></tr>
+              <tr><td><code>observacoes</code></td><td>string</td><td>Não</td><td>Anotações livres sobre a fornada</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- GET /producao e filtros -->
+    <div id="api-producao-list">
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method GET">GET</span>
+        <span class="endpoint-path">/producao</span>
+        <span class="badge badge-auth">JWT</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Retorna todas as produções com paginação, incluindo a avaliação vinculada quando existente.</div>
+        <h4>Query params</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Param</th><th>Padrão</th><th>Descrição</th></tr></thead>
+            <tbody>
+              <tr><td><code>page</code></td><td>1</td><td>Número da página</td></tr>
+              <tr><td><code>limit</code></td><td>20</td><td>Itens por página</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>Resposta</h4>
+        <pre><code>{
+  <span class="key">"dados"</span>: [ <span class="cmt">/* array de Producao com avaliacao inclusa */</span> ],
+  <span class="key">"total"</span>:       <span class="num">142</span>,
+  <span class="key">"pagina"</span>:      <span class="num">1</span>,
+  <span class="key">"totalPaginas"</span>: <span class="num">8</span>
+}</code></pre>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method GET">GET</span>
+        <span class="endpoint-path">/producao/filtrar</span>
+        <span class="badge badge-auth">JWT</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Busca avançada com filtros combinados por data, ingredientes, temperatura e nota. Todos os parâmetros são opcionais e combináveis.</div>
+        <h4>Query params disponíveis</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Param</th><th>Descrição</th></tr></thead>
+            <tbody>
+              <tr><td><code>dataInicio</code> / <code>dataFim</code></td><td>Intervalo de datas de produção (ISO 8601)</td></tr>
+              <tr><td><code>farinhaMin</code> / <code>farinhaMax</code></td><td>Faixa de farinha em kg</td></tr>
+              <tr><td><code>fermentoMin</code> / <code>fermentoMax</code></td><td>Faixa de fermento em gramas</td></tr>
+              <tr><td><code>emulsificanteMin</code> / <code>emulsificanteMax</code></td><td>Faixa de emulsificante em ml</td></tr>
+              <tr><td><code>tempoMin</code> / <code>tempoMax</code></td><td>Faixa de tempo de fermentação em minutos</td></tr>
+              <tr><td><code>tempIniMin</code> / <code>tempIniMax</code></td><td>Faixa de temperatura ambiente inicial</td></tr>
+              <tr><td><code>tempFimPrevMin</code> / <code>tempFimPrevMax</code></td><td>Faixa de temperatura final prevista</td></tr>
+              <tr><td><code>nota</code></td><td>Nota exata da avaliação (1–5)</td></tr>
+              <tr><td><code>tempRealMin</code> / <code>tempRealMax</code></td><td>Faixa de temperatura final real (campo da avaliação)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method GET">GET</span>
+        <span class="endpoint-path">/producao/pendentes</span>
+        <span class="badge badge-auth">JWT</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Retorna todas as produções que ainda não possuem avaliação, ordenadas das mais recentes para as mais antigas. Usado pelo dashboard para exibir o contador de pendências.</div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method GET">GET</span>
+        <span class="endpoint-path">/producao/:id</span>
+        <span class="badge badge-auth">JWT</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Retorna uma produção específica com sua avaliação inclusa. Lança <code>404</code> se não encontrada.</div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method PATCH">PATCH</span>
+        <span class="endpoint-path">/producao/:id</span>
+        <span class="badge badge-auth">JWT</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Atualiza campos de uma produção existente. Requer permissão <code>editar</code>. Padeiros só podem editar produções com até 3 dias de antiguidade.</div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method DELETE">DELETE</span>
+        <span class="endpoint-path">/producao/:id</span>
+        <span class="badge badge-auth">JWT</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Remove uma produção e sua avaliação associada (cascade). Registra automaticamente um <code>LogExclusao</code> com o nome do usuário. Requer permissão <code>excluir</code>.</div>
+      </div>
+    </div>
+    </div>
+
+    <!-- Sugestão -->
+    <div id="api-producao-sugestao">
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method GET">GET</span>
+        <span class="endpoint-path">/producao/sugestao</span>
+        <span class="badge badge-auth">JWT</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Calcula a dosagem sugerida de fermento com base no histórico de fornadas bem-avaliadas (nota ≥ 4) e no cenário climático atual. Retorna também as 5 fornadas mais similares usadas no cálculo.</div>
+        <h4>Query params</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Param</th><th>Obrigatório</th><th>Descrição</th></tr></thead>
+            <tbody>
+              <tr><td><code>farinha</code></td><td>Sim</td><td>Quantidade de farinha da fornada atual (kg)</td></tr>
+              <tr><td><code>temp</code></td><td>Não</td><td>Temperatura ambiente atual (°C)</td></tr>
+              <tr><td><code>tempFim</code></td><td>Não</td><td>Temperatura prevista para o fim da fermentação (°C)</td></tr>
+              <tr><td><code>minutos</code></td><td>Não</td><td>Tempo de fermentação desejado (minutos)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>Resposta</h4>
+        <pre><code>{
+  <span class="key">"fermento"</span>:  <span class="num">380</span>,
+  <span class="key">"mensagem"</span>: <span class="str">"Foi analisadas 18 fornadas similares..."</span>,
+  <span class="key">"provas"</span>: [
+    {
+      <span class="key">"id"</span>:          <span class="num">47</span>,
+      <span class="key">"tIni"</span>:        <span class="num">24</span>,
+      <span class="key">"tFim"</span>:        <span class="num">26</span>,
+      <span class="key">"tReal"</span>:       <span class="num">25.5</span>,
+      <span class="key">"nota"</span>:        <span class="num">5</span>,
+      <span class="key">"tempo"</span>:       <span class="num">180</span>,
+      <span class="key">"farinha"</span>:     <span class="num">20</span>,
+      <span class="key">"fermento"</span>:    <span class="num">390</span>,
+      <span class="key">"emulsificante"</span>: <span class="num">100</span>,
+      <span class="key">"obs"</span>:         <span class="str">"Dia mais quente"</span>,
+      <span class="key">"comentario"</span>:  <span class="str">"Excelente textura"</span>
+    }
+    <span class="cmt">/* ... mais 4 */</span>
+  ]
+}</code></pre>
+      </div>
+    </div>
+    </div>
+
+    <!-- Clima -->
+    <div id="api-producao-clima">
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method GET">GET</span>
+        <span class="endpoint-path">/producao/clima-previsao</span>
+        <span class="badge badge-auth">JWT</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Consulta a API Open-Meteo e retorna as temperaturas previstas para o início e fim do horário informado, com base nas coordenadas configuradas nas variáveis de ambiente.</div>
+        <h4>Query params</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Param</th><th>Tipo</th><th>Descrição</th></tr></thead>
+            <tbody>
+              <tr><td><code>inicio</code></td><td>string (ISO 8601)</td><td>Timestamp de início da fermentação</td></tr>
+              <tr><td><code>fim</code></td><td>string (ISO 8601)</td><td>Timestamp de fim da fermentação</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>Resposta</h4>
+        <pre><code>{
+  <span class="key">"tempInicial"</span>: <span class="num">24</span>,
+  <span class="key">"tempFinal"</span>:   <span class="num">26</span>,
+  <span class="key">"fonte"</span>:       <span class="str">"Open-Meteo (Best Match)"</span>
+}</code></pre>
+        <div class="callout warn">
+          <div class="callout-title">Fallback</div>
+          Se a API Open-Meteo não retornar dados para o horário solicitado, a resposta conterá <code>tempInicial: null</code>, <code>tempFinal: null</code> e um campo <code>aviso</code> explicativo. O frontend deve tratar esse caso e permitir preenchimento manual.
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- Import/Export -->
+    <div id="api-producao-import">
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method POST">POST</span>
+        <span class="endpoint-path">/producao/importar</span>
+        <span class="badge badge-auth">JWT</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Recebe um arquivo CSV via <code>multipart/form-data</code> (campo <code>file</code>) e inicia a importação em segundo plano. A resposta é imediata — o processamento ocorre de forma assíncrona em lotes de 50 registros para evitar timeout.</div>
+        <h4>Colunas esperadas no CSV</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Coluna</th><th>Exemplo</th></tr></thead>
+            <tbody>
+              <tr><td>data</td><td><code>15/03/2025 06:30:00</code></td></tr>
+              <tr><td>quilos farinha</td><td><code>20,5</code></td></tr>
+              <tr><td>gramas fermento</td><td><code>400</code></td></tr>
+              <tr><td>ml emulsificante</td><td><code>100</code></td></tr>
+              <tr><td>temperatura inicial</td><td><code>23</code></td></tr>
+              <tr><td>temperatura final prevista</td><td><code>25</code></td></tr>
+              <tr><td>temperatura final real</td><td><code>24,5</code> ou <code>N/A</code></td></tr>
+              <tr><td>tempo fermentação</td><td><code>3,0</code> (em horas)</td></tr>
+              <tr><td>qualidade</td><td><code>excelente</code> / <code>bom</code> / <code>regular</code> / <code>ruim</code> / <code>pessimo</code> / <code>N/A</code></td></tr>
+              <tr><td>status</td><td><code>Avaliado</code> ou <code>Pendente</code></td></tr>
+              <tr><td>observações</td><td>Texto livre ou <code>N/A</code></td></tr>
+              <tr><td>comentários</td><td>Texto livre ou <code>N/A</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method GET">GET</span>
+        <span class="endpoint-path">/producao/exportar</span>
+        <span class="badge badge-auth">JWT</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Exporta todas as produções com suas avaliações em um arquivo CSV com delimitador <code>;</code>. O arquivo é enviado diretamente como download com nome <code>producao_royal_export.csv</code>. O CSV exportado é compatível com o formato de importação.</div>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <!-- ── API AVALIACAO ─────────────────────── -->
+  <section class="section" id="api-avaliacao">
+    <h2>Avaliação</h2>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method POST">POST</span>
+        <span class="endpoint-path">/avaliacao</span>
+        <span class="badge badge-auth">JWT</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Cria uma avaliação para uma produção pendente. Cada produção só pode ser avaliada uma vez. Requer permissão <code>avaliar</code>.</div>
+        <h4>Corpo</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Campo</th><th>Tipo</th><th>Obrigatório</th></tr></thead>
+            <tbody>
+              <tr><td><code>producaoId</code></td><td>number</td><td>Sim</td></tr>
+              <tr><td><code>nota</code></td><td>number (1–5)</td><td>Sim</td></tr>
+              <tr><td><code>comentario</code></td><td>string</td><td>Não</td></tr>
+              <tr><td><code>tempAmbienteFinalReal</code></td><td>number</td><td>Não</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method PATCH">PATCH</span>
+        <span class="endpoint-path">/avaliacao/:id</span>
+        <span class="badge badge-auth">JWT</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Edita uma avaliação existente. Requer permissão <code>editar</code>. Padeiros só podem editar avaliações cuja produção vinculada tenha no máximo 3 dias de antiguidade.</div>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="api-dashboard">
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method GET">GET</span>
+        <span class="endpoint-path">/avaliacao/dashboard</span>
+        <span class="badge badge-auth">JWT</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Agrega estatísticas de qualidade para o painel principal. Executa seis queries em paralelo via <code>Promise.all</code>. Retorna dados gerais (todos os tempos) e dados do mês corrente.</div>
+        <h4>Resposta</h4>
+        <pre><code>{
+  <span class="key">"geral"</span>: {
+    <span class="key">"media"</span>: <span class="str">"4.2"</span>,
+    <span class="key">"total"</span>: <span class="num">98</span>,
+    <span class="key">"distribuicao"</span>: [
+      { <span class="key">"nota"</span>: <span class="num">5</span>, <span class="key">"name"</span>: <span class="str">"Excelente"</span>, <span class="key">"value"</span>: <span class="num">41</span>, <span class="key">"fill"</span>: <span class="str">"#22c55e"</span> },
+      { <span class="key">"nota"</span>: <span class="num">4</span>, <span class="key">"name"</span>: <span class="str">"Bom"</span>,       <span class="key">"value"</span>: <span class="num">32</span>, <span class="key">"fill"</span>: <span class="str">"#3b82f6"</span> }
+      <span class="cmt">/* ... notas 3, 2, 1 */</span>
+    ]
+  },
+  <span class="key">"mes"</span>: { <span class="cmt">/* mesma estrutura, filtrado pelo mês atual */</span> },
+  <span class="key">"historico"</span>: [
+    { <span class="key">"name"</span>: <span class="str">"Out"</span>, <span class="key">"media"</span>: <span class="num">4.1</span> },
+    { <span class="key">"name"</span>: <span class="str">"Nov"</span>, <span class="key">"media"</span>: <span class="num">4.3</span> }
+    <span class="cmt">/* últimos 6 meses, ordenado cronologicamente */</span>
+  ]
+}</code></pre>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <!-- ── API USUARIO ───────────────────────── -->
+  <section class="section" id="api-usuario">
+    <h2>Usuários</h2>
+    <p>Todos os endpoints deste recurso são restritos a gerentes. Um gerente não pode excluir sua própria conta.</p>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method GET">GET</span>
+        <span class="endpoint-path">/usuario</span>
+        <span class="badge badge-gerente">Gerente</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Lista todos os usuários cadastrados no sistema.</div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method POST">POST</span>
+        <span class="endpoint-path">/usuario</span>
+        <span class="badge badge-gerente">Gerente</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Cria um novo usuário. A senha é automaticamente hasheada com bcrypt antes de ser persistida.</div>
+        <h4>Campos esperados</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Campo</th><th>Tipo</th><th>Descrição</th></tr></thead>
+            <tbody>
+              <tr><td><code>nome</code></td><td>string</td><td>Nome completo</td></tr>
+              <tr><td><code>email</code></td><td>string</td><td>E-mail único</td></tr>
+              <tr><td><code>senha</code></td><td>string</td><td>Senha em texto plano (será hashada)</td></tr>
+              <tr><td><code>cargo</code></td><td>"GERENTE" | "PADEIRO"</td><td>Nível de acesso</td></tr>
+              <tr><td><code>horarioEntrada</code></td><td>string ("HH:MM")</td><td>Opcional — restrição de horário</td></tr>
+              <tr><td><code>horarioSaida</code></td><td>string ("HH:MM")</td><td>Opcional — restrição de horário</td></tr>
+              <tr><td><code>podeRegistrar</code> ... <code>podeExcluir</code></td><td>boolean</td><td>As 5 permissões individuais</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method PATCH">PATCH</span>
+        <span class="endpoint-path">/usuario/:id</span>
+        <span class="badge badge-gerente">Gerente</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Atualiza qualquer campo de um usuário, incluindo permissões e horário de acesso.</div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method DELETE">DELETE</span>
+        <span class="endpoint-path">/usuario/:id</span>
+        <span class="badge badge-gerente">Gerente</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Remove um usuário. Retorna <code>401</code> se o gerente tentar excluir a própria conta.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── API ADMIN ─────────────────────────── -->
+  <section class="section" id="api-admin">
+    <h2>Administração</h2>
+    <p>Endpoints de configuração e auditoria, exclusivos para gerentes.</p>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method GET">GET</span>
+        <span class="endpoint-path">/admin/logs</span>
+        <span class="badge badge-gerente">Gerente</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Retorna o registro completo de exclusões de fornadas, com nome do responsável, ID da produção excluída e timestamp.</div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method GET">GET</span>
+        <span class="endpoint-path">/admin/config/email</span>
+        <span class="badge badge-gerente">Gerente</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Retorna o e-mail destinatário configurado para o backup diário. Lê da tabela <code>Configuracao</code> pela chave <code>Email_Backup</code>.</div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method PATCH">PATCH</span>
+        <span class="endpoint-path">/admin/config/email</span>
+        <span class="badge badge-gerente">Gerente</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Atualiza o e-mail destinatário do backup. Corpo: <code>{ "email": "novo@email.com" }</code>.</div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method DELETE">DELETE</span>
+        <span class="endpoint-path">/admin/historico/reset</span>
+        <span class="badge badge-gerente">Gerente</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Apaga permanentemente todos os registros de produção e avaliação do banco de dados. Operação irreversível. O frontend exige que o gerente digite a frase exata <code>quero-apagar-meu-historico</code> para habilitar o botão de confirmação.</div>
+        <div class="callout">
+          <div class="callout-title">Atenção</div>
+          Esta operação não pode ser desfeita e não registra log. Use apenas para resetar o sistema em ambiente de testes ou ao encerrar um ciclo completo de dados.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       ALGORITMO
+  ══════════════════════════════════════════ -->
+  <section class="section" id="algoritmo">
+    <div class="section-eyebrow">Lógica Central</div>
+    <h2>Algoritmo de Sugestão de Fermento</h2>
+
+    <p>O módulo de sugestão responde a uma pergunta prática: <em>dado o clima previsto e o tempo de fermentação desejado, qual deve ser a dosagem de fermento por quilo de farinha?</em> A abordagem é baseada em similaridade sobre o histórico de fornadas bem-sucedidas, sem necessidade de treinamento offline.</p>
+
+    <h3>Etapa 1 — Seleção da base histórica</h3>
+    <p>Apenas fornadas que atendam os três critérios abaixo são consideradas:</p>
+    <ul style="margin: .5rem 0 1rem 1.5rem; color: #3c3835;">
+      <li>Nota da avaliação ≥ 4 (Bom ou Excelente)</li>
+      <li>Campo <code>tempAmbienteInicial</code> preenchido</li>
+      <li>Campo <code>tempAmbienteFinal</code> preenchido</li>
+    </ul>
+    <p>Isso garante que o modelo aprenda exclusivamente com produções validadas e com contexto climático completo.</p>
+
+    <h3>Etapa 2 — Cálculo de distância</h3>
+    <p>Para cada fornada histórica, calcula-se uma distância em relação ao cenário atual. A métrica combina diferença de temperatura e diferença de tempo de fermentação:</p>
+
+    <div class="formula">
+      distancia = |tempIni<sub>hist</sub> − tempIni<sub>atual</sub>|<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; + |tempFim<sub>hist</sub> − tempFim<sub>atual</sub>|<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; + |tempo<sub>hist</sub> − tempo<sub>alvo</sub>| ÷ 60<br>
+      <span class="comment"><br>// A divisão por 60 normaliza minutos para a mesma escala
+// que os graus Celsius, evitando dominância da variável temporal.</span>
+    </div>
+
+    <p>Os registros históricos são então ordenados pela distância e os 20 mais próximos são selecionados para o cálculo.</p>
+
+    <h3>Etapa 3 — Peso inversamente proporcional</h3>
+    <p>Cada fornada selecionada recebe um peso que aumenta quanto menor for sua distância ao cenário atual:</p>
+
+    <div class="formula">
+      peso = 1 ÷ (distancia + 0.1)<br>
+      <span class="comment"><br>// O +0.1 evita divisão por zero quando a distância é exatamente 0
+// (temperatura e tempo idênticos ao alvo). Nesse caso, peso ≈ 10.</span>
+    </div>
+
+    <h3>Etapa 4 — Média ponderada da proporção fermento/farinha</h3>
+    <p>O sistema não trabalha com gramas absolutas, mas com a <strong>proporção</strong> entre fermento e farinha de cada fornada. Isso torna a sugestão independente do volume de produção.</p>
+
+    <div class="formula">
+      proporcao<sub>i</sub> = fermento<sub>i</sub> ÷ farinha<sub>i</sub><br><br>
+      proporcao_media = Σ(proporcao<sub>i</sub> × peso<sub>i</sub>) ÷ Σ(peso<sub>i</sub>)<br><br>
+      fermento_sugerido = round(proporcao_media × farinha_atual)
+    </div>
+
+    <h3>Fallback</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Situação</th><th>Comportamento</th></tr></thead>
+        <tbody>
+          <tr><td>Nenhuma temperatura informada</td><td>Todos os 20 últimos registros recebem peso igual (média simples)</td></tr>
+          <tr><td>Nenhum histórico disponível</td><td>Retorna <code>fermento: 0</code> e mensagem explicativa</td></tr>
+          <tr><td>Open-Meteo indisponível</td><td>Campos de temperatura ficam <code>null</code>; usuário preenche manualmente</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-title">Transparência algorítmica</div>
+      A resposta sempre inclui as 5 fornadas mais próximas usadas no cálculo (campo <code>provas</code>), com todos os seus parâmetros. Isso permite que o gerente ou padeiro inspecione a origem da recomendação e julgue sua pertinência.
+    </div>
+  </section>
+
+  <!-- ── REGRAS DE NEGÓCIO ─────────────────── -->
+  <section class="section" id="regras">
+    <div class="section-eyebrow">Lógica do Sistema</div>
+    <h2>Regras de Negócio</h2>
+
+    <h3>Janela de edição de 3 dias</h3>
+    <p>Padeiros podem editar produções e avaliações somente se a produção vinculada tem menos de 3 dias a partir de <code>horaInicio</code>. O cálculo é feito em milissegundos:</p>
+    <pre><code><span class="kw">const</span> diferencaMs = <span class="fn">Date.now</span>() - <span class="kw">new</span> <span class="fn">Date</span>(producao.horaInicio).<span class="fn">getTime</span>();
+<span class="kw">const</span> diferencaDias = diferencaMs / (<span class="num">1000</span> * <span class="num">60</span> * <span class="num">60</span> * <span class="num">24</span>);
+<span class="kw">if</span> (diferencaDias > <span class="num">3</span>) <span class="kw">throw</span> <span class="fn">UnauthorizedException</span>();</code></pre>
+    <p>Gerentes não têm essa restrição.</p>
+
+    <h3>Restrição de horário de login</h3>
+    <p>Ao fazer login, o backend compara o horário atual (no fuso do Brasil) com os campos <code>horarioEntrada</code> e <code>horarioSaida</code> do usuário. A comparação é feita entre strings no formato <code>HH:MM</code>, o que é funcionalmente correto para verificar se o horário atual está dentro do intervalo permitido.</p>
+
+    <h3>Unicidade da avaliação</h3>
+    <p>Antes de criar uma avaliação, o service verifica se já existe um registro com o mesmo <code>producaoId</code>. Como o campo possui constraint <code>@unique</code> no schema, a proteção existe tanto na camada de aplicação quanto no banco de dados.</p>
+
+    <h3>Autoexclusão bloqueada</h3>
+    <p>Um gerente não pode excluir sua própria conta via <code>DELETE /usuario/:id</code>. O controller compara o <code>id</code> do parâmetro com <code>req.user.sub</code> (ID extraído do token JWT).</p>
+
+    <h3>Log de auditoria em exclusões</h3>
+    <p>Toda chamada a <code>DELETE /producao/:id</code> cria um registro em <code>LogExclusao</code> <em>antes</em> de executar a deleção, preservando o histórico mesmo que o registro de produção deixe de existir.</p>
+  </section>
+
+  <!-- ── PERMISSÕES ────────────────────────── -->
+  <section class="section" id="permissoes">
+    <h2>Sistema de Permissões</h2>
+    <p>Cada usuário possui 5 permissões booleanas independentes armazenadas no banco. Ao fazer login, essas permissões são emitidas no payload do JWT e também devolvidas no corpo da resposta para uso imediato pelo frontend.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Permissão</th><th>Campo no banco</th><th>Controla</th></tr></thead>
+        <tbody>
+          <tr><td>Registrar</td><td><code>podeRegistrar</code></td><td>Criar novas produções (<code>POST /producao</code>)</td></tr>
+          <tr><td>Avaliar</td><td><code>podeAvaliar</code></td><td>Submeter avaliações (<code>POST /avaliacao</code>)</td></tr>
+          <tr><td>Ver histórico</td><td><code>podeVerHistorico</code></td><td>Visibilidade do botão "Histórico" no frontend</td></tr>
+          <tr><td>Editar</td><td><code>podeEditar</code></td><td>Atualizar produções e avaliações (<code>PATCH</code>)</td></tr>
+          <tr><td>Excluir</td><td><code>podeExcluir</code></td><td>Remover produções (<code>DELETE /producao/:id</code>)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout info">
+      <div class="callout-title">Aplicação dupla</div>
+      As permissões são verificadas no backend (antes de executar a operação) <em>e</em> usadas no frontend para esconder ou desabilitar elementos de interface. Gerentes ignoram as permissões individuais e têm acesso irrestrito a todos os recursos.
+    </div>
+  </section>
+
+  <!-- ── AUTENTICAÇÃO ──────────────────────── -->
+  <section class="section" id="autenticacao">
+    <h2>Autenticação JWT</h2>
+    <p>O sistema usa JSON Web Tokens assinados com <code>HS256</code>. O token é verificado pelo <code>AuthGuard</code> em todos os controllers, exceto <code>POST /auth/login</code>.</p>
+
+    <h3>Payload do token</h3>
+    <pre><code>{
+  <span class="key">"sub"</span>:           <span class="num">3</span>,           <span class="cmt">// ID do usuário</span>
+  <span class="key">"nome"</span>:         <span class="str">"João"</span>,
+  <span class="key">"cargo"</span>:        <span class="str">"PADEIRO"</span>,
+  <span class="key">"horarioEntrada"</span>: <span class="str">"06:00"</span>,
+  <span class="key">"horarioSaida"</span>:  <span class="str">"14:00"</span>,
+  <span class="key">"permissoes"</span>: {
+    <span class="key">"registrar"</span>: <span class="kw">true</span>,
+    <span class="key">"avaliar"</span>:   <span class="kw">true</span>,
+    <span class="key">"historico"</span>: <span class="kw">false</span>,
+    <span class="key">"editar"</span>:    <span class="kw">true</span>,
+    <span class="key">"excluir"</span>:   <span class="kw">false</span>
+  },
+  <span class="key">"iat"</span>: <span class="num">1741564800</span>,
+  <span class="key">"exp"</span>: <span class="num">1741651200</span>
+}</code></pre>
+
+    <p>O campo <code>sub</code> é o identificador canônico do usuário nos controllers que precisam rastrear quem executou uma ação (criação de produção, exclusão com log, etc.).</p>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       FLUXOS
+  ══════════════════════════════════════════ -->
+  <section class="section" id="fluxo-producao">
+    <div class="section-eyebrow">Fluxos</div>
+    <h2>Ciclo de Vida de uma Produção</h2>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-dot">1</div>
+        <div class="flow-content">
+          <div class="flow-title">Registro da fornada</div>
+          <div class="flow-text">O padeiro preenche o formulário com ingredientes e horário. O frontend consulta <code>GET /producao/clima-previsao</code> para preencher as temperaturas automaticamente. O padeiro pode ajustar os valores antes de salvar. <code>POST /producao</code> calcula <code>tempoFermentacaoMinutos</code> e persiste o registro.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">2</div>
+        <div class="flow-content">
+          <div class="flow-title">Estado pendente</div>
+          <div class="flow-text">A fornada existe no banco sem avaliação. <code>GET /producao/pendentes</code> a retorna. O dashboard exibe o contador de pendências e alerta visual.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">3</div>
+        <div class="flow-content">
+          <div class="flow-title">Avaliação</div>
+          <div class="flow-text">O operador atribui uma nota de 1 a 5, com comentário e temperatura final real opcional. <code>POST /avaliacao</code> verifica unicidade e persiste. A fornada sai da lista de pendentes.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">4</div>
+        <div class="flow-content">
+          <div class="flow-title">Contribuição ao modelo</div>
+          <div class="flow-text">Se a nota for ≥ 4 e os campos de temperatura estiverem preenchidos, a fornada passa a compor a base do algoritmo de sugestão em todas as chamadas futuras a <code>GET /producao/sugestao</code>.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="fluxo-sugestao">
+    <h2>Fluxo de Sugestão Inteligente</h2>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-dot">1</div>
+        <div class="flow-content">
+          <div class="flow-title">Frontend busca previsão climática</div>
+          <div class="flow-text">Ao informar os horários de início e fim, o frontend chama <code>GET /producao/clima-previsao</code>. As temperaturas são preenchidas automaticamente nos campos do formulário.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">2</div>
+        <div class="flow-content">
+          <div class="flow-title">Requisição de sugestão</div>
+          <div class="flow-text">Com farinha, temperaturas e tempo de fermentação preenchidos, o frontend chama <code>GET /producao/sugestao?farinha=20&temp=24&tempFim=26&minutos=180</code>.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">3</div>
+        <div class="flow-content">
+          <div class="flow-title">Cálculo no backend</div>
+          <div class="flow-text">O algoritmo seleciona os 20 registros mais similares, calcula os pesos, computa a média ponderada e retorna a dosagem sugerida em gramas junto com as 5 fornadas mais próximas como evidência.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">4</div>
+        <div class="flow-content">
+          <div class="flow-title">Exibição e decisão</div>
+          <div class="flow-text">O padeiro vê a sugestão e pode aceitar, ajustar ou ignorar. O valor pode ser editado livremente antes de submeter o formulário.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="fluxo-backup">
+    <h2>Backup Automático</h2>
+    <p>O <code>BackupModule</code> usa <code>@nestjs/schedule</code> para executar uma tarefa agendada diariamente. O processo é:</p>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-dot">1</div>
+        <div class="flow-content">
+          <div class="flow-title">Leitura do destinatário</div>
+          <div class="flow-text">O service busca o e-mail configurado na tabela <code>Configuracao</code> pela chave <code>Email_Backup</code>.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">2</div>
+        <div class="flow-content">
+          <div class="flow-title">Geração do CSV</div>
+          <div class="flow-text">Chama internamente a mesma lógica de <code>GET /producao/exportar</code> para gerar o arquivo com todos os dados.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot">3</div>
+        <div class="flow-content">
+          <div class="flow-title">Envio por e-mail</div>
+          <div class="flow-text">O Nodemailer envia o CSV como anexo usando as credenciais configuradas nas variáveis de ambiente (<code>EMAIL_USER</code> e <code>EMAIL_PASS</code>).</div>
+        </div>
+      </div>
+    </div>
+
+    <p>O e-mail destinatário pode ser alterado a qualquer momento pelo gerente via <code>PATCH /admin/config/email</code>.</p>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       FRONTEND
+  ══════════════════════════════════════════ -->
+  <section class="section" id="frontend-rotas">
+    <div class="section-eyebrow">Frontend</div>
+    <h2>Rotas da Interface</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Rota</th><th>Descrição</th><th>Acesso</th></tr></thead>
+        <tbody>
+          <tr><td><code>/login</code></td><td>Tela de autenticação</td><td>Público</td></tr>
+          <tr><td><code>/</code></td><td>Dashboard principal com gráficos, contador de pendências e atalhos</td><td>Autenticado</td></tr>
+          <tr><td><code>/producao/novo</code></td><td>Formulário de registro de nova fornada com sugestão inteligente</td><td>Autenticado + perm. registrar</td></tr>
+          <tr><td><code>/producao/historico</code></td><td>Listagem paginada e filtrável de todas as fornadas</td><td>Autenticado + perm. histórico</td></tr>
+          <tr><td><code>/avaliacao</code></td><td>Lista de produções pendentes de avaliação</td><td>Autenticado</td></tr>
+          <tr><td><code>/avaliacao/[id]</code></td><td>Formulário de avaliação de uma fornada específica</td><td>Autenticado + perm. avaliar</td></tr>
+          <tr><td><code>/usuarios</code></td><td>Gerenciamento de equipe (criar, editar, remover funcionários)</td><td>Gerente</td></tr>
+          <tr><td><code>/painel</code></td><td>Painel gerencial: backup, logs de auditoria, reset do sistema</td><td>Gerente</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section" id="frontend-auth">
+    <h2>Gerenciamento de Sessão</h2>
+    <p>A sessão é controlada pelo <code>AuthContext</code>, um React Context disponível em toda a aplicação via <code>AuthProvider</code> no <code>layout.tsx</code>.</p>
+
+    <h3>Persistência</h3>
+    <p>Ao fazer login, o token JWT é armazenado em <code>localStorage</code> com a chave <code>royal_token</code>. Os dados básicos do usuário (nome, cargo, permissões) são armazenados em <code>royal_user</code> como JSON. Na inicialização do app, o <code>AuthProvider</code> verifica a presença dessas chaves e restaura a sessão automaticamente.</p>
+
+    <h3>Proteção de rotas</h3>
+    <p>O <code>useEffect</code> do <code>AuthProvider</code> redireciona para <code>/login</code> caso nenhum token seja encontrado no <code>localStorage</code>. Rotas específicas (como <code>/usuarios</code> e <code>/painel</code>) verificam adicionalmente o cargo do usuário via <code>isGerente</code>.</p>
+
+    <h3>Expiração do token</h3>
+    <p>Quando o backend retorna <code>401</code> em qualquer requisição, o frontend executa <code>logout()</code>, que limpa o <code>localStorage</code> e redireciona para <code>/login</code>.</p>
+  </section>
+
+  <!-- ══════════════════════════════════════════
+       SETUP
+  ══════════════════════════════════════════ -->
+  <section class="section" id="setup">
+    <div class="section-eyebrow">Operações</div>
+    <h2>Configuração do Ambiente Local</h2>
+
+    <div class="callout info">
+      <div class="callout-title">Pré-requisitos</div>
+      Node.js 20 ou superior, Docker e Docker Compose instalados na máquina.
+    </div>
+
+    <h3>1. Banco de dados</h3>
+    <pre><code><span class="cmt"># Na raiz do projeto</span>
+docker-compose up -d</code></pre>
+
+    <h3>2. Backend</h3>
+    <pre><code>cd backend
+
+<span class="cmt"># Instalar dependências</span>
+npm install
+
+<span class="cmt"># Criar o .env a partir do exemplo e preencher as variáveis</span>
+cp .env.example .env
+
+<span class="cmt"># Aplicar as migrations no banco</span>
+npx prisma migrate deploy
+
+<span class="cmt"># Popular com dados iniciais (seed)</span>
+npx prisma db seed
+
+<span class="cmt"># Iniciar em modo de desenvolvimento</span>
+npm run start:dev</code></pre>
+    <p>A API estará disponível em <code>http://localhost:3000</code>.</p>
+
+    <h3>3. Frontend</h3>
+    <pre><code>cd frontend
+npm install
+npm run dev</code></pre>
+    <p>A interface estará disponível em <code>http://localhost:3001</code> (ou <code>3000</code> caso o backend esteja em outra porta).</p>
+
+    <h3>Comandos úteis</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Comando</th><th>Descrição</th></tr></thead>
+        <tbody>
+          <tr><td><code>npm run test</code></td><td>Executa testes unitários (backend)</td></tr>
+          <tr><td><code>npm run test:cov</code></td><td>Testes com relatório de cobertura</td></tr>
+          <tr><td><code>npm run test:e2e</code></td><td>Testes end-to-end com Supertest</td></tr>
+          <tr><td><code>npx prisma studio</code></td><td>Interface visual para inspecionar o banco de dados</td></tr>
+          <tr><td><code>npx prisma migrate dev</code></td><td>Criar e aplicar uma nova migration após alterar o schema</td></tr>
+          <tr><td><code>npm run start:prod</code></td><td>Build e execução em modo produção</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── VARIÁVEIS ─────────────────────────── -->
+  <section class="section" id="variaveis">
+    <h2>Variáveis de Ambiente</h2>
+    <p>Todas as variáveis são carregadas pelo <code>ConfigModule.forRoot({ isGlobal: true })</code> do NestJS e ficam disponíveis em todo o backend via <code>ConfigService</code> ou <code>process.env</code>.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Variável</th><th>Obrigatória</th><th>Descrição</th></tr></thead>
+        <tbody>
+          <tr><td><code>DATABASE_URL</code></td><td>Sim</td><td>String de conexão PostgreSQL. Ex: <code>postgresql://admin:adminpassword@localhost:5432/padaria_royal</code></td></tr>
+          <tr><td><code>JWT_SECRET</code></td><td>Sim</td><td>Chave secreta para assinar e verificar tokens JWT. Use uma string longa e aleatória em produção.</td></tr>
+          <tr><td><code>CIDADE_LAT</code></td><td>Sim</td><td>Latitude da cidade da padaria. Usada na consulta à API Open-Meteo.</td></tr>
+          <tr><td><code>CIDADE_LON</code></td><td>Sim</td><td>Longitude da cidade da padaria.</td></tr>
+          <tr><td><code>EMAIL_USER</code></td><td>Sim</td><td>Endereço de e-mail usado pelo Nodemailer para enviar o backup diário.</td></tr>
+          <tr><td><code>EMAIL_PASS</code></td><td>Sim</td><td>Senha ou token de aplicativo da conta de e-mail.</td></tr>
+          <tr><td><code>PORT</code></td><td>Não</td><td>Porta do servidor HTTP. Padrão: <code>3000</code>.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  // Highlight nav link ativo conforme scroll
+  const links = document.querySelectorAll('.nav-link');
+  const sections = document.querySelectorAll('.section');
+
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-10% 0px -85% 0px' });
+
+  sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>
