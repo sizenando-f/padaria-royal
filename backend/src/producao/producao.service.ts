@@ -405,7 +405,7 @@ export class ProducaoService {
 
     return {
       fermento: fermentoSugerido,
-      mensagem: `IA analisou ${selecionados.length} fornadas similares (considerando Clima e Tempo de Fermentação).`,
+      mensagem: `Sistema analisou ${selecionados.length} fornadas similares (considerando Clima e Tempo de Fermentação).`,
       // Retorna completo para a prova
       provas: topProvas.map((s) => ({
         id: s.id,
