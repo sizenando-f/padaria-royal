@@ -17,7 +17,7 @@ export class BackupService {
         private configService: ConfigService
     ){}
 
-    @Cron('0 0 9 * * *', { timeZone: 'America/Campo_Grande'})    // Para rodar todos os dias as 18:00
+    @Cron('0 30 9 * * *', { timeZone: 'America/Campo_Grande'})    // Para rodar todos os dias as 18:00
     async verificarEExecutarBackup() {
         this.logger.log(`Cron disparado! Hora atual: ${new Date().toLocaleString('pt-BR')}`)
 
