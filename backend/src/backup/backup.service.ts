@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "src/prisma/prisma.service";
-import * as nodemailer from 'nodemailer';
+import { Resend } from "resend";
 import { Parser } from "json2csv";
 import { Cron } from "@nestjs/schedule";
 
@@ -88,30 +88,20 @@ export class BackupService {
             const emailDestino = configBanco ? configBanco.valor : this.configService.get('EMAIL_DESTINO');
 
             // Configura o envio de email
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: this.configService.get('EMAIL_USER'),
-                    pass: this.configService.get('EMAIL_PASS'),
-                },
-            });
+            const resend = new Resend(this.configService.get('RESEND_API_KEY'));
 
-            const mailOptions = {
-                from: `"Sistema Royal" <${this.configService.get('EMAIL_USER')}>`,
+            await resend.emails.send({
+                from: 'Padaria Royal <onboarding@resend.dev>',
                 to: emailDestino,
                 subject: `Backup Diário - ${hoje} - Padaria Royal`,
                 text: `Olá gerente, \n\nSegue em anexo o backup completo dos dados do sistema referente ao dia ${hoje}.\n\nGuarde este arquivo em segurança. Pode ser usado para restaurar dados via importação.`,
                 attachments: [
                     {
                         filename: `backup-royal-${hoje.replace(/\//g, '-')}.csv`,
-                        content: csvContent,
-                        contentType: 'text/csv'
+                        content: Buffer.from(csvContent).toString('base64'),
                     },
                 ],
-            };
-
-            // Realiza o envio
-            await transporter.sendMail(mailOptions);
+            });
 
             // Marca como feito
             this.lastBackupDate = hoje;
