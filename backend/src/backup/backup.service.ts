@@ -18,7 +18,7 @@ export class BackupService {
         private configService: ConfigService
     ){}
 
-    @Cron('0 30 10 * * *', { timeZone: 'America/Campo_Grande'})    // Para rodar todos os dias as 18:00
+    @Cron('0 40 10 * * *', { timeZone: 'America/Campo_Grande'})    // Para rodar todos os dias as 18:00
     async verificarEExecutarBackup() {
         this.logger.log(`Cron disparado! Hora atual: ${new Date().toLocaleString('pt-BR')}`)
 
@@ -103,8 +103,8 @@ export class BackupService {
 
             const transporter = nodemailer.createTransport({
                 host: 'smtp.gmail.com',
-                port: 465,
-                secure: true,
+                port: 587,
+                secure: false,
                 auth: {
                     type: 'OAuth2',
                     user: 'black.wingsss.ofc@gmail.com',
