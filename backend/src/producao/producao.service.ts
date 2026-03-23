@@ -11,6 +11,7 @@ import { Parser } from 'json2csv';
 @Injectable()
 export class ProducaoService {
   private readonly logger = new Logger(ProducaoService.name);
+  private readonly timezonePadraoImportacao = 'America/Campo_Grande';
 
   // Fazemos a injeção
   constructor(
@@ -439,6 +440,10 @@ export class ProducaoService {
   private async processarImportacao(buffer: Buffer) {
     const bufferString = buffer.toString('utf-8');
     const stream = Readable.from(bufferString);
+    const timezoneImportacao =
+      this.configService.get<string>('IMPORT_TIMEZONE') ||
+      this.configService.get<string>('TZ') ||
+      this.timezonePadraoImportacao;
 
     const parser = stream.pipe(
       parse({
@@ -515,11 +520,36 @@ export class ProducaoService {
         }
 
         const [dia, mes, ano] = dataSplitted;
-        const dataISO   = `${ano}-${mes}-${dia}T${horaPart}.000Z`;
-        const parsedDate = new Date(dataISO);
 
-        if (isNaN(parsedDate.getTime())) {
-          this.logger.warn(`Linha ignorada: Data inválida: ${dataISO}`);
+        const [hora, minuto, segundo] = horaPart.split(':');
+        const parsedDate = this.criarDataNoFuso(
+          Number(ano),
+          Number(mes),
+          Number(dia),
+          Number(hora),
+          Number(minuto),
+          Number(segundo),
+          timezoneImportacao,
+        );
+
+        if (!parsedDate || isNaN(parsedDate.getTime())) {
+          this.logger.warn(`Linha ignorada: Data inválida: ${rawData}`);
+          continue;
+        }
+
+        const dataInicioIso = parsedDate.toISOString();
+        const dataProducaoDate = this.criarDataNoFuso(
+          Number(ano),
+          Number(mes),
+          Number(dia),
+          0,
+          0,
+          0,
+          timezoneImportacao,
+        );
+
+        if (!dataProducaoDate || isNaN(dataProducaoDate.getTime())) {
+          this.logger.warn(`Linha ignorada: Data de produção inválida: ${rawData}`);
           continue;
         }
 
@@ -550,9 +580,9 @@ export class ProducaoService {
           (qualidadeStr && qualidadeStr.toLowerCase().trim() === 'pendente');
 
         linhasValidas.push({
-          dataProducao:            `${ano}-${mes}-${dia}T00:00:00.000Z`,
-          horaInicio:              dataISO,
-          horaFim:                 new Date(new Date(dataISO).getTime() + minutos * 60000).toISOString(),
+          dataProducao:            dataProducaoDate.toISOString(),
+          horaInicio:              dataInicioIso,
+          horaFim:                 new Date(parsedDate.getTime() + minutos * 60000).toISOString(),
           tempoFermentacaoMinutos: minutos,
           farinhaKg:               farinha,
           fermentoGrama:           fermento,
@@ -681,5 +711,87 @@ export class ProducaoService {
       delimiter: ';',
     });
     return json2csvParser.parse(dadosFormatados);
+  }
+
+  private criarDataNoFuso(
+    ano: number,
+    mes: number,
+    dia: number,
+    hora: number,
+    minuto: number,
+    segundo: number,
+    timezone: string,
+  ): Date | null {
+    if (
+      !Number.isFinite(ano) ||
+      !Number.isFinite(mes) ||
+      !Number.isFinite(dia) ||
+      !Number.isFinite(hora) ||
+      !Number.isFinite(minuto) ||
+      !Number.isFinite(segundo)
+    ) {
+      return null;
+    }
+
+    // Converte o horário local (fuso configurado) para um instante UTC persistível.
+    const utcGuessMs = Date.UTC(ano, mes - 1, dia, hora, minuto, segundo);
+    const instante = this.converterHorarioLocalParaUtc(utcGuessMs, timezone);
+
+    return isNaN(instante.getTime()) ? null : instante;
+  }
+
+  private converterHorarioLocalParaUtc(
+    utcGuessMs: number,
+    timezone: string,
+  ): Date {
+    let utcMs = utcGuessMs;
+
+    // Duas iterações estabilizam o cálculo caso exista transição de horário no dia.
+    for (let i = 0; i < 2; i++) {
+      const offsetMs = this.getOffsetDoFusoMs(new Date(utcMs), timezone);
+      utcMs = utcGuessMs - offsetMs;
+    }
+
+    return new Date(utcMs);
+  }
+
+  private getOffsetDoFusoMs(date: Date, timezone: string): number {
+    try {
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: timezone,
+        hour12: false,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      });
+
+      const parts = formatter.formatToParts(date);
+      const valores: Record<string, string> = {};
+
+      for (const part of parts) {
+        if (part.type !== 'literal') {
+          valores[part.type] = part.value;
+        }
+      }
+
+      const asUtcMs = Date.UTC(
+        Number(valores.year),
+        Number(valores.month) - 1,
+        Number(valores.day),
+        Number(valores.hour),
+        Number(valores.minute),
+        Number(valores.second),
+      );
+
+      return asUtcMs - date.getTime();
+    } catch {
+      this.logger.warn(
+        `Timezone inválido (${timezone}) na importação. Usando UTC como fallback.`,
+      );
+      return 0;
+    }
   }
 }
