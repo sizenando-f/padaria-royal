@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import MobileNav from "./components/MobileNav";
 import { AuthProvider } from "@/context/AuthContext";
+import { Providers } from "./providers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -41,11 +42,13 @@ export default function RootLayout({
   return (
     <html lang="pt-br">
       <body className={`${inter.className} bg-gray-50 text-gray-900`}>
-        <AuthProvider>
-          <main className="pb-24 md:pb-8">{children}</main>
-          {/* Menu só aparece quando logado */}
-          <MobileNav />
-        </AuthProvider>
+        <Providers>
+          <AuthProvider>
+            <main className="pb-24 md:pb-8">{children}</main>
+            {/* Menu só aparece quando logado */}
+            <MobileNav />
+          </AuthProvider>
+        </Providers>
       </body>
     </html>
   );

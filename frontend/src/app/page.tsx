@@ -17,66 +17,43 @@ import {
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, CartesianGrid, XAxis, Bar, YAxis } from "recharts";
 import { useAuth } from "@/context/AuthContext"; // Informações de login
+import { useQuery } from "@tanstack/react-query";
 
 export default function Home() {
   // Informações do usuário
   const { user, logout } = useAuth();
 
-  // Estados
-  const [stats, setStats] = useState<any>(null);
-  const [pendentes, setPendentes] = useState(0);
-  const [loading, setLoading] = useState(true);
+  // Query para buscar as pendências
+  const { data: pendentes = 0 } = useQuery({
+    queryKey: ["pendentes"],
+    queryFn: async () => {
+      const token = localStorage.getItem("royal_token");
+      if(!token) return 0;
 
-  // Nome do mês atual
-  const nomeMesAtual = new Date().toLocaleString('pt-BR', { month: 'long' });
-  const mesCapitalizado = nomeMesAtual.charAt(0).toUpperCase + nomeMesAtual.slice(1);
+      const res = await fetch("https://padaria-royal-api.onrender.com/producao/pendentes", {
+        headers: {Authorization: `Bearer ${token}`}, 
+      });
 
-  // Busca os Dados
-  useEffect(() => {
-    const token = localStorage.getItem("royal_token");
-    if(token) {
-      fetch("https://padaria-royal-api.onrender.com/producao/pendentes", {
-        headers: { Authorization: `Bearer ${token}`},
-      }).catch(() => {});
-    }
+      if(!res.ok) return 0;
+      const data = await res.json();
+      return data.length || 0;
+    },
+  });
 
-    async function fetchData() {
-      try {
-        const token = localStorage.getItem("royal_token");
-        if (!token) return;
+  // Query para buscar estatisticas do dashboard
+  const { data: stats, isLoading: loading } = useQuery({
+    queryKey: ["dashboard"],
+    queryFn: async () => {
+      const token = localStorage.getItem("royal_token");
+      if (!token) return null;
 
-        const headers = {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        };
-
-        // As duas requisições disparam ao mesmo tempo
-        const [resPendentes, resStats] = await Promise.all([
-          fetch("https://padaria-royal-api.onrender.com/producao/pendentes", { headers }),
-          fetch("https://padaria-royal-api.onrender.com/avaliacao/dashboard", { headers }),
-        ]);
-
-        if (resPendentes.status === 401) {
-          logout();
-          return;
-        } // Desloga se o token venceu
-
-        const [dataPendentes, dataStats] = await Promise.all([
-          resPendentes.json(),
-          resStats.json(),
-        ]);
-
-        if (Array.isArray(dataPendentes)) setPendentes(dataPendentes.length);
-        setStats(dataStats);
-
-      } catch (error) {
-        console.error("Erro ao carregar dashboard", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
+      const res = await fetch("https://padaria-royal-api.onrender.com/avaliacao/dashboard", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Erro ao buscar dashboard");
+      return res.json();
+    },
+  });
 
   // Auxilair para o gráfico de rosca
   const DonutChart = ({ data, media, total, titulo, icon: Icon, colorIcon }: any) => (

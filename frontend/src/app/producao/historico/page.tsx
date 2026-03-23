@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Calendar,
   Clock,
   Thermometer,
   Trash2,
@@ -13,14 +12,10 @@ import {
   Download,
   Upload,
   Loader2,
-  Search,
   ArrowLeft,
   Droplets,
   Star,
-  AlertTriangle,
-  CheckCircle2,
   MessageSquare,
-  Key,
   Filter,
   X,
   ThermometerSun,
@@ -28,28 +23,23 @@ import {
 } from "lucide-react";
 import Toast from "@/app/components/Toast";
 import { useAuth } from "@/context/AuthContext";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 
 export default function HistoricoProducao() {
   const router = useRouter();
   const { user, isGerente } = useAuth();
 
-  const [producoes, setProducoes] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [importando, setImportando] = useState(false);
-
   const [pagina, setPagina] = useState(1);
-  const [totalPaginas, setTotalPaginas] = useState(1);
-  const [total, setTotal] = useState(0);
   const LIMIT = 20;
 
   const [toast, setToast] = useState<{
     msg: string;
     type: "success" | "error";
   } | null>(null);
+  const [importando, setImportando] = useState(false);
 
-  // Filtro
-  const [mostrarFiltros, setMostrarFiltros] = useState(false);
-  const [filtros, setFiltros] = useState({
+   // Filtro
+  const filtrosIniciais = {
     dataInicio: '', dataFim: '',
     nota: '',
     farinhaMin: '', farinhaMax: '',
@@ -58,98 +48,100 @@ export default function HistoricoProducao() {
     emulsificanteMin: '', emulsificanteMax: '',
     tempoHoraMin: '', tempoHoraMax: '',
     tempPrevMin: '', tempPrevMax: ''
-  });
+  };
 
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
+  const [filtros, setFiltros] = useState(filtrosIniciais); // Modal
+  const [filtrosAplicados, setFiltrosAplicados] = useState(filtrosIniciais);
 
-  useEffect(() => {
-    // Trava de segurança
-    if(user){
-      if(!isGerente && !user.permissoes?.historico) {
-        router.push("/");
-        return;
-      }
+   const handleChangeFiltro = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setFiltros({ ...filtros, [e.target.name]: e.target.value });
+  };
+
+  const limparFiltros = () => {
+    setFiltros(filtrosIniciais);
+    setFiltrosAplicados(filtrosIniciais); 
+    setPagina(1);
+    setMostrarFiltros(false);
+  };
+
+  const handleAplicarFiltros = () => {
+    setFiltrosAplicados(filtros); 
+    setPagina(1);
+    setMostrarFiltros(false);
+    showToast('Filtros aplicados', 'success');
+  };
+
+  // Converte o estado local para os nomes de query esperados pelo backend.
+  const buildQueryString = () => {
+    const params = new URLSearchParams();
+
+    if (filtrosAplicados.dataInicio) params.append("dataInicio", filtrosAplicados.dataInicio);
+    if (filtrosAplicados.dataFim) params.append("dataFim", filtrosAplicados.dataFim);
+    if (filtrosAplicados.nota) params.append("nota", filtrosAplicados.nota);
+
+    if (filtrosAplicados.farinhaMin) params.append("farinhaMin", filtrosAplicados.farinhaMin);
+    if (filtrosAplicados.farinhaMax) params.append("farinhaMax", filtrosAplicados.farinhaMax);
+    if (filtrosAplicados.fermentoMin) params.append("fermentoMin", filtrosAplicados.fermentoMin);
+    if (filtrosAplicados.fermentoMax) params.append("fermentoMax", filtrosAplicados.fermentoMax);
+    if (filtrosAplicados.emulsificanteMin) params.append("emulsificanteMin", filtrosAplicados.emulsificanteMin);
+    if (filtrosAplicados.emulsificanteMax) params.append("emulsificanteMax", filtrosAplicados.emulsificanteMax);
+
+    // Conversão de horas para minutos no payload final.
+    if (filtrosAplicados.tempoHoraMin) {
+      params.append("tempoMin", String(Number(filtrosAplicados.tempoHoraMin) * 60));
+    }
+    if (filtrosAplicados.tempoHoraMax) {
+      params.append("tempoMax", String(Number(filtrosAplicados.tempoHoraMax) * 60));
     }
 
-    carregarDados();
-  }, [user, isGerente, router]);
+    // No backend atual, a temperatura prevista final usa tempFimPrevMin/Max.
+    if (filtrosAplicados.tempPrevMin) params.append("tempFimPrevMin", filtrosAplicados.tempPrevMin);
+    if (filtrosAplicados.tempPrevMax) params.append("tempFimPrevMax", filtrosAplicados.tempPrevMax);
+
+    if (filtrosAplicados.tempRealMin) params.append("tempRealMin", filtrosAplicados.tempRealMin);
+    if (filtrosAplicados.tempRealMax) params.append("tempRealMax", filtrosAplicados.tempRealMax);
+
+    return params.toString();
+  };
+
+const { data, isLoading, isFetching, refetch} = useQuery({
+  queryKey: ["historico", pagina, filtrosAplicados],
+  queryFn: async () => {
+      const token = localStorage.getItem("royal_token");
+        if (!token) throw new Error("Não autorizado");
+
+        const qs = buildQueryString();
+        const filtrosAtivos = qs.length > 0;
+        const baseUrl = filtrosAtivos
+          ? "https://padaria-royal-api.onrender.com/producao/filtrar"
+          : "https://padaria-royal-api.onrender.com/producao";
+        const paginacao = filtrosAtivos ? "" : `page=${pagina}&limit=${LIMIT}&`;
+        const url = `${baseUrl}?${paginacao}${qs}`;
+
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) throw new Error("Erro ao buscar histórico");
+        return res.json(); 
+    },
+    placeholderData: keepPreviousData,
+  });
+
+  const retornoFiltrado = Array.isArray(data);
+  const listaCompleta = retornoFiltrado ? data : data?.dados || [];
+  const total = retornoFiltrado ? listaCompleta.length : data?.total || 0;
+  const totalPaginas = retornoFiltrado
+    ? Math.max(1, Math.ceil(total / LIMIT))
+    : data?.totalPaginas || 1;
+  const inicioPaginacao = (pagina - 1) * LIMIT;
+  const producoes = retornoFiltrado
+    ? listaCompleta.slice(inicioPaginacao, inicioPaginacao + LIMIT)
+    : listaCompleta;
 
   // Para pegar o header
   const getHeaders = () => {
     const token = localStorage.getItem("royal_token");
     return { Authorization: `Bearer ${token}` };
   };
-
-  async function carregarDados(queryParams = '', paginaAtual = 1) {
-    setLoading(true);
-
-    try {
-      let url: string;
-
-      if (queryParams) {
-        // Filtro usa endpoint próprio
-        url = `https://padaria-royal-api.onrender.com/producao/filtrar?${queryParams}`;
-      } else {
-        // Listagem normal com paginação
-        url = `https://padaria-royal-api.onrender.com/producao?page=${paginaAtual}&limit=${LIMIT}`;
-      }
-
-      const res = await fetch(url, { headers: getHeaders() });
-
-      if (res.status === 401) { 
-        router.push("/login"); 
-        return;
-      }
-
-      const data = await res.json();
-
-      if (queryParams) {
-        setProducoes(Array.isArray(data) ? data: []);
-        setTotalPaginas(1);
-        setTotal(Array.isArray(data) ? data.length : 0);
-      } else {
-        setProducoes(data.dados ?? []);
-        setTotal(data.total ?? 0);
-        setTotalPaginas(data.totalPaginas ?? 1);
-        setPagina(data.pagina ?? 1);
-      }
-    } catch (error) {
-      showToast("Erro ao carregar dados.", "error");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const handleAplicarFiltros = () => {
-    const params = new URLSearchParams();
-
-    Object.entries(filtros).forEach(([Key, value]) => {
-      if(value) params.append(Key, value);
-    });
-
-    // Conversão: Horas -> Minutos para o Backend
-    if(filtros.tempoHoraMin) params.append('tempoMin', String(Number(filtros.tempoHoraMin) * 60));
-    if(filtros.tempoHoraMax) params.append('tempoMax', String(Number(filtros.tempoHoraMax) * 60));
-
-    carregarDados(params.toString());
-    setMostrarFiltros(false);
-    showToast('Filtros aplicados', 'success');
-  };
-
-  const limparFiltros = () => {
-    setFiltros({
-        dataInicio: '', dataFim: '',
-        nota: '',
-        farinhaMin: '', farinhaMax: '',
-        tempRealMin: '', tempRealMax: '',
-        fermentoMin: '', fermentoMax: '',
-        emulsificanteMin: '', emulsificanteMax: '',
-        tempoHoraMin: '', tempoHoraMax: '',
-        tempPrevMin: '', tempPrevMax: ''
-      });
-      setPagina(1);
-      carregarDados();
-      setMostrarFiltros(false);
-  }
 
   const showToast = (msg: string, type: "success" | "error") => {
     setToast({ msg, type });
@@ -220,7 +212,9 @@ export default function HistoricoProducao() {
       });
 
       if (!res.ok) throw new Error();
-      setProducoes((prev) => prev.filter((p) => p.id !== id));
+
+      refetch();
+
       showToast("Produção excluída.", "success");
     } catch {
       showToast("Erro ao excluir.", "error");
@@ -293,7 +287,7 @@ export default function HistoricoProducao() {
               <span className="text-sm font-bold ">Filtros Avançados</span>
             </div>
             {/* Bolinha para mostrar se filtro está ativo */}
-            {Object.values(filtros).some(x => x !== '') && (
+            {Object.values(filtrosAplicados).some(x => x !== '') && (
               <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
             )}
           </button>
@@ -435,14 +429,14 @@ export default function HistoricoProducao() {
         )}
 
         {/* Lista de cards */}
-        {loading ? (
+        {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-2">
             <Loader2 className="animate-spin text-orange-500" size={32} />
             <p className="text-gray-400 text-sm">Carregando histórico...</p>
           </div>
         ) : (
           <div className="space-y-4 animate-fade-in">
-            {producoes.map((prod) => (
+            {producoes.map((prod: any) => (
               <div
                 key={prod.id}
                 className="bg-white p-5 rounded-4xl border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow"
@@ -586,7 +580,7 @@ export default function HistoricoProducao() {
               </div>
             ))}
             {/* Paginação que só aparece quando o filtro não está ativo */}
-            {!loading && totalPaginas > 1 && (
+            {!isLoading && totalPaginas > 1 && (
             <div className="flex items-center justify-between pt-2 pb-4">
               <span className="text-xs text-gray-400 font-medium">
                 {total} fornadas - página {pagina} de {totalPaginas}
@@ -595,10 +589,8 @@ export default function HistoricoProducao() {
                 <button
                   disabled={pagina <= 1}
                   onClick={() => {
-                    const p = pagina - 1;
-                    setPagina(p);
+                    setPagina(pagina - 1);
                     scrollTo({top: 0, behavior: 'smooth'});
-                    carregarDados('', p);
                   }}
                   className="px-4 py-2 text-sm font-bold rounded-xl border border-gray-200 bg-white text-gray-600 disabled:opacity-30 hover:bg-gray-50 transition-colors"
                 >
@@ -610,7 +602,6 @@ export default function HistoricoProducao() {
                     const p = pagina + 1;
                     setPagina(p);
                     scrollTo({top: 0, behavior: 'smooth'});
-                    carregarDados('', p);
                   }}
                   className="px-4 py-2 text-sm font-bold rounded-xl border border-gray-200 bg-white text-gray-600 disabled:opacity-30 hover:bg-gray-50 transition-colors"
                 >
