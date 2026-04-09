@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { Prisma } from "@prisma/client";
 import { PrismaService } from "src/prisma/prisma.service";
 import { Parser } from "json2csv";
 import { Cron } from "@nestjs/schedule";
@@ -110,7 +111,16 @@ export class BackupService {
             this.lastBackupDate = hoje;
             this.logger.log(`Backup enviado com sucesso para ${emailDestino} (ID: ${data?.id})`);
         } catch (error) {
-            this.logger.error('Falha ao enviar backup:', error);
+            if (error instanceof Prisma.PrismaClientKnownRequestError) {
+                this.logger.error(
+                    `Falha Prisma ao enviar backup (code=${error.code}, version=${error.clientVersion}): ${error.message}`,
+                );
+                this.logger.error(`Detalhes Prisma: ${JSON.stringify(error.meta || {})}`);
+            } else if (error instanceof Prisma.PrismaClientValidationError) {
+                this.logger.error(`Falha de validacao Prisma ao enviar backup: ${error.message}`);
+            } else {
+                this.logger.error('Falha ao enviar backup:', error);
+            }
         } finally {
             // Libera a trava
             this.isProcessing = false;
