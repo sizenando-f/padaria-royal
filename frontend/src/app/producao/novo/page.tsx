@@ -18,6 +18,7 @@ import {
   Star,
   Droplets,
   AlertTriangle,
+  RefreshCw
 } from "lucide-react";
 import Toast from "@/app/components/Toast";
 
@@ -390,7 +391,9 @@ export default function NovaProducao() {
               {buscandoClima ? (
                 <Loader2 className="animate-spin" size={14} />
               ) : (
-                "🔄 Atualizar"
+                <div className="flex gap-1 justify-center items-center">
+                  <RefreshCw size={12}/> Atualizar
+                </div>
               )}
             </button>
           </div>
