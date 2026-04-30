@@ -31,6 +31,68 @@ export class BackupService {
         this.logger.log('Iniciando rotina de Backup diário...');
 
         try {
+                await this.executeBackupWithRetries(false);
+            } catch (err) {
+                this.logger.error('Backup final falhou após tentativas:', err);
+            }
+        }
+
+        // Método público para disparo manual via controller
+        async triggerBackupManual() {
+            return this.executeBackupWithRetries(true);
+        }
+
+        // Envolve a execução com retry + exponential backoff
+        private async executeBackupWithRetries(ignoreDate = false) {
+            const hoje = new Date().toLocaleDateString('pt-BR');
+
+            if (!ignoreDate && this.lastBackupDate === hoje) {
+                this.logger.log('Backup já realizado hoje, pulando execução.');
+                return;
+            }
+
+            if (this.isProcessing) {
+                this.logger.log('Outra execução de backup está em andamento, pulando.');
+                return;
+            }
+
+            this.isProcessing = true;
+            this.logger.log(`Iniciando rotina de Backup (manual=${ignoreDate})...`);
+
+            const maxAttempts = 3;
+            let attempt = 0;
+            let delayMs = 1000;
+
+            while (attempt < maxAttempts) {
+                attempt++;
+                try {
+                    this.logger.log(`Tentativa ${attempt} de ${maxAttempts} para gerar/enviar backup.`);
+                    await this.runBackup();
+                    this.lastBackupDate = hoje;
+                    this.logger.log(`Backup enviado com sucesso (tentativa ${attempt}).`);
+                    break; // sucesso
+                } catch (error: any) {
+                    // Log detalhado
+                    const code = error?.code || error?.message || 'unknown';
+                    this.logger.error(`Falha na tentativa ${attempt}: ${code}`);
+                    this.logger.debug(`Detalhes do erro da tentativa ${attempt}: ${JSON.stringify(error)}`);
+
+                    if (attempt >= maxAttempts) {
+                        this.logger.error('Todas as tentativas de backup falharam.');
+                        throw error;
+                    }
+
+                    // Exponential backoff
+                    await new Promise((r) => setTimeout(r, delayMs));
+                    delayMs *= 2;
+                }
+            }
+
+            this.isProcessing = false;
+        }
+
+        // Lógica única que realiza a coleta, formatação e envio do backup
+        private async runBackup() {
             // Coleta todos os dados
             const dados = await this.prisma.producao.findMany({
                 include: {
@@ -42,7 +104,7 @@ export class BackupService {
             });
 
             if(dados.length === 0){
-                this.logger.log('Sem dadoss para backup.');
+                this.logger.log('Sem dados para backup.');
                 return;
             }
 
@@ -57,7 +119,6 @@ export class BackupService {
                 };
 
                 return {
-                    // Esses cabeçalhos iguais aos que o 'importarDados'
                     'Fornada': `#${p.id}`,
                     'Data/Hora': new Date(p.horaInicio).toLocaleString('pt-BR'),
                     'Temperatura Inicial (°C)': p.tempAmbienteInicial,
@@ -89,41 +150,26 @@ export class BackupService {
             // Configura o envio de email
             const resend = new Resend(this.configService.get('RESEND_API_KEY'));
 
+            const hoje = new Date().toLocaleDateString('pt-BR');
+
             const { data, error } = await resend.emails.send({
-                from: 'Padaria Royal <onboarding@resend.dev>', // O email padrão de teste do Resend
+                from: 'Padaria Royal <onboarding@resend.dev>',
                 to: emailDestino,
                 subject: `Backup Diário - ${hoje} - Padaria Royal`,
                 text: `Olá gerente, \n\nSegue em anexo o backup completo dos dados do sistema referente ao dia ${hoje}.\n\nGuarde este arquivo em segurança. Pode ser usado para restaurar dados via importação.`,
                 attachments: [
                     {
                         filename: `backup-royal-${hoje.replace(/\//g, '-')}.csv`,
-                        content: Buffer.from(csvContent, 'utf-8'), // Converte o texto para buffer para o anexo
+                        content: Buffer.from(csvContent, 'utf-8'),
                     },
                 ],
             });
 
             if (error) {
                 this.logger.error(`Erro da API do Resend: ${error.message}`);
-                return;
+                throw error;
             }
 
-            // Marca como feito
-            this.lastBackupDate = hoje;
             this.logger.log(`Backup enviado com sucesso para ${emailDestino} (ID: ${data?.id})`);
-        } catch (error) {
-            if (error instanceof Prisma.PrismaClientKnownRequestError) {
-                this.logger.error(
-                    `Falha Prisma ao enviar backup (code=${error.code}, version=${error.clientVersion}): ${error.message}`,
-                );
-                this.logger.error(`Detalhes Prisma: ${JSON.stringify(error.meta || {})}`);
-            } else if (error instanceof Prisma.PrismaClientValidationError) {
-                this.logger.error(`Falha de validacao Prisma ao enviar backup: ${error.message}`);
-            } else {
-                this.logger.error('Falha ao enviar backup:', error);
-            }
-        } finally {
-            // Libera a trava
-            this.isProcessing = false;
         }
-    }
 }
