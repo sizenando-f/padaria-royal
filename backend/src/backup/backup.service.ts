@@ -51,28 +51,30 @@ export class BackupService {
         this.logger.log(`Iniciando rotina de Backup (manual=${ignoreDate})...`);
 
         try {
-            const maxAttempts = 3;
+            const maxAttempts = 5;
             let attempt = 0;
-            let delayMs = 1000;
+            let delayMs = 2000; // Começar com 2s em vez de 1s
 
             while (attempt < maxAttempts) {
                 attempt++;
+                const timestamp = new Date().toISOString();
                 try {
-                    this.logger.log(`Tentativa ${attempt} de ${maxAttempts} para gerar/enviar backup.`);
+                    this.logger.log(`[${timestamp}] Tentativa ${attempt} de ${maxAttempts} para gerar/enviar backup.`);
                     await this.runBackup();
                     this.lastBackupDate = hoje;
-                    this.logger.log(`Backup enviado com sucesso (tentativa ${attempt}).`);
+                    this.logger.log(`[${timestamp}] Backup enviado com sucesso (tentativa ${attempt}).`);
                     break;
                 } catch (error: any) {
                     const code = error?.code || error?.message || 'unknown';
-                    this.logger.error(`Falha na tentativa ${attempt}: ${code}`);
-                    this.logger.debug(`Detalhes do erro da tentativa ${attempt}: ${JSON.stringify(error)}`);
+                    this.logger.error(`[${timestamp}] Falha na tentativa ${attempt}: ${code}`);
+                    this.logger.debug(`[${timestamp}] Detalhes do erro da tentativa ${attempt}: ${JSON.stringify(error)}`);
 
                     if (attempt >= maxAttempts) {
-                        this.logger.error('Todas as tentativas de backup falharam.');
+                        this.logger.error(`[${timestamp}] Todas as ${maxAttempts} tentativas de backup falharam.`);
                         throw error;
                     }
 
+                    this.logger.log(`[${timestamp}] Aguardando ${delayMs}ms antes da tentativa ${attempt + 1}...`);
                     await new Promise((r) => setTimeout(r, delayMs));
                     delayMs *= 2;
                 }
