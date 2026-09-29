@@ -1,9 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';  // Importa
+import compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Ativa compressão HTTP (Gzip/Deflate)
+  app.use(compression());
 
   // Libera o Frontend
   app.enableCors({
