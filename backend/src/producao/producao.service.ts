@@ -226,22 +226,39 @@ export class ProducaoService {
 
   async getPrevisaoPorHorario(inicioIso: string, fimIso: string) {
     try {
-      const lat = this.configService.get<string>('CIDADE_LAT');
-      const lon = this.configService.get<string>('CIDADE_LON');
+      const inicioDate = new Date(inicioIso);
+      const fimDate = new Date(fimIso);
 
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m&timezone=auto&forecast_days=3&timeformat=unixtime`;
+      if (isNaN(inicioDate.getTime()) || isNaN(fimDate.getTime())) {
+        return {
+          tempInicial: null,
+          tempFinal: null,
+          aviso: 'Horários de início ou fim inválidos.',
+        };
+      }
+
+      const lat = this.configService.get<string>('CIDADE_LAT') || '-21.78759548687768';
+      const lon = this.configService.get<string>('CIDADE_LON') || '-54.5592407544818';
+
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m&timezone=auto&past_days=2&forecast_days=3&timeformat=unixtime`;
 
       this.logger.log(`Buscando clima (Auto) em: ${url}`);
 
-      const response = await axios.get(url);
+      const response = await axios.get(url, { timeout: 8000 });
 
-      const times: number[] = response.data.hourly.time;
-      const temps: number[] = response.data.hourly.temperature_2m;
+      const times: number[] = response.data?.hourly?.time || [];
+      const temps: number[] = response.data?.hourly?.temperature_2m || [];
 
-      const targetInicioSeconds = Math.floor(
-        new Date(inicioIso).getTime() / 1000,
-      );
-      const targetFimSeconds = Math.floor(new Date(fimIso).getTime() / 1000);
+      if (!times.length || !temps.length) {
+        return {
+          tempInicial: null,
+          tempFinal: null,
+          aviso: 'Dados meteorológicos indisponíveis no momento.',
+        };
+      }
+
+      const targetInicioSeconds = Math.floor(inicioDate.getTime() / 1000);
+      const targetFimSeconds = Math.floor(fimDate.getTime() / 1000);
 
       const findClosestTemp = (targetSec: number) => {
         let menorDiff = Infinity;
@@ -256,6 +273,9 @@ export class ProducaoService {
         }
 
         if (indexEncontrado === -1) return null;
+
+        // Se a diferença for superior a 4 dias (345600 seg), desconsidera
+        if (menorDiff > 345600) return null;
 
         // Proteção extra: Se a API devolver null, retornamos null explicitamente
         const temperatura = temps[indexEncontrado];
@@ -290,7 +310,11 @@ export class ProducaoService {
       };
     } catch (error) {
       this.logger.error(`Erro Open-Meteo: ${error.message}`);
-      return null;
+      return {
+        tempInicial: null,
+        tempFinal: null,
+        aviso: 'Instabilidade na consulta meteorológica. Insira as temperaturas manualmente.',
+      };
     }
   }
 

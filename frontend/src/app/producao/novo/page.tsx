@@ -92,11 +92,64 @@ export default function NovaProducao() {
     setFormData((prev) => ({ ...prev, horaFim: isoLocal }));
   };
 
+  // Busca clima diretamente do Open-Meteo pelo navegador caso a API backend oscile ou sofra rate-limit de IP compartilhado
+  async function buscarClimaDiretoOpenMeteo(dInicio: Date, dFim: Date) {
+    try {
+      const lat = "-21.78759548687768";
+      const lon = "-54.5592407544818";
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m&timezone=auto&past_days=2&forecast_days=3&timeformat=unixtime`;
+
+      const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      const times: number[] = data?.hourly?.time || [];
+      const temps: number[] = data?.hourly?.temperature_2m || [];
+      if (!times.length || !temps.length) return null;
+
+      const targetIniSec = Math.floor(dInicio.getTime() / 1000);
+      const targetFimSec = Math.floor(dFim.getTime() / 1000);
+
+      const findClosest = (sec: number) => {
+        let menorDiff = Infinity;
+        let indexEncontrado = -1;
+        for (let i = 0; i < times.length; i++) {
+          const diff = Math.abs(times[i] - sec);
+          if (diff < menorDiff) {
+            menorDiff = diff;
+            indexEncontrado = i;
+          }
+        }
+        if (indexEncontrado === -1 || menorDiff > 345600) return null;
+        const temp = temps[indexEncontrado];
+        return temp != null ? Math.round(temp) : null;
+      };
+
+      const tIni = findClosest(targetIniSec);
+      const tFim = findClosest(targetFimSec);
+      if (tIni != null && tFim != null) {
+        return { tempInicial: tIni, tempFinal: tFim };
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
   async function buscarTemperaturas() {
     if (!formData.horaInicio || !formData.horaFim) {
       setToast({ msg: "Preencha os horários de Início e Fim.", type: "error" });
       return;
     }
+
+    const dInicio = new Date(formData.horaInicio);
+    const dFim = new Date(formData.horaFim);
+
+    if (isNaN(dInicio.getTime()) || isNaN(dFim.getTime())) {
+      setToast({ msg: "Horários de Início ou Fim inválidos.", type: "error" });
+      return;
+    }
+
     setBuscandoClima(true);
     try {
       const token = localStorage.getItem("royal_token");
@@ -105,48 +158,71 @@ export default function NovaProducao() {
         return;
       }
 
-      const dInicio = new Date(formData.horaInicio);
-      const dFim = new Date(formData.horaFim);
-
       const query = new URLSearchParams({
         inicio: dInicio.toISOString(),
         fim: dFim.toISOString(),
       }).toString();
 
-      const res = await fetch(
-        `https://padaria-royal-api.onrender.com/producao/clima-previsao?${query}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      let climaEncontrado: { tempInicial: number; tempFinal: number } | null = null;
 
-      if (res.status === 401) {
-        setToast({
-          msg: "Sessão inválida. Faça login novamente.",
-          type: "error",
-        });
-        return;
+      // 1. Tenta obter pelo backend
+      try {
+        const res = await fetch(
+          `https://padaria-royal-api.onrender.com/producao/clima-previsao?${query}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        if (res.status === 401) {
+          setToast({
+            msg: "Sessão inválida. Faça login novamente.",
+            type: "error",
+          });
+          return;
+        }
+
+        if (res.ok) {
+          const text = await res.text();
+          if (text) {
+            const data = JSON.parse(text);
+            if (data && data.tempInicial != null && data.tempFinal != null) {
+              climaEncontrado = {
+                tempInicial: Number(data.tempInicial),
+                tempFinal: Number(data.tempFinal),
+              };
+            }
+          }
+        }
+      } catch (errBackend) {
+        console.warn("Backend indisponível para clima, acionando busca direta...", errBackend);
       }
 
-      const data = await res.json();
+      // 2. Se o backend retornar vazio ou falhar (ex: IP do Render limitado pelo Open-Meteo), busca direto do navegador
+      if (!climaEncontrado) {
+        climaEncontrado = await buscarClimaDiretoOpenMeteo(dInicio, dFim);
+      }
 
-      if (data && data.tempInicial != null && data.tempFinal != null) {
+      if (climaEncontrado) {
         setFormData((prev) => ({
           ...prev,
-          tempAmbienteInicial: String(data.tempInicial),
-          tempAmbienteFinal: String(data.tempFinal),
+          tempAmbienteInicial: String(climaEncontrado.tempInicial),
+          tempAmbienteFinal: String(climaEncontrado.tempFinal),
         }));
       } else {
         setToast({
-          msg: data.aviso || "Sem previsão disponível.",
+          msg: "Não foi possível obter a previsão para este horário. Insira manualmente.",
           type: "error",
         });
       }
     } catch (error) {
-      console.error(error);
-      setToast({ msg: "Erro de conexão com API de clima.", type: "error" });
+      console.error("Erro ao buscar clima:", error);
+      setToast({
+        msg: "Falha ao obter o clima. Insira as temperaturas manualmente.",
+        type: "error",
+      });
     } finally {
       setBuscandoClima(false);
     }

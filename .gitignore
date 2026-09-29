@@ -14,6 +14,8 @@ build/
 # Logs e Sistema
 *.log
 .DS_Store
+*Zone.Identifier*
+*:Zone.Identifier
 
 # IDE
 .vscode/

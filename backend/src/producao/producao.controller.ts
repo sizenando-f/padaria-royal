@@ -87,7 +87,13 @@ export class ProducaoController {
 
   @Get('clima-previsao')
   async getClima(@Query('inicio') inicio: string, @Query('fim') fim: string) {
-    if (!inicio || !fim) return null;
+    if (!inicio || !fim) {
+      return {
+        tempInicial: null,
+        tempFinal: null,
+        aviso: 'Parâmetros de início e fim são obrigatórios.',
+      };
+    }
     return this.producaoService.getPrevisaoPorHorario(inicio, fim);
   }
 
