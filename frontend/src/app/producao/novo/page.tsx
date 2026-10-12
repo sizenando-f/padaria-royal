@@ -21,6 +21,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import Toast from "@/app/components/Toast";
+import { getApiBaseUrl } from "@/utils/api";
 
 export default function NovaProducao() {
   // Estados
@@ -168,7 +169,7 @@ export default function NovaProducao() {
       // 1. Tenta obter pelo backend
       try {
         const res = await fetch(
-          `https://padaria-royal-api.onrender.com/producao/clima-previsao?${query}`,
+          `${getApiBaseUrl()}/producao/clima-previsao?${query}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -271,7 +272,7 @@ export default function NovaProducao() {
     try {
       const token = localStorage.getItem("royal_token");
 
-      let url = `https://padaria-royal-api.onrender.com/producao/sugestao?farinha=${farinha}`;
+      let url = `${getApiBaseUrl()}/producao/sugestao?farinha=${farinha}`;
       if (tIni) url += `&temp=${tIni}`;
       if (tFim) url += `&tempFim=${tFim}`;
       if (minutosAlvo) url += `&minutos=${minutosAlvo}`;
@@ -343,7 +344,7 @@ export default function NovaProducao() {
           : null,
       };
 
-      const res = await fetch("https://padaria-royal-api.onrender.com/producao", {
+      const res = await fetch(`${getApiBaseUrl()}/producao`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

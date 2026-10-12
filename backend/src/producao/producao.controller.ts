@@ -62,6 +62,17 @@ export class ProducaoController {
     res.send(csv);
   }
 
+  @Get('bi-stats')
+  async getBiStats(
+    @Query('periodo') periodo: 'todos' | 'mes' = 'todos',
+    @Request() req,
+  ) {
+    if (req.user.cargo !== 'GERENTE') {
+      throw new UnauthorizedException('Acesso restrito a gerentes.');
+    }
+    return this.producaoService.getBiStats(periodo);
+  }
+
   // Precisa vir antes do @Get('id') senão ele acha que 'pendentes é um ID'
   @Get('pendentes')
   findPendentes() {
