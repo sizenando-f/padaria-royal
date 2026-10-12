@@ -5,6 +5,7 @@ import { AlertTriangle, ArrowLeft, History, Loader2, Mail, Save, Trash2 } from "
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Toast from "../components/Toast";
+import { getApiBaseUrl } from "@/utils/api";
 
 export default function PainelGerencial() {
     const router = useRouter();
@@ -37,14 +38,14 @@ export default function PainelGerencial() {
     async function carregarDados() {
         try {
             // Busca o email atual
-            const resEmail = await fetch("https://padaria-royal-api.onrender.com/admin/config/email",
+            const resEmail = await fetch(`${getApiBaseUrl()}/admin/config/email`,
                 { headers: getHeaders()}
             );
             const dataEmail = await resEmail.json();
             if(dataEmail.email) setEmailBackup(dataEmail.email);
 
             // Busca os logs
-            const resLogs = await fetch("https://padaria-royal-api.onrender.com/admin/logs", { headers: getHeaders()});
+            const resLogs = await fetch(`${getApiBaseUrl()}/admin/logs`, { headers: getHeaders()});
             const dataLogs = await resLogs.json();
             setLogs(dataLogs);
 
@@ -63,7 +64,7 @@ export default function PainelGerencial() {
         setSalvandoEmail(true);
 
         try {
-            const res = await fetch("https://padaria-royal-api.onrender.com/admin/config/email", {
+            const res = await fetch(`${getApiBaseUrl()}/admin/config/email`, {
                 method: "PATCH",
                 headers: getHeaders(),
                 body: JSON.stringify({ email: emailBackup })
@@ -90,7 +91,7 @@ export default function PainelGerencial() {
 
         setApagando(true);
         try{
-            const res = await fetch("https://padaria-royal-api.onrender.com/admin/historico/reset", {
+            const res = await fetch(`${getApiBaseUrl()}/admin/historico/reset`, {
                 method: "DELETE",
                 headers: getHeaders()
             });

@@ -18,6 +18,8 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, CartesianGrid, XAxis, Bar, YAxis } from "recharts";
 import { useAuth } from "@/context/AuthContext"; // Informações de login
 import { useQuery } from "@tanstack/react-query";
+import BiGerencial from "./components/BiGerencial";
+import { fetchWithFallback } from "@/utils/api";
 
 export default function Home() {
   // Informações do usuário
@@ -27,31 +29,20 @@ export default function Home() {
   const { data: pendentes = 0 } = useQuery({
     queryKey: ["pendentes"],
     queryFn: async () => {
-      const token = localStorage.getItem("royal_token");
-      if(!token) return 0;
-
-      const res = await fetch("https://padaria-royal-api.onrender.com/producao/pendentes", {
-        headers: {Authorization: `Bearer ${token}`}, 
-      });
-
-      if(!res.ok) return 0;
-      const data = await res.json();
-      return data.length || 0;
+      try {
+        const data = await fetchWithFallback<any[]>("/producao/pendentes");
+        return data.length || 0;
+      } catch {
+        return 0;
+      }
     },
   });
 
   // Query para buscar estatisticas do dashboard
-  const { data: stats, isLoading: loading } = useQuery({
+  const { data: stats, isLoading: loading } = useQuery<any>({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const token = localStorage.getItem("royal_token");
-      if (!token) return null;
-
-      const res = await fetch("https://padaria-royal-api.onrender.com/avaliacao/dashboard", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Erro ao buscar dashboard");
-      return res.json();
+      return await fetchWithFallback<any>("/avaliacao/dashboard");
     },
   });
 
@@ -293,8 +284,10 @@ export default function Home() {
             </p>
         </Link>
         )}
-        
       </div>
+
+      {/* Seção de Inteligência de Produção exclusiva para Gerente */}
+      {user?.cargo === "GERENTE" && <BiGerencial />}
     </div>
   );
 }

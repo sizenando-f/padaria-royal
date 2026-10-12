@@ -24,6 +24,7 @@ import {
 import Toast from "@/app/components/Toast";
 import { useAuth } from "@/context/AuthContext";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { getApiBaseUrl } from "@/utils/api";
 
 export default function HistoricoProducao() {
   const router = useRouter();
@@ -114,8 +115,8 @@ const { data, isLoading, isFetching, refetch} = useQuery({
         const qs = buildQueryString();
         const filtrosAtivos = qs.length > 0;
         const baseUrl = filtrosAtivos
-          ? "https://padaria-royal-api.onrender.com/producao/filtrar"
-          : "https://padaria-royal-api.onrender.com/producao";
+          ? `${getApiBaseUrl()}/producao/filtrar`
+          : `${getApiBaseUrl()}/producao`;
         const paginacao = filtrosAtivos ? "" : `page=${pagina}&limit=${LIMIT}&`;
         const url = `${baseUrl}?${paginacao}${qs}`;
 
@@ -150,7 +151,7 @@ const { data, isLoading, isFetching, refetch} = useQuery({
   // Blob
   const handleExportar = async () => {
     try {
-      const res = await fetch("https://padaria-royal-api.onrender.com/producao/exportar", {
+      const res = await fetch(`${getApiBaseUrl()}/producao/exportar`, {
         method: "GET",
         headers: getHeaders(), // Envia o token
       });
@@ -184,7 +185,7 @@ const { data, isLoading, isFetching, refetch} = useQuery({
 
     try {
       const token = localStorage.getItem("royal_token");
-      const res = await fetch("https://padaria-royal-api.onrender.com/producao/importar", {
+      const res = await fetch(`${getApiBaseUrl()}/producao/importar`, {
         method: "POST",
         body: formData,
         headers: { Authorization: `Bearer ${token}` },
@@ -206,7 +207,7 @@ const { data, isLoading, isFetching, refetch} = useQuery({
     if (!confirm("Tem certeza que deseja excluir a fornada #" + id + "?"))
       return;
     try {
-      const res = await fetch(`https://padaria-royal-api.onrender.com/producao/${id}`, {
+      const res = await fetch(`${getApiBaseUrl()}/producao/${id}`, {
         method: "DELETE",
         headers: getHeaders(),
       });
