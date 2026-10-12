@@ -16,7 +16,7 @@ export function getApiBaseUrl(): string {
   return "https://padaria-royal-api.onrender.com";
 }
 
-export async function fetchWithFallback<T = any>(
+export async function fetchWithFallback<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
