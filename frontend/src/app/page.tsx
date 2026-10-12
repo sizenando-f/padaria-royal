@@ -39,10 +39,10 @@ export default function Home() {
   });
 
   // Query para buscar estatisticas do dashboard
-  const { data: stats, isLoading: loading } = useQuery({
+  const { data: stats, isLoading: loading } = useQuery<any>({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      return await fetchWithFallback("/avaliacao/dashboard");
+      return await fetchWithFallback<any>("/avaliacao/dashboard");
     },
   });
 
