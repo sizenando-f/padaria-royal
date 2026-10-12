@@ -11,6 +11,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Toast from "@/app/components/Toast";
+import { getApiBaseUrl } from "@/utils/api";
 
 export default function RevisaoAvaliacao() {
   const params = useParams();
@@ -51,7 +52,7 @@ export default function RevisaoAvaliacao() {
     async function fetchProducao() {
       try {
         const response = await fetch(
-          `https://padaria-royal-api.onrender.com/producao/${params.id}`,
+          `${getApiBaseUrl()}/producao/${params.id}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("royal_token")}`,
@@ -105,7 +106,7 @@ export default function RevisaoAvaliacao() {
     setSalvando(true);
     try {
       // Atualiza dados da produção (PATCH)
-      const resProducao = await fetch(`https://padaria-royal-api.onrender.com/producao/${params.id}`, {
+      const resProducao = await fetch(`${getApiBaseUrl()}/producao/${params.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -135,8 +136,8 @@ export default function RevisaoAvaliacao() {
       };
 
       const url = avaliacaoId
-        ? `https://padaria-royal-api.onrender.com/avaliacao/${avaliacaoId}`
-        : "https://padaria-royal-api.onrender.com/avaliacao";
+        ? `${getApiBaseUrl()}/avaliacao/${avaliacaoId}`
+        : `${getApiBaseUrl()}/avaliacao`;
 
       const method = avaliacaoId ? "PATCH" : "POST";
 

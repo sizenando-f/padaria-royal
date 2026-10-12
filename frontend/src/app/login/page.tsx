@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import React, { useState } from "react";
 import Toast from "../components/Toast";
 import { ArrowRight, ChefHat, Loader2, Lock, User } from "lucide-react";
+import { getApiBaseUrl } from "@/utils/api";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -20,7 +21,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch("https://padaria-royal-api.onrender.com/auth/login", {
+      const res = await fetch(`${getApiBaseUrl()}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

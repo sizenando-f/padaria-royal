@@ -16,6 +16,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Toast from "../components/Toast";
+import { getApiBaseUrl } from "@/utils/api";
 
 interface Producao {
   id: number;
@@ -40,7 +41,7 @@ export default function ListaPendentes() {
 
         // Busca todas as produções e filtra no front ou usa rota específica se tiver
         // Assumindo que sua rota /producao retorna tudo, filtramos aqui ou usamos rota dedicada
-        const response = await fetch("https://padaria-royal-api.onrender.com/producao/pendentes", {
+        const response = await fetch(`${getApiBaseUrl()}/producao/pendentes`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.status === 401) {
@@ -69,7 +70,7 @@ export default function ListaPendentes() {
 
     try {
       const token = localStorage.getItem('royal_token');
-      const res = await fetch(`https://padaria-royal-api.onrender.com/producao/${id}`, {
+      const res = await fetch(`${getApiBaseUrl()}/producao/${id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`

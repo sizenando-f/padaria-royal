@@ -5,6 +5,7 @@ import { ArrowLeft, CheckCircle2, Clock, Loader2, Pencil, Settings, ShieldCheck,
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Toast from "../components/Toast";
+import { getApiBaseUrl } from "@/utils/api";
 
 export default function GestaoUsuario() {
     const router = useRouter();
@@ -44,7 +45,7 @@ export default function GestaoUsuario() {
 
     async function carregarUsuarios() {
         try {
-            const res = await fetch("https://padaria-royal-api.onrender.com/usuario",
+            const res = await fetch(`${getApiBaseUrl()}/usuario`,
                 {
                     headers: getHeaders()
                 }
@@ -70,7 +71,7 @@ export default function GestaoUsuario() {
         if(!confirm(`Tem certeza que deseja demitir/excluir o acesso de ${nome}?`)) return;
 
         try {
-            const res = await fetch(`https://padaria-royal-api.onrender.com/usuario/${id}`, {
+            const res = await fetch(`${getApiBaseUrl()}/usuario/${id}`, {
                 method: "DELETE",
                 headers: getHeaders()
             });
@@ -126,8 +127,8 @@ export default function GestaoUsuario() {
         setSalvando(true);
 
         try {
-            const url = usuarioEditando ? `https://padaria-royal-api.onrender.com/usuario/${usuarioEditando}`
-            : "https://padaria-royal-api.onrender.com/usuario";
+            const url = usuarioEditando ? `${getApiBaseUrl()}/usuario/${usuarioEditando}`
+            : `${getApiBaseUrl()}/usuario`;
 
             const method = usuarioEditando ? "PATCH" : "POST";
 

@@ -224,6 +224,125 @@ export class ProducaoService {
     });
   }
 
+  async getBiStats(periodo: 'todos' | 'mes' = 'todos') {
+    const hoje = new Date();
+    const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const fimMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    fimMes.setHours(23, 59, 59, 999);
+
+    const whereClause: any =
+      periodo === 'mes'
+        ? {
+            dataProducao: {
+              gte: inicioMes,
+              lte: fimMes,
+            },
+          }
+        : {};
+
+    // Histórico mensal (últimos 6 meses) para o gráfico de consumo de farinha
+    const seisMesesAtras = new Date();
+    seisMesesAtras.setMonth(seisMesesAtras.getMonth() - 5);
+    seisMesesAtras.setDate(1);
+    seisMesesAtras.setHours(0, 0, 0, 0);
+
+    const [agg, totalCount, producoesRecentes] = await Promise.all([
+      this.prisma.producao.aggregate({
+        where: whereClause,
+        _sum: {
+          farinhaKg: true,
+          fermentoGrama: true,
+          emulsificanteMl: true,
+        },
+        _avg: {
+          farinhaKg: true,
+          fermentoGrama: true,
+          tempoFermentacaoMinutos: true,
+        },
+      }),
+      this.prisma.producao.count({ where: whereClause }),
+      this.prisma.producao.findMany({
+        where: {
+          dataProducao: { gte: seisMesesAtras },
+        },
+        select: {
+          dataProducao: true,
+          farinhaKg: true,
+        },
+        orderBy: {
+          dataProducao: 'asc',
+        },
+      }),
+    ]);
+
+    const totalFarinhaKg = agg._sum.farinhaKg ? Number(agg._sum.farinhaKg) : 0;
+    const totalFermentoGrama = agg._sum.fermentoGrama ? Number(agg._sum.fermentoGrama) : 0;
+    const totalEmulsificanteMl = agg._sum.emulsificanteMl ? Number(agg._sum.emulsificanteMl) : 0;
+
+    const tempoMedioMinutos = agg._avg.tempoFermentacaoMinutos
+      ? Math.round(Number(agg._avg.tempoFermentacaoMinutos))
+      : 0;
+
+    // Proporção de fermento: g de fermento por kg de farinha
+    const proporcaoFermentoGramaPorKg =
+      totalFarinhaKg > 0 ? Number((totalFermentoGrama / totalFarinhaKg).toFixed(2)) : 0;
+
+    // Agrupamento mensal para o gráfico de evolução nos últimos 6 meses
+    const mesesMap = new Map<string, { nome: string; farinhaKg: number; fornadas: number; sortKey: number }>();
+
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+      const mesNome = d.toLocaleDateString('pt-BR', { month: 'short' });
+      const key = (mesNome.charAt(0).toUpperCase() + mesNome.slice(1)).replace('.', '');
+      const sortKey = d.getFullYear() * 100 + d.getMonth();
+      mesesMap.set(key, { nome: key, farinhaKg: 0, fornadas: 0, sortKey });
+    }
+
+    producoesRecentes.forEach((p) => {
+      const d = new Date(p.dataProducao);
+      const mesNome = d.toLocaleDateString('pt-BR', { month: 'short' });
+      const key = (mesNome.charAt(0).toUpperCase() + mesNome.slice(1)).replace('.', '');
+      if (mesesMap.has(key)) {
+        const item = mesesMap.get(key)!;
+        item.farinhaKg += Number(p.farinhaKg);
+        item.fornadas += 1;
+      }
+    });
+
+    const evolucaoFarinha = Array.from(mesesMap.values())
+      .sort((a, b) => a.sortKey - b.sortKey)
+      .map((item) => ({
+        name: item.nome,
+        farinhaKg: Number(item.farinhaKg.toFixed(1)),
+        fornadas: item.fornadas,
+      }));
+
+    return {
+      periodo,
+      totalFarinhaKg: Number(totalFarinhaKg.toFixed(2)),
+      totalFermentoGrama: Number(totalFermentoGrama.toFixed(2)),
+      totalEmulsificanteMl: Number(totalEmulsificanteMl.toFixed(2)),
+      totalFornadas: totalCount,
+      tempoMedioMinutos,
+      mediaFarinhaPorFornada: totalCount > 0 ? Number((totalFarinhaKg / totalCount).toFixed(2)) : 0,
+      proporcaoFermentoGramaPorKg,
+      tendenciaFarinha: await (async () => {
+        if (periodo !== 'mes') return null;
+        const inicioMesAnterior = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+        const fimMesAnterior = new Date(hoje.getFullYear(), hoje.getMonth(), 0, 23, 59, 59, 999);
+        const aggAnt = await this.prisma.producao.aggregate({
+          where: { dataProducao: { gte: inicioMesAnterior, lte: fimMesAnterior } },
+          _sum: { farinhaKg: true },
+        });
+        const farinhaAnt = aggAnt._sum.farinhaKg ? Number(aggAnt._sum.farinhaKg) : 0;
+        if (farinhaAnt <= 0) return null;
+        return Number((((totalFarinhaKg - farinhaAnt) / farinhaAnt) * 100).toFixed(1));
+      })(),
+      evolucaoFarinha,
+    };
+  }
+
+
   async getPrevisaoPorHorario(inicioIso: string, fimIso: string) {
     try {
       const inicioDate = new Date(inicioIso);
