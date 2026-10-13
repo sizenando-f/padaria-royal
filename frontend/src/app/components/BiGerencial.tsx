@@ -107,6 +107,7 @@ interface BiStats {
 export default function BiGerencial() {
   const [periodo, setPeriodo] = useState<"todos" | "mes">("todos");
   const [cenarioAtivo, setCenarioAtivo] = useState<"farinha" | "massa" | "assado">("farinha");
+  const [showBalancoInfo, setShowBalancoInfo] = useState(false);
 
   const { data, isLoading, isError, refetch } = useQuery<BiStats>({
     queryKey: ["bi-stats", periodo],
@@ -351,13 +352,22 @@ export default function BiGerencial() {
                 <div className="p-2 bg-amber-100/70 text-amber-700 rounded-2xl">
                   <Scale size={20} />
                 </div>
-                <div>
+                <div className="flex items-center gap-2">
                   <h3 className="text-sm font-bold text-gray-900">
                     Balanço de Massa & Estimativa de Produção
                   </h3>
-                  <p className="text-[11px] text-gray-400">
-                    Base: 40 kg farinha + 20 kg água = 60,2 kg massa crua • 850 pães de 55 g assados
-                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowBalancoInfo(!showBalancoInfo)}
+                    className={`p-1.5 rounded-xl transition-all cursor-pointer ${
+                      showBalancoInfo
+                        ? "bg-amber-100 text-amber-700 shadow-2xs"
+                        : "text-gray-400 hover:text-amber-600 hover:bg-amber-50"
+                    }`}
+                    title="Ver premissas e regras de cálculo da receita"
+                  >
+                    <Info size={15} />
+                  </button>
                 </div>
               </div>
 
@@ -396,114 +406,134 @@ export default function BiGerencial() {
               </div>
             </div>
 
-            {/* Conteúdo Dinâmico do Cenário Selecionado */}
-            {cenarioAtivo === "farinha" && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-orange-50/50 rounded-3xl border border-orange-100/60">
-                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-orange-100/50">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Pães Produzidos Estimados
+            {/* Painel Informativo Discreto de Premissas (Exibido sob demanda) */}
+            {showBalancoInfo && (
+              <div className="mb-4 p-4 bg-amber-50/70 border border-amber-200/60 rounded-3xl text-xs text-amber-950 animate-fade-in flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold flex items-center gap-1.5 text-amber-900">
+                    <Info size={15} className="text-amber-600" />
+                    Premissas Fixas da Receita Padrão
                   </span>
-                  <span className="text-xl font-black text-gray-900 mt-1 block">
-                    {formatarPaes(data.balancoMassa.cenarioFarinha.paesEstimadosTotal).legivel}
-                  </span>
-                  <span className="text-[10px] text-gray-500 mt-0.5 block">
-                    Fator: 21,25 pães por kg de farinha
-                  </span>
+                  <button
+                    onClick={() => setShowBalancoInfo(false)}
+                    className="text-[11px] text-amber-700 hover:text-amber-950 font-semibold cursor-pointer underline underline-offset-2"
+                  >
+                    Fechar
+                  </button>
                 </div>
+                <p className="text-[11px] text-amber-800 leading-relaxed">
+                  <strong>Batida de Referência:</strong> 40 kg farinha + 20 kg água + 100 g sal + 100 g melhorador = <strong>60,2 kg de massa crua</strong> (fator multiplicador de 1,505x trigo).
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-amber-200/50 text-[11px] text-amber-900">
+                  <div className="bg-white/60 p-2.5 rounded-2xl border border-amber-100">
+                    <strong className="block text-amber-950">1. Por Farinha:</strong>
+                    850 pães por batida de 40 kg (~21 a 22 pães/kg de farinha).
+                  </div>
+                  <div className="bg-white/60 p-2.5 rounded-2xl border border-amber-100">
+                    <strong className="block text-amber-950">2. Massa Crua (Divisora):</strong>
+                    Unidade crua regulada em ~70,82 g (~14 pães/kg de massa).
+                  </div>
+                  <div className="bg-white/60 p-2.5 rounded-2xl border border-amber-100">
+                    <strong className="block text-amber-950">3. Pão Assado (Balcão):</strong>
+                    22,3% de quebra térmica por evaporação no forno (46,75 kg assados / batida de 55 g cada).
+                  </div>
+                </div>
+              </div>
+            )}
 
-                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-orange-100/50">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Média por Fornada
-                  </span>
-                  <span className="text-xl font-black text-gray-900 mt-1 block">
-                    {data.balancoMassa.cenarioFarinha.paesEstimadosPorFornada.toLocaleString("pt-BR")} pães
-                  </span>
-                  <span className="text-[10px] text-gray-500 mt-0.5 block">
-                    Baseada na média de {data.mediaFarinhaPorFornada} kg de farinha
+            {/* Conteúdo Dinâmico com 2 Colunas Limpas */}
+            {cenarioAtivo === "farinha" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-orange-50/50 rounded-3xl border border-orange-100/60">
+                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-orange-100/50 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                      Pães Produzidos Estimados
+                    </span>
+                    <span className="text-2xl font-black text-gray-900 mt-1 block">
+                      {formatarPaes(data.balancoMassa.cenarioFarinha.paesEstimadosTotal).legivel}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-gray-500 mt-2 block">
+                    Fator: 21,25 pães por kg de farinha de trigo
                   </span>
                 </div>
 
                 <div className="bg-white p-4 rounded-2xl shadow-2xs border border-orange-100/50 flex flex-col justify-between">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Visão de Insumo Base
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                      Média por Fornada
+                    </span>
+                    <span className="text-2xl font-black text-gray-900 mt-1 block">
+                      {data.balancoMassa.cenarioFarinha.paesEstimadosPorFornada.toLocaleString("pt-BR")} pães
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-gray-500 mt-2 block">
+                    Baseada na média de {data.mediaFarinhaPorFornada} kg de farinha por fornada
                   </span>
-                  <p className="text-[11px] text-gray-600 leading-snug mt-1">
-                    Cada saco de 40 kg de farinha rende aproximadamente <strong>850 pães</strong> franceses prontos no balcão.
-                  </p>
                 </div>
               </div>
             )}
 
             {cenarioAtivo === "massa" && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-blue-50/50 rounded-3xl border border-blue-100/60">
-                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-blue-100/50">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Massa Crua Processada
-                  </span>
-                  <span className="text-xl font-black text-gray-900 mt-1 block">
-                    {formatarMassa(data.balancoMassa.cenarioMassaCrua.massaCruaTotalKg).legivel}
-                  </span>
-                  <span className="text-[10px] text-gray-500 mt-0.5 block">
-                    Multiplicador: 1,505x peso da farinha
-                  </span>
-                </div>
-
-                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-blue-100/50">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Massa Crua por Fornada
-                  </span>
-                  <span className="text-xl font-black text-gray-900 mt-1 block">
-                    {data.balancoMassa.cenarioMassaCrua.massaCruaPorFornadaKg.toLocaleString("pt-BR")} kg
-                  </span>
-                  <span className="text-[10px] text-gray-500 mt-0.5 block">
-                    Média de corte na divisora
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-blue-50/50 rounded-3xl border border-blue-100/60">
+                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-blue-100/50 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                      Massa Crua Processada
+                    </span>
+                    <span className="text-2xl font-black text-gray-900 mt-1 block">
+                      {formatarMassa(data.balancoMassa.cenarioMassaCrua.massaCruaTotalKg).legivel}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-gray-500 mt-2 block">
+                    Multiplicador: 1,505x peso da farinha (~14 pães/kg de massa)
                   </span>
                 </div>
 
                 <div className="bg-white p-4 rounded-2xl shadow-2xs border border-blue-100/50 flex flex-col justify-between">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Balanço da Divisora
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                      Massa Crua por Fornada
+                    </span>
+                    <span className="text-2xl font-black text-gray-900 mt-1 block">
+                      {data.balancoMassa.cenarioMassaCrua.massaCruaPorFornadaKg.toLocaleString("pt-BR")} kg
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-gray-500 mt-2 block">
+                    Volume médio processado na divisora por batida
                   </span>
-                  <p className="text-[11px] text-gray-600 leading-snug mt-1">
-                    Unidade crua na divisora regulada em <strong>~70,82 g</strong> gerando <strong>~14 pães</strong> por kg de massa crua.
-                  </p>
                 </div>
               </div>
             )}
 
             {cenarioAtivo === "assado" && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-emerald-50/50 rounded-3xl border border-emerald-100/60">
-                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-emerald-100/50">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Pão Assado / Pronto (Venda)
-                  </span>
-                  <span className="text-xl font-black text-gray-900 mt-1 block">
-                    {formatarMassa(data.balancoMassa.cenarioPaoAssado.paoAssadoTotalKg).legivel}
-                  </span>
-                  <span className="text-[10px] text-gray-500 mt-0.5 block">
-                    ~18 pães prontos por kg assado (55 g/un)
-                  </span>
-                </div>
-
-                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-emerald-100/50">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Perda Térmica de Forno (Quebra)
-                  </span>
-                  <span className="text-xl font-black text-rose-600 mt-1 block">
-                    -{formatarMassa(data.balancoMassa.cenarioPaoAssado.perdaAguaTotalKg).legivel}
-                  </span>
-                  <span className="text-[10px] text-gray-500 mt-0.5 block">
-                    22,3% de evaporação de água no forneamento
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-emerald-50/50 rounded-3xl border border-emerald-100/60">
+                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-emerald-100/50 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                      Pão Assado / Pronto (Balcão)
+                    </span>
+                    <span className="text-2xl font-black text-gray-900 mt-1 block">
+                      {formatarMassa(data.balancoMassa.cenarioPaoAssado.paoAssadoTotalKg).legivel}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-gray-500 mt-2 block">
+                    ~18 pães prontos por kg assado (55 g por unidade)
                   </span>
                 </div>
 
                 <div className="bg-white p-4 rounded-2xl shadow-2xs border border-emerald-100/50 flex flex-col justify-between">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                    Rendimento de Balcão
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                      Perda Térmica de Forno (Quebra)
+                    </span>
+                    <span className="text-2xl font-black text-rose-600 mt-1 block">
+                      -{formatarMassa(data.balancoMassa.cenarioPaoAssado.perdaAguaTotalKg).legivel}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-gray-500 mt-2 block">
+                    22,3% de evaporação hídrica durante o forneamento
                   </span>
-                  <p className="text-[11px] text-gray-600 leading-snug mt-1">
-                    Cada 40 kg de farinha resulta em <strong>46,75 kg</strong> de pão assado pronto no balcão (fator de 1,16875x).
-                  </p>
                 </div>
               </div>
             )}
