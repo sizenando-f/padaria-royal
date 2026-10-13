@@ -395,7 +395,7 @@ export default function BiGerencial() {
                       : "text-gray-500 hover:text-gray-800"
                   }`}
                 >
-                  2. Massa Crua (1,505x)
+                  2. Massa Crua (14 un/kg)
                 </button>
                 <button
                   onClick={() => setCenarioAtivo("assado")}
@@ -405,7 +405,7 @@ export default function BiGerencial() {
                       : "text-gray-500 hover:text-gray-800"
                   }`}
                 >
-                  3. Pão Assado (18,18 un/kg)
+                  3. Pão Assado (18 un/kg)
                 </button>
               </div>
             </div>
@@ -458,7 +458,7 @@ export default function BiGerencial() {
                     </span>
                   </div>
                   <span className="text-[10px] text-gray-500 mt-2 block">
-                    Rendimento: 21 a 22 pães/kg de farinha (21,25 un/kg)
+                    De 21 a 22 pães/kg (~{formatarPaes(data.totalFarinhaKg * 21).legivel} a ~{formatarPaes(data.totalFarinhaKg * 22).legivel})
                   </span>
                 </div>
 
@@ -504,7 +504,7 @@ export default function BiGerencial() {
                     </span>
                   </div>
                   <span className="text-[10px] text-gray-500 mt-2 block">
-                    Rendimento: ~14 pães/kg de massa crua (~70,82 g cru)
+                    Rendimento: 14 pães/kg de massa crua (~70,82 g cru)
                   </span>
                 </div>
 
@@ -550,7 +550,7 @@ export default function BiGerencial() {
                     </span>
                   </div>
                   <span className="text-[10px] text-gray-500 mt-2 block">
-                    Rendimento: ~18 pães/kg assado (pão pronto de 55 g)
+                    Rendimento: 18 pães/kg assado (pão pronto de 55 g)
                   </span>
                 </div>
 

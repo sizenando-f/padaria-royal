@@ -120,11 +120,15 @@ describe('ProducaoService', () => {
       expect(result.mediaFarinhaPorFornada).toBe(25);
       expect(result.proporcaoFermentoGramaPorKg).toBe(8.5);
 
-      // Balanço de massa (3 Cenários)
+      // Balanço de massa (3 Cenários - Opção A)
       expect(result.balancoMassa.cenarioFarinha.paesEstimadosTotal).toBe(21250); // 1000 * 21.25
       expect(result.balancoMassa.cenarioFarinha.paesEstimadosPorFornada).toBe(531); // 25 * 21.25 = 531.25 -> 531
       expect(result.balancoMassa.cenarioMassaCrua.massaCruaTotalKg).toBe(1505); // 1000 * 1.505
+      expect(result.balancoMassa.cenarioMassaCrua.paesEstimadosTotal).toBe(21070); // 1505 * 14
+      expect(result.balancoMassa.cenarioMassaCrua.paesEstimadosPorFornada).toBe(527); // 37.63 * 14 -> 527
       expect(result.balancoMassa.cenarioPaoAssado.paoAssadoTotalKg).toBe(1168.75); // 1000 * 1.16875
+      expect(result.balancoMassa.cenarioPaoAssado.paesEstimadosTotal).toBe(21038); // 1168.75 * 18 -> 21038
+      expect(result.balancoMassa.cenarioPaoAssado.paesEstimadosPorFornada).toBe(526); // 29.22 * 18 -> 526
       expect(result.balancoMassa.cenarioPaoAssado.taxaQuebraEvaporacao).toBe(22.3);
 
       // Auditoria Climática (Opção B)

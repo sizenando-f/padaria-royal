@@ -550,32 +550,38 @@ export class ProducaoService {
         : 0;
 
     // --- MÓDULO 1: Balanço de Massa e Estimativa de Produção (3 Cenários) ---
-    const paesEstimadosTotal = Math.round(totalFarinhaKg * 21.25);
-    const paesEstimadosPorFornada = Math.round(mediaFarinhaPorFornada * 21.25);
+    const paesEstimadosTotalFarinha = Math.round(totalFarinhaKg * 21.25);
+    const paesEstimadosPorFornadaFarinha = Math.round(mediaFarinhaPorFornada * 21.25);
+
+    const massaCruaTotalKg = Number((totalFarinhaKg * 1.505).toFixed(2));
+    const massaCruaPorFornadaKg = Number((mediaFarinhaPorFornada * 1.505).toFixed(2));
+
+    const paoAssadoTotalKg = Number((totalFarinhaKg * 1.16875).toFixed(2));
+    const paoAssadoPorFornadaKg = Number((mediaFarinhaPorFornada * 1.16875).toFixed(2));
 
     const balancoMassa = {
       cenarioFarinha: {
         fatorConversao: 21.25,
-        paesEstimadosTotal,
-        paesEstimadosPorFornada,
+        paesEstimadosTotal: paesEstimadosTotalFarinha,
+        paesEstimadosPorFornada: paesEstimadosPorFornadaFarinha,
       },
       cenarioMassaCrua: {
         fatorMassa: 1.505,
-        massaCruaTotalKg: Number((totalFarinhaKg * 1.505).toFixed(2)),
-        massaCruaPorFornadaKg: Number((mediaFarinhaPorFornada * 1.505).toFixed(2)),
-        rendimentoPorKgMassa: 14.12,
-        paesEstimadosTotal,
-        paesEstimadosPorFornada,
+        massaCruaTotalKg,
+        massaCruaPorFornadaKg,
+        rendimentoPorKgMassa: 14,
+        paesEstimadosTotal: Math.round(massaCruaTotalKg * 14),
+        paesEstimadosPorFornada: Math.round(massaCruaPorFornadaKg * 14),
       },
       cenarioPaoAssado: {
         fatorAssado: 1.16875,
-        paoAssadoTotalKg: Number((totalFarinhaKg * 1.16875).toFixed(2)),
-        paoAssadoPorFornadaKg: Number((mediaFarinhaPorFornada * 1.16875).toFixed(2)),
-        rendimentoPorKgAssado: 18.18,
+        paoAssadoTotalKg,
+        paoAssadoPorFornadaKg,
+        rendimentoPorKgAssado: 18,
         taxaQuebraEvaporacao: 22.3,
         perdaAguaTotalKg: Number((totalFarinhaKg * (1.505 - 1.16875)).toFixed(2)),
-        paesEstimadosTotal,
-        paesEstimadosPorFornada,
+        paesEstimadosTotal: Math.round(paoAssadoTotalKg * 18),
+        paesEstimadosPorFornada: Math.round(paoAssadoPorFornadaKg * 18),
       },
     };
 
