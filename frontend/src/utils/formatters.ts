@@ -90,3 +90,62 @@ export function formatarMinutos(minutos: number): string {
   const resto = m % 60;
   return resto > 0 ? `${horas}h ${resto}min` : `${horas}h`;
 }
+
+export function formatarPaes(unidades: number) {
+  const num = Math.round(Number(unidades) || 0);
+  if (num >= 1_000_000) {
+    const mi = (num / 1_000_000).toLocaleString('pt-BR', {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 2,
+    });
+    return {
+      valor: mi,
+      unidade: 'milhões',
+      legivel: `${mi} mi pães`,
+    };
+  }
+
+  if (num >= 1_000) {
+    const mil = (num / 1_000).toLocaleString('pt-BR', {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    });
+    return {
+      valor: mil,
+      unidade: 'mil pães',
+      legivel: `${mil} mil pães`,
+    };
+  }
+
+  const formatado = num.toLocaleString('pt-BR');
+  return {
+    valor: formatado,
+    unidade: num === 1 ? 'pão' : 'pães',
+    legivel: `${formatado} pães`,
+  };
+}
+
+export function formatarMassa(kg: number) {
+  const num = Number(kg) || 0;
+  if (num >= 1000) {
+    const t = (num / 1000).toLocaleString('pt-BR', {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 2,
+    });
+    return {
+      valor: t,
+      unidade: 'toneladas',
+      legivel: `${t} t`,
+    };
+  }
+
+  const formatado = num.toLocaleString('pt-BR', {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 2,
+  });
+  return {
+    valor: formatado,
+    unidade: 'kg',
+    legivel: `${formatado} kg`,
+  };
+}

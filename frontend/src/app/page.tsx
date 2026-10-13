@@ -15,7 +15,7 @@ import {
   Icon,
   Calendar,
 } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, CartesianGrid, XAxis, Bar, YAxis } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, CartesianGrid, XAxis, Bar, YAxis, ReferenceLine } from "recharts";
 import { useAuth } from "@/context/AuthContext"; // Informações de login
 import { useQuery } from "@tanstack/react-query";
 import BiGerencial from "./components/BiGerencial";
@@ -218,10 +218,10 @@ export default function Home() {
                                 dy={10}
                             />
                             
-                            {/* eixo y com 1, 2, 3, 4, 5 */}
+                            {/* eixo y com zoom 3.0 a 5.0 para destacar variações sutis */}
                             <YAxis 
-                                domain={[0, 5]} 
-                                ticks={[1, 2, 3, 4, 5]} 
+                                domain={[3.0, 5.0]} 
+                                ticks={[3.0, 3.5, 4.0, 4.5, 5.0]} 
                                 axisLine={false}
                                 tickLine={false}
                                 tick={{fontSize: 10, fill: '#9ca3af'}}
@@ -231,6 +231,12 @@ export default function Home() {
                                 cursor={{fill: '#f3f4f6', radius: 4}}
                                 contentStyle={{backgroundColor: '#1f2937', borderRadius: '8px', border: 'none', color: '#fff'}}
                                 itemStyle={{color: '#fff', fontSize: '12px'}}
+                            />
+                            <ReferenceLine 
+                                y={4.5} 
+                                stroke="#10b981" 
+                                strokeDasharray="3 3" 
+                                label={{ value: 'Meta 4.5', position: 'insideTopRight', fill: '#10b981', fontSize: 10 }}
                             />
                             <Bar 
                                 dataKey="media" 
