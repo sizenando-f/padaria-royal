@@ -550,17 +550,22 @@ export class ProducaoService {
         : 0;
 
     // --- MÓDULO 1: Balanço de Massa e Estimativa de Produção (3 Cenários) ---
+    const paesEstimadosTotal = Math.round(totalFarinhaKg * 21.25);
+    const paesEstimadosPorFornada = Math.round(mediaFarinhaPorFornada * 21.25);
+
     const balancoMassa = {
       cenarioFarinha: {
         fatorConversao: 21.25,
-        paesEstimadosTotal: Math.round(totalFarinhaKg * 21.25),
-        paesEstimadosPorFornada: Math.round(mediaFarinhaPorFornada * 21.25),
+        paesEstimadosTotal,
+        paesEstimadosPorFornada,
       },
       cenarioMassaCrua: {
         fatorMassa: 1.505,
         massaCruaTotalKg: Number((totalFarinhaKg * 1.505).toFixed(2)),
         massaCruaPorFornadaKg: Number((mediaFarinhaPorFornada * 1.505).toFixed(2)),
         rendimentoPorKgMassa: 14.12,
+        paesEstimadosTotal,
+        paesEstimadosPorFornada,
       },
       cenarioPaoAssado: {
         fatorAssado: 1.16875,
@@ -569,6 +574,8 @@ export class ProducaoService {
         rendimentoPorKgAssado: 18.18,
         taxaQuebraEvaporacao: 22.3,
         perdaAguaTotalKg: Number((totalFarinhaKg * (1.505 - 1.16875)).toFixed(2)),
+        paesEstimadosTotal,
+        paesEstimadosPorFornada,
       },
     };
 

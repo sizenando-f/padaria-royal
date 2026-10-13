@@ -70,6 +70,8 @@ interface BiStats {
       massaCruaTotalKg: number;
       massaCruaPorFornadaKg: number;
       rendimentoPorKgMassa: number;
+      paesEstimadosTotal: number;
+      paesEstimadosPorFornada: number;
     };
     cenarioPaoAssado: {
       fatorAssado: number;
@@ -78,6 +80,8 @@ interface BiStats {
       rendimentoPorKgAssado: number;
       taxaQuebraEvaporacao: number;
       perdaAguaTotalKg: number;
+      paesEstimadosTotal: number;
+      paesEstimadosPorFornada: number;
     };
   };
   auditoriaClima: {
@@ -441,20 +445,20 @@ export default function BiGerencial() {
               </div>
             )}
 
-            {/* Conteúdo Dinâmico com 2 Colunas Limpas */}
+            {/* Conteúdo Dinâmico nos 3 Cenários (Pães Estimados, Média por Fornada e Peso Físico) */}
             {cenarioAtivo === "farinha" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-orange-50/50 rounded-3xl border border-orange-100/60">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-orange-50/50 rounded-3xl border border-orange-100/60">
                 <div className="bg-white p-4 rounded-2xl shadow-2xs border border-orange-100/50 flex flex-col justify-between">
                   <div>
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                      Pães Produzidos Estimados
+                      Pães Estimados (Base Trigo)
                     </span>
                     <span className="text-2xl font-black text-gray-900 mt-1 block">
                       {formatarPaes(data.balancoMassa.cenarioFarinha.paesEstimadosTotal).legivel}
                     </span>
                   </div>
                   <span className="text-[10px] text-gray-500 mt-2 block">
-                    Fator: 21,25 pães por kg de farinha de trigo
+                    Rendimento: 21 a 22 pães/kg de farinha (21,25 un/kg)
                   </span>
                 </div>
 
@@ -468,14 +472,56 @@ export default function BiGerencial() {
                     </span>
                   </div>
                   <span className="text-[10px] text-gray-500 mt-2 block">
-                    Baseada na média de {data.mediaFarinhaPorFornada} kg de farinha por fornada
+                    Baseada em {data.mediaFarinhaPorFornada} kg de trigo por batida
+                  </span>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-orange-100/50 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                      Farinha Consumida
+                    </span>
+                    <span className="text-2xl font-black text-gray-900 mt-1 block">
+                      {formatarFarinha(data.totalFarinhaKg).legivel}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-gray-500 mt-2 block">
+                    Insumo base acumulado no período
                   </span>
                 </div>
               </div>
             )}
 
             {cenarioAtivo === "massa" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-blue-50/50 rounded-3xl border border-blue-100/60">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-blue-50/50 rounded-3xl border border-blue-100/60">
+                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-blue-100/50 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                      Pães Estimados (Divisora)
+                    </span>
+                    <span className="text-2xl font-black text-gray-900 mt-1 block">
+                      {formatarPaes(data.balancoMassa.cenarioMassaCrua.paesEstimadosTotal).legivel}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-gray-500 mt-2 block">
+                    Rendimento: ~14 pães/kg de massa crua (~70,82 g cru)
+                  </span>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-blue-100/50 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                      Média por Fornada
+                    </span>
+                    <span className="text-2xl font-black text-gray-900 mt-1 block">
+                      {data.balancoMassa.cenarioMassaCrua.paesEstimadosPorFornada.toLocaleString("pt-BR")} pães
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-gray-500 mt-2 block">
+                    Corte na divisora regulada a ~70,82 g
+                  </span>
+                </div>
+
                 <div className="bg-white p-4 rounded-2xl shadow-2xs border border-blue-100/50 flex flex-col justify-between">
                   <div>
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
@@ -486,53 +532,53 @@ export default function BiGerencial() {
                     </span>
                   </div>
                   <span className="text-[10px] text-gray-500 mt-2 block">
-                    Multiplicador: 1,505x peso da farinha (~14 pães/kg de massa)
-                  </span>
-                </div>
-
-                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-blue-100/50 flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                      Massa Crua por Fornada
-                    </span>
-                    <span className="text-2xl font-black text-gray-900 mt-1 block">
-                      {data.balancoMassa.cenarioMassaCrua.massaCruaPorFornadaKg.toLocaleString("pt-BR")} kg
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-gray-500 mt-2 block">
-                    Volume médio processado na divisora por batida
+                    Multiplicador: 1,505x peso da farinha ({data.balancoMassa.cenarioMassaCrua.massaCruaPorFornadaKg} kg/fornada)
                   </span>
                 </div>
               </div>
             )}
 
             {cenarioAtivo === "assado" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-emerald-50/50 rounded-3xl border border-emerald-100/60">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-emerald-50/50 rounded-3xl border border-emerald-100/60">
                 <div className="bg-white p-4 rounded-2xl shadow-2xs border border-emerald-100/50 flex flex-col justify-between">
                   <div>
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                      Pão Assado / Pronto (Balcão)
+                      Pães Assados no Balcão
                     </span>
                     <span className="text-2xl font-black text-gray-900 mt-1 block">
-                      {formatarMassa(data.balancoMassa.cenarioPaoAssado.paoAssadoTotalKg).legivel}
+                      {formatarPaes(data.balancoMassa.cenarioPaoAssado.paesEstimadosTotal).legivel}
                     </span>
                   </div>
                   <span className="text-[10px] text-gray-500 mt-2 block">
-                    ~18 pães prontos por kg assado (55 g por unidade)
+                    Rendimento: ~18 pães/kg assado (pão pronto de 55 g)
                   </span>
                 </div>
 
                 <div className="bg-white p-4 rounded-2xl shadow-2xs border border-emerald-100/50 flex flex-col justify-between">
                   <div>
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                      Perda Térmica de Forno (Quebra)
+                      Média por Fornada
                     </span>
-                    <span className="text-2xl font-black text-rose-600 mt-1 block">
-                      -{formatarMassa(data.balancoMassa.cenarioPaoAssado.perdaAguaTotalKg).legivel}
+                    <span className="text-2xl font-black text-gray-900 mt-1 block">
+                      {data.balancoMassa.cenarioPaoAssado.paesEstimadosPorFornada.toLocaleString("pt-BR")} pães
                     </span>
                   </div>
                   <span className="text-[10px] text-gray-500 mt-2 block">
-                    22,3% de evaporação hídrica durante o forneamento
+                    Média de {data.balancoMassa.cenarioPaoAssado.paoAssadoPorFornadaKg} kg assados por fornada
+                  </span>
+                </div>
+
+                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-emerald-100/50 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                      Pão Pronto & Quebra Forno
+                    </span>
+                    <span className="text-2xl font-black text-gray-900 mt-1 block">
+                      {formatarMassa(data.balancoMassa.cenarioPaoAssado.paoAssadoTotalKg).legivel}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-rose-600 font-semibold mt-2 block">
+                    Quebra térmica: -{formatarMassa(data.balancoMassa.cenarioPaoAssado.perdaAguaTotalKg).legivel} (22,3% evaporação)
                   </span>
                 </div>
               </div>
