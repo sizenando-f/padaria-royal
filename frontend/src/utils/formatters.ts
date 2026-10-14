@@ -105,7 +105,9 @@ export function formatarPaes(unidades: number) {
     };
   }
 
-  if (num >= 1_000) {
+  // Apenas abrevia com 'mil pães' se passar de 100 mil (ex: 435,4 mil pães no histórico geral)
+  // Abaixo de 100 mil (ex: no filtro mensal), exibe a contagem exata com ponto de milhar (ex: 6.035 pães)
+  if (num >= 100_000) {
     const mil = (num / 1_000).toLocaleString('pt-BR', {
       minimumFractionDigits: 1,
       maximumFractionDigits: 1,

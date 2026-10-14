@@ -350,503 +350,509 @@ export default function BiGerencial() {
           </div>
 
           {/* MÓDULO 1: Balanço de Massa e Estimativa de Produção (Os 3 Cenários) */}
-          <div className="bg-white p-5 sm:p-6 rounded-4xl shadow-sm border border-gray-100">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-amber-100/70 text-amber-700 rounded-2xl">
-                  <Scale size={20} />
+          {data.balancoMassa && (
+            <div className="bg-white p-5 sm:p-6 rounded-4xl shadow-sm border border-gray-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-amber-100/70 text-amber-700 rounded-2xl">
+                    <Scale size={20} />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-gray-900">
+                      Balanço de Massa & Estimativa de Produção
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setShowBalancoInfo(!showBalancoInfo)}
+                      className={`p-1.5 rounded-xl transition-all cursor-pointer ${
+                        showBalancoInfo
+                          ? "bg-amber-100 text-amber-700 shadow-2xs"
+                          : "text-gray-400 hover:text-amber-600 hover:bg-amber-50"
+                      }`}
+                      title="Ver premissas e regras de cálculo da receita"
+                    >
+                      <Info size={15} />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-gray-900">
-                    Balanço de Massa & Estimativa de Produção
-                  </h3>
+
+                {/* Seletor dos 3 Cenários */}
+                <div className="flex bg-gray-100 p-1 rounded-2xl self-start sm:self-auto text-xs font-semibold">
                   <button
-                    type="button"
-                    onClick={() => setShowBalancoInfo(!showBalancoInfo)}
-                    className={`p-1.5 rounded-xl transition-all cursor-pointer ${
-                      showBalancoInfo
-                        ? "bg-amber-100 text-amber-700 shadow-2xs"
-                        : "text-gray-400 hover:text-amber-600 hover:bg-amber-50"
+                    onClick={() => setCenarioAtivo("farinha")}
+                    className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                      cenarioAtivo === "farinha"
+                        ? "bg-white text-orange-600 shadow-sm"
+                        : "text-gray-500 hover:text-gray-800"
                     }`}
-                    title="Ver premissas e regras de cálculo da receita"
                   >
-                    <Info size={15} />
+                    1. Por Farinha (21,25 un/kg)
                   </button>
-                </div>
-              </div>
-
-              {/* Seletor dos 3 Cenários */}
-              <div className="flex bg-gray-100 p-1 rounded-2xl self-start sm:self-auto text-xs font-semibold">
-                <button
-                  onClick={() => setCenarioAtivo("farinha")}
-                  className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
-                    cenarioAtivo === "farinha"
-                      ? "bg-white text-orange-600 shadow-sm"
-                      : "text-gray-500 hover:text-gray-800"
-                  }`}
-                >
-                  1. Por Farinha (21,25 un/kg)
-                </button>
-                <button
-                  onClick={() => setCenarioAtivo("massa")}
-                  className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
-                    cenarioAtivo === "massa"
-                      ? "bg-white text-orange-600 shadow-sm"
-                      : "text-gray-500 hover:text-gray-800"
-                  }`}
-                >
-                  2. Massa Crua (14 un/kg)
-                </button>
-                <button
-                  onClick={() => setCenarioAtivo("assado")}
-                  className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
-                    cenarioAtivo === "assado"
-                      ? "bg-white text-orange-600 shadow-sm"
-                      : "text-gray-500 hover:text-gray-800"
-                  }`}
-                >
-                  3. Pão Assado (18 un/kg)
-                </button>
-              </div>
-            </div>
-
-            {/* Painel Informativo Discreto de Premissas (Exibido sob demanda) */}
-            {showBalancoInfo && (
-              <div className="mb-4 p-4 bg-amber-50/70 border border-amber-200/60 rounded-3xl text-xs text-amber-950 animate-fade-in flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold flex items-center gap-1.5 text-amber-900">
-                    <Info size={15} className="text-amber-600" />
-                    Premissas Fixas da Receita Padrão
-                  </span>
                   <button
-                    onClick={() => setShowBalancoInfo(false)}
-                    className="text-[11px] text-amber-700 hover:text-amber-950 font-semibold cursor-pointer underline underline-offset-2"
+                    onClick={() => setCenarioAtivo("massa")}
+                    className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                      cenarioAtivo === "massa"
+                        ? "bg-white text-orange-600 shadow-sm"
+                        : "text-gray-500 hover:text-gray-800"
+                    }`}
                   >
-                    Fechar
+                    2. Massa Crua (14 un/kg)
+                  </button>
+                  <button
+                    onClick={() => setCenarioAtivo("assado")}
+                    className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
+                      cenarioAtivo === "assado"
+                        ? "bg-white text-orange-600 shadow-sm"
+                        : "text-gray-500 hover:text-gray-800"
+                    }`}
+                  >
+                    3. Pão Assado (18 un/kg)
                   </button>
                 </div>
-                <p className="text-[11px] text-amber-800 leading-relaxed">
-                  <strong>Batida de Referência:</strong> 40 kg farinha + 20 kg água + 100 g sal + 100 g melhorador = <strong>60,2 kg de massa crua</strong> (fator multiplicador de 1,505x trigo).
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-amber-200/50 text-[11px] text-amber-900">
-                  <div className="bg-white/60 p-2.5 rounded-2xl border border-amber-100">
-                    <strong className="block text-amber-950">1. Por Farinha:</strong>
-                    850 pães por batida de 40 kg (~21 a 22 pães/kg de farinha).
-                  </div>
-                  <div className="bg-white/60 p-2.5 rounded-2xl border border-amber-100">
-                    <strong className="block text-amber-950">2. Massa Crua (Divisora):</strong>
-                    Unidade crua regulada em ~70,82 g (~14 pães/kg de massa).
-                  </div>
-                  <div className="bg-white/60 p-2.5 rounded-2xl border border-amber-100">
-                    <strong className="block text-amber-950">3. Pão Assado (Balcão):</strong>
-                    22,3% de quebra térmica por evaporação no forno (46,75 kg assados / batida de 55 g cada).
-                  </div>
-                </div>
               </div>
-            )}
 
-            {/* Conteúdo Dinâmico nos 3 Cenários (Pães Estimados, Média por Fornada e Peso Físico) */}
-            {cenarioAtivo === "farinha" && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-orange-50/50 rounded-3xl border border-orange-100/60">
-                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-orange-100/50 flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                      Pães Estimados (Base Trigo)
+              {/* Painel Informativo Discreto de Premissas (Exibido sob demanda) */}
+              {showBalancoInfo && (
+                <div className="mb-4 p-4 bg-amber-50/70 border border-amber-200/60 rounded-3xl text-xs text-amber-950 animate-fade-in flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold flex items-center gap-1.5 text-amber-900">
+                      <Info size={15} className="text-amber-600" />
+                      Premissas Fixas da Receita Padrão
                     </span>
-                    <span className="text-2xl font-black text-gray-900 mt-1 block">
-                      {formatarPaes(data.balancoMassa.cenarioFarinha.paesEstimadosTotal).legivel}
+                    <button
+                      onClick={() => setShowBalancoInfo(false)}
+                      className="text-[11px] text-amber-700 hover:text-amber-950 font-semibold cursor-pointer underline underline-offset-2"
+                    >
+                      Fechar
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-amber-800 leading-relaxed">
+                    <strong>Batida de Referência:</strong> 40 kg farinha + 20 kg água + 100 g sal + 100 g melhorador = <strong>60,2 kg de massa crua</strong> (fator multiplicador de 1,505x trigo).
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2 border-t border-amber-200/50 text-[11px] text-amber-900">
+                    <div className="bg-white/60 p-2.5 rounded-2xl border border-amber-100">
+                      <strong className="block text-amber-950">1. Por Farinha:</strong>
+                      850 pães por batida de 40 kg (~21 a 22 pães/kg de farinha).
+                    </div>
+                    <div className="bg-white/60 p-2.5 rounded-2xl border border-amber-100">
+                      <strong className="block text-amber-950">2. Massa Crua (Divisora):</strong>
+                      Unidade crua regulada em ~70,82 g (~14 pães/kg de massa).
+                    </div>
+                    <div className="bg-white/60 p-2.5 rounded-2xl border border-amber-100">
+                      <strong className="block text-amber-950">3. Pão Assado (Balcão):</strong>
+                      22,3% de quebra térmica por evaporação no forno (46,75 kg assados / batida de 55 g cada).
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Conteúdo Dinâmico nos 3 Cenários (Pães Estimados, Média por Fornada e Peso Físico) */}
+              {cenarioAtivo === "farinha" && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-orange-50/50 rounded-3xl border border-orange-100/60">
+                  <div className="bg-white p-4 rounded-2xl shadow-2xs border border-orange-100/50 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                        Pães Estimados (Base Trigo)
+                      </span>
+                      <span className="text-2xl font-black text-gray-900 mt-1 block">
+                        {formatarPaes(data.balancoMassa?.cenarioFarinha?.paesEstimadosTotal ?? 0).legivel}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-gray-500 mt-2 block">
+                      De 21 a 22 pães/kg (~{formatarPaes(data.totalFarinhaKg * 21).legivel.replace(" pães", "")} a ~{formatarPaes(data.totalFarinhaKg * 22).legivel})
                     </span>
                   </div>
-                  <span className="text-[10px] text-gray-500 mt-2 block">
-                    De 21 a 22 pães/kg (~{formatarPaes(data.totalFarinhaKg * 21).legivel} a ~{formatarPaes(data.totalFarinhaKg * 22).legivel})
-                  </span>
-                </div>
 
-                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-orange-100/50 flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                      Média por Fornada
-                    </span>
-                    <span className="text-2xl font-black text-gray-900 mt-1 block">
-                      {data.balancoMassa.cenarioFarinha.paesEstimadosPorFornada.toLocaleString("pt-BR")} pães
+                  <div className="bg-white p-4 rounded-2xl shadow-2xs border border-orange-100/50 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                        Média por Fornada
+                      </span>
+                      <span className="text-2xl font-black text-gray-900 mt-1 block">
+                        {(data.balancoMassa?.cenarioFarinha?.paesEstimadosPorFornada ?? 0).toLocaleString("pt-BR")} pães
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-gray-500 mt-2 block">
+                      Baseada em {data.mediaFarinhaPorFornada} kg de trigo por batida
                     </span>
                   </div>
-                  <span className="text-[10px] text-gray-500 mt-2 block">
-                    Baseada em {data.mediaFarinhaPorFornada} kg de trigo por batida
-                  </span>
-                </div>
 
-                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-orange-100/50 flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                      Farinha Consumida
-                    </span>
-                    <span className="text-2xl font-black text-gray-900 mt-1 block">
-                      {formatarFarinha(data.totalFarinhaKg).legivel}
+                  <div className="bg-white p-4 rounded-2xl shadow-2xs border border-orange-100/50 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                        Farinha Consumida
+                      </span>
+                      <span className="text-2xl font-black text-gray-900 mt-1 block">
+                        {formatarFarinha(data.totalFarinhaKg).legivel}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-gray-500 mt-2 block">
+                      Insumo base acumulado no período
                     </span>
                   </div>
-                  <span className="text-[10px] text-gray-500 mt-2 block">
-                    Insumo base acumulado no período
-                  </span>
                 </div>
-              </div>
-            )}
+              )}
 
-            {cenarioAtivo === "massa" && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-blue-50/50 rounded-3xl border border-blue-100/60">
-                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-blue-100/50 flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                      Pães Estimados (Divisora)
-                    </span>
-                    <span className="text-2xl font-black text-gray-900 mt-1 block">
-                      {formatarPaes(data.balancoMassa.cenarioMassaCrua.paesEstimadosTotal).legivel}
+              {cenarioAtivo === "massa" && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-blue-50/50 rounded-3xl border border-blue-100/60">
+                  <div className="bg-white p-4 rounded-2xl shadow-2xs border border-blue-100/50 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                        Pães Estimados (Divisora)
+                      </span>
+                      <span className="text-2xl font-black text-gray-900 mt-1 block">
+                        {formatarPaes(data.balancoMassa?.cenarioMassaCrua?.paesEstimadosTotal ?? 0).legivel}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-gray-500 mt-2 block">
+                      Rendimento: 14 pães/kg de massa crua (~70,82 g cru)
                     </span>
                   </div>
-                  <span className="text-[10px] text-gray-500 mt-2 block">
-                    Rendimento: 14 pães/kg de massa crua (~70,82 g cru)
-                  </span>
-                </div>
 
-                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-blue-100/50 flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                      Média por Fornada
-                    </span>
-                    <span className="text-2xl font-black text-gray-900 mt-1 block">
-                      {data.balancoMassa.cenarioMassaCrua.paesEstimadosPorFornada.toLocaleString("pt-BR")} pães
+                  <div className="bg-white p-4 rounded-2xl shadow-2xs border border-blue-100/50 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                        Média por Fornada
+                      </span>
+                      <span className="text-2xl font-black text-gray-900 mt-1 block">
+                        {(data.balancoMassa?.cenarioMassaCrua?.paesEstimadosPorFornada ?? 0).toLocaleString("pt-BR")} pães
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-gray-500 mt-2 block">
+                      Corte na divisora regulada a ~70,82 g
                     </span>
                   </div>
-                  <span className="text-[10px] text-gray-500 mt-2 block">
-                    Corte na divisora regulada a ~70,82 g
-                  </span>
-                </div>
 
-                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-blue-100/50 flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                      Massa Crua Processada
-                    </span>
-                    <span className="text-2xl font-black text-gray-900 mt-1 block">
-                      {formatarMassa(data.balancoMassa.cenarioMassaCrua.massaCruaTotalKg).legivel}
+                  <div className="bg-white p-4 rounded-2xl shadow-2xs border border-blue-100/50 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                        Massa Crua Processada
+                      </span>
+                      <span className="text-2xl font-black text-gray-900 mt-1 block">
+                        {formatarMassa(data.balancoMassa?.cenarioMassaCrua?.massaCruaTotalKg ?? 0).legivel}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-gray-500 mt-2 block">
+                      Multiplicador: 1,505x peso da farinha ({data.balancoMassa?.cenarioMassaCrua?.massaCruaPorFornadaKg ?? 0} kg/fornada)
                     </span>
                   </div>
-                  <span className="text-[10px] text-gray-500 mt-2 block">
-                    Multiplicador: 1,505x peso da farinha ({data.balancoMassa.cenarioMassaCrua.massaCruaPorFornadaKg} kg/fornada)
-                  </span>
                 </div>
-              </div>
-            )}
+              )}
 
-            {cenarioAtivo === "assado" && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-emerald-50/50 rounded-3xl border border-emerald-100/60">
-                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-emerald-100/50 flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                      Pães Assados no Balcão
-                    </span>
-                    <span className="text-2xl font-black text-gray-900 mt-1 block">
-                      {formatarPaes(data.balancoMassa.cenarioPaoAssado.paesEstimadosTotal).legivel}
+              {cenarioAtivo === "assado" && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 bg-emerald-50/50 rounded-3xl border border-emerald-100/60">
+                  <div className="bg-white p-4 rounded-2xl shadow-2xs border border-emerald-100/50 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                        Pães Assados no Balcão
+                      </span>
+                      <span className="text-2xl font-black text-gray-900 mt-1 block">
+                        {formatarPaes(data.balancoMassa?.cenarioPaoAssado?.paesEstimadosTotal ?? 0).legivel}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-gray-500 mt-2 block">
+                      Rendimento: 18 pães/kg assado (pão pronto de 55 g)
                     </span>
                   </div>
-                  <span className="text-[10px] text-gray-500 mt-2 block">
-                    Rendimento: 18 pães/kg assado (pão pronto de 55 g)
-                  </span>
-                </div>
 
-                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-emerald-100/50 flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                      Média por Fornada
-                    </span>
-                    <span className="text-2xl font-black text-gray-900 mt-1 block">
-                      {data.balancoMassa.cenarioPaoAssado.paesEstimadosPorFornada.toLocaleString("pt-BR")} pães
+                  <div className="bg-white p-4 rounded-2xl shadow-2xs border border-emerald-100/50 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                        Média por Fornada
+                      </span>
+                      <span className="text-2xl font-black text-gray-900 mt-1 block">
+                        {(data.balancoMassa?.cenarioPaoAssado?.paesEstimadosPorFornada ?? 0).toLocaleString("pt-BR")} pães
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-gray-500 mt-2 block">
+                      Média de {data.balancoMassa?.cenarioPaoAssado?.paoAssadoPorFornadaKg ?? 0} kg assados por fornada
                     </span>
                   </div>
-                  <span className="text-[10px] text-gray-500 mt-2 block">
-                    Média de {data.balancoMassa.cenarioPaoAssado.paoAssadoPorFornadaKg} kg assados por fornada
-                  </span>
-                </div>
 
-                <div className="bg-white p-4 rounded-2xl shadow-2xs border border-emerald-100/50 flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
-                      Pão Pronto & Quebra Forno
-                    </span>
-                    <span className="text-2xl font-black text-gray-900 mt-1 block">
-                      {formatarMassa(data.balancoMassa.cenarioPaoAssado.paoAssadoTotalKg).legivel}
+                  <div className="bg-white p-4 rounded-2xl shadow-2xs border border-emerald-100/50 flex flex-col justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+                        Pão Pronto & Quebra Forno
+                      </span>
+                      <span className="text-2xl font-black text-gray-900 mt-1 block">
+                        {formatarMassa(data.balancoMassa?.cenarioPaoAssado?.paoAssadoTotalKg ?? 0).legivel}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-rose-600 font-semibold mt-2 block">
+                      Quebra térmica: -{formatarMassa(data.balancoMassa?.cenarioPaoAssado?.perdaAguaTotalKg ?? 0).legivel} (22,3% evaporação)
                     </span>
                   </div>
-                  <span className="text-[10px] text-rose-600 font-semibold mt-2 block">
-                    Quebra térmica: -{formatarMassa(data.balancoMassa.cenarioPaoAssado.perdaAguaTotalKg).legivel} (22,3% evaporação)
-                  </span>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* MÓDULO 2: Auditoria Climática de Dosagem (Opção B) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Card Aderência Climática */}
-            <div className="bg-white p-5 sm:p-6 rounded-4xl shadow-sm border border-gray-100 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-2xl">
-                      <ShieldCheck size={20} />
+          {data.auditoriaClima && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Card Aderência Climática */}
+              <div className="bg-white p-5 sm:p-6 rounded-4xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 bg-indigo-50 text-indigo-600 rounded-2xl">
+                        <ShieldCheck size={20} />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-gray-900">
+                          Auditoria Climática de Dosagem
+                        </h3>
+                        <p className="text-[10px] text-gray-400">
+                          Comparativo de aderência à faixa ideal para o clima do dia (±10%)
+                        </p>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-bold">
+                      {data.auditoriaClima.taxaAderenciaIdeal ?? 0}% calibrado
+                    </span>
+                  </div>
+
+                  {/* Comparativo de Nota Média */}
+                  <div className="grid grid-cols-2 gap-3 mt-4">
+                    <div className="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-100">
+                      <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">
+                        Dosagem no Clima
+                      </span>
+                      <div className="flex items-baseline gap-1 mt-1">
+                        <span className="text-xl font-black text-emerald-700">
+                          ★ {data.auditoriaClima.notaMediaAderente ?? 0}
+                        </span>
+                        <span className="text-[10px] text-emerald-600 font-semibold">
+                          média
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-emerald-600 block mt-0.5">
+                        {data.auditoriaClima.totalAderente ?? 0} {(data.auditoriaClima.totalAderente ?? 0) === 1 ? "fornada" : "fornadas"}
+                      </span>
+                    </div>
+
+                    <div className="p-3.5 bg-rose-50/70 rounded-2xl border border-rose-100">
+                      <span className="text-[10px] font-bold text-rose-800 uppercase tracking-wider block">
+                        Fora da Faixa Ideal
+                      </span>
+                      <div className="flex items-baseline gap-1 mt-1">
+                        <span className="text-xl font-black text-rose-700">
+                          ★ {data.auditoriaClima.notaMediaDescalibrado ?? 0}
+                        </span>
+                        <span className="text-[10px] text-rose-600 font-semibold">
+                          média
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-rose-600 block mt-0.5">
+                        {data.auditoriaClima.totalDescalibrado ?? 0} {(data.auditoriaClima.totalDescalibrado ?? 0) === 1 ? "fornada" : "fornadas"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-gray-50 text-[11px] text-gray-500 mt-4 flex items-center gap-1.5">
+                  <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+                  <span>
+                    Fornadas na dosagem ideal do clima têm nota média <strong>+{Number(((data.auditoriaClima.notaMediaAderente ?? 0) - (data.auditoriaClima.notaMediaDescalibrado ?? 0)).toFixed(2))}</strong> maior.
+                  </span>
+                </div>
+              </div>
+
+              {/* Card Faixas de Referência por Clima (Zona de Ouro) */}
+              <div className="bg-white p-5 sm:p-6 rounded-4xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="p-2 bg-blue-50 text-blue-600 rounded-2xl">
+                      <Thermometer size={20} />
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-gray-900">
-                        Auditoria Climática de Dosagem
+                        Zona de Ouro por Clima (Nota 5)
                       </h3>
                       <p className="text-[10px] text-gray-400">
-                        Comparativo de aderência à faixa ideal para o clima do dia (±10%)
+                        Dosagens de referência extraídas das melhores fornadas históricas
                       </p>
                     </div>
                   </div>
-                  <span className="px-2.5 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-bold">
-                    {data.auditoriaClima.taxaAderenciaIdeal}% calibrado
-                  </span>
-                </div>
 
-                {/* Comparativo de Nota Média */}
-                <div className="grid grid-cols-2 gap-3 mt-4">
-                  <div className="p-3.5 bg-emerald-50/70 rounded-2xl border border-emerald-100">
-                    <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider block">
-                      Dosagem no Clima
-                    </span>
-                    <div className="flex items-baseline gap-1 mt-1">
-                      <span className="text-xl font-black text-emerald-700">
-                        ★ {data.auditoriaClima.notaMediaAderente}
-                      </span>
-                      <span className="text-[10px] text-emerald-600 font-semibold">
-                        média
+                  <div className="space-y-2.5 mt-4">
+                    {/* Frio */}
+                    <div className="flex items-center justify-between p-2.5 bg-blue-50/50 rounded-2xl border border-blue-100/50">
+                      <div className="flex items-center gap-2">
+                        <Snowflake size={16} className="text-blue-500" />
+                        <div>
+                          <span className="text-xs font-bold text-gray-800 block">
+                            Clima Frio (&lt; 20°C)
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            {data.auditoriaClima.faixasReferencia?.frio?.fornadas ?? 0} fornadas Nota 5 {data.auditoriaClima.faixasReferencia?.frio?.usouFallback ? "(histórico)" : ""}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-xs font-black text-blue-700 bg-white px-2.5 py-1 rounded-xl shadow-2xs border border-blue-100">
+                        {data.auditoriaClima.faixasReferencia?.frio?.dosagemMediaNota5 ?? 0} g/kg
                       </span>
                     </div>
-                    <span className="text-[10px] text-emerald-600 block mt-0.5">
-                      {data.auditoriaClima.totalAderente} {data.auditoriaClima.totalAderente === 1 ? "fornada" : "fornadas"}
-                    </span>
-                  </div>
 
-                  <div className="p-3.5 bg-rose-50/70 rounded-2xl border border-rose-100">
-                    <span className="text-[10px] font-bold text-rose-800 uppercase tracking-wider block">
-                      Fora da Faixa Ideal
-                    </span>
-                    <div className="flex items-baseline gap-1 mt-1">
-                      <span className="text-xl font-black text-rose-700">
-                        ★ {data.auditoriaClima.notaMediaDescalibrado}
-                      </span>
-                      <span className="text-[10px] text-rose-600 font-semibold">
-                        média
+                    {/* Ameno */}
+                    <div className="flex items-center justify-between p-2.5 bg-amber-50/50 rounded-2xl border border-amber-100/50">
+                      <div className="flex items-center gap-2">
+                        <CloudSun size={16} className="text-amber-500" />
+                        <div>
+                          <span className="text-xs font-bold text-gray-800 block">
+                            Clima Ameno (20°C a 26°C)
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            {data.auditoriaClima.faixasReferencia?.ameno?.fornadas ?? 0} fornadas Nota 5 {data.auditoriaClima.faixasReferencia?.ameno?.usouFallback ? "(histórico)" : ""}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-xs font-black text-amber-700 bg-white px-2.5 py-1 rounded-xl shadow-2xs border border-amber-100">
+                        {data.auditoriaClima.faixasReferencia?.ameno?.dosagemMediaNota5 ?? 0} g/kg
                       </span>
                     </div>
-                    <span className="text-[10px] text-rose-600 block mt-0.5">
-                      {data.auditoriaClima.totalDescalibrado} {data.auditoriaClima.totalDescalibrado === 1 ? "fornada" : "fornadas"}
-                    </span>
+
+                    {/* Quente */}
+                    <div className="flex items-center justify-between p-2.5 bg-rose-50/50 rounded-2xl border border-rose-100/50">
+                      <div className="flex items-center gap-2">
+                        <Sun size={16} className="text-rose-500" />
+                        <div>
+                          <span className="text-xs font-bold text-gray-800 block">
+                            Clima Quente (&gt; 26°C)
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            {data.auditoriaClima.faixasReferencia?.quente?.fornadas ?? 0} fornadas Nota 5 {data.auditoriaClima.faixasReferencia?.quente?.usouFallback ? "(histórico)" : ""}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-xs font-black text-rose-700 bg-white px-2.5 py-1 rounded-xl shadow-2xs border border-rose-100">
+                        {data.auditoriaClima.faixasReferencia?.quente?.dosagemMediaNota5 ?? 0} g/kg
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="pt-3 border-t border-gray-50 text-[11px] text-gray-500 mt-4 flex items-center gap-1.5">
-                <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
-                <span>
-                  Fornadas na dosagem ideal do clima têm nota média <strong>+{Number((data.auditoriaClima.notaMediaAderente - data.auditoriaClima.notaMediaDescalibrado).toFixed(2))}</strong> maior.
-                </span>
+                <p className="text-[10px] text-gray-400 mt-3">
+                  * Tolerância calculada em ±10% sobre a proporção média observada na faixa climática.
+                </p>
               </div>
             </div>
-
-            {/* Card Faixas de Referência por Clima (Zona de Ouro) */}
-            <div className="bg-white p-5 sm:p-6 rounded-4xl shadow-sm border border-gray-100 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="p-2 bg-blue-50 text-blue-600 rounded-2xl">
-                    <Thermometer size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-gray-900">
-                      Zona de Ouro por Clima (Nota 5)
-                    </h3>
-                    <p className="text-[10px] text-gray-400">
-                      Dosagens de referência extraídas das melhores fornadas históricas
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-2.5 mt-4">
-                  {/* Frio */}
-                  <div className="flex items-center justify-between p-2.5 bg-blue-50/50 rounded-2xl border border-blue-100/50">
-                    <div className="flex items-center gap-2">
-                      <Snowflake size={16} className="text-blue-500" />
-                      <div>
-                        <span className="text-xs font-bold text-gray-800 block">
-                          Clima Frio (&lt; 20°C)
-                        </span>
-                        <span className="text-[10px] text-gray-400">
-                          {data.auditoriaClima.faixasReferencia.frio.fornadas} fornadas Nota 5 {data.auditoriaClima.faixasReferencia.frio.usouFallback ? "(histórico)" : ""}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="text-xs font-black text-blue-700 bg-white px-2.5 py-1 rounded-xl shadow-2xs border border-blue-100">
-                      {data.auditoriaClima.faixasReferencia.frio.dosagemMediaNota5} g/kg
-                    </span>
-                  </div>
-
-                  {/* Ameno */}
-                  <div className="flex items-center justify-between p-2.5 bg-amber-50/50 rounded-2xl border border-amber-100/50">
-                    <div className="flex items-center gap-2">
-                      <CloudSun size={16} className="text-amber-500" />
-                      <div>
-                        <span className="text-xs font-bold text-gray-800 block">
-                          Clima Ameno (20°C a 26°C)
-                        </span>
-                        <span className="text-[10px] text-gray-400">
-                          {data.auditoriaClima.faixasReferencia.ameno.fornadas} fornadas Nota 5 {data.auditoriaClima.faixasReferencia.ameno.usouFallback ? "(histórico)" : ""}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="text-xs font-black text-amber-700 bg-white px-2.5 py-1 rounded-xl shadow-2xs border border-amber-100">
-                      {data.auditoriaClima.faixasReferencia.ameno.dosagemMediaNota5} g/kg
-                    </span>
-                  </div>
-
-                  {/* Quente */}
-                  <div className="flex items-center justify-between p-2.5 bg-rose-50/50 rounded-2xl border border-rose-100/50">
-                    <div className="flex items-center gap-2">
-                      <Sun size={16} className="text-rose-500" />
-                      <div>
-                        <span className="text-xs font-bold text-gray-800 block">
-                          Clima Quente (&gt; 26°C)
-                        </span>
-                        <span className="text-[10px] text-gray-400">
-                          {data.auditoriaClima.faixasReferencia.quente.fornadas} fornadas Nota 5 {data.auditoriaClima.faixasReferencia.quente.usouFallback ? "(histórico)" : ""}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="text-xs font-black text-rose-700 bg-white px-2.5 py-1 rounded-xl shadow-2xs border border-rose-100">
-                      {data.auditoriaClima.faixasReferencia.quente.dosagemMediaNota5} g/kg
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <p className="text-[10px] text-gray-400 mt-3">
-                * Tolerância calculada em ±10% sobre a proporção média observada na faixa climática.
-              </p>
-            </div>
-          </div>
+          )}
 
           {/* MÓDULO 3: Estabilidade Térmica (Delta T) & Perfil Nota 5 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Sensibilidade de Amplitude Térmica */}
-            <div className="bg-white p-5 rounded-4xl shadow-sm border border-gray-100 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="p-2 bg-purple-50 text-purple-600 rounded-2xl">
-                    <Thermometer size={18} />
+          {data.sensibilidadeTermica && data.zonaDeOuro && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Sensibilidade de Amplitude Térmica */}
+              <div className="bg-white p-5 rounded-4xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="p-2 bg-purple-50 text-purple-600 rounded-2xl">
+                      <Thermometer size={18} />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-900">
+                        Estabilidade Térmica (ΔT)
+                      </h3>
+                      <p className="text-[10px] text-gray-400">
+                        Impacto da variação de temperatura entre o início e o fim da fermentação
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-gray-900">
-                      Estabilidade Térmica (ΔT)
-                    </h3>
-                    <p className="text-[10px] text-gray-400">
-                      Impacto da variação de temperatura entre o início e o fim da fermentação
-                    </p>
+
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    <div className="p-3 bg-gray-50 rounded-2xl border border-gray-100">
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
+                        Estável (ΔT ≤ 4°C)
+                      </span>
+                      <span className="text-lg font-black text-gray-900 mt-0.5 block">
+                        ★ {data.sensibilidadeTermica.estavel?.notaMedia ?? 0}
+                      </span>
+                      <span className="text-[10px] text-gray-400 block">
+                        {data.sensibilidadeTermica.estavel?.total ?? 0} fornadas
+                      </span>
+                    </div>
+
+                    <div className="p-3 bg-gray-50 rounded-2xl border border-gray-100">
+                      <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
+                        Oscilação (ΔT &gt; 4°C)
+                      </span>
+                      <span className="text-lg font-black text-gray-900 mt-0.5 block">
+                        ★ {data.sensibilidadeTermica.oscilacao?.notaMedia ?? 0}
+                      </span>
+                      <span className="text-[10px] text-gray-400 block">
+                        {data.sensibilidadeTermica.oscilacao?.total ?? 0} fornadas
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mt-3">
-                  <div className="p-3 bg-gray-50 rounded-2xl border border-gray-100">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
-                      Estável (ΔT ≤ 4°C)
-                    </span>
-                    <span className="text-lg font-black text-gray-900 mt-0.5 block">
-                      ★ {data.sensibilidadeTermica.estavel.notaMedia}
-                    </span>
-                    <span className="text-[10px] text-gray-400 block">
-                      {data.sensibilidadeTermica.estavel.total} fornadas
-                    </span>
-                  </div>
-
-                  <div className="p-3 bg-gray-50 rounded-2xl border border-gray-100">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block">
-                      Oscilação (ΔT &gt; 4°C)
-                    </span>
-                    <span className="text-lg font-black text-gray-900 mt-0.5 block">
-                      ★ {data.sensibilidadeTermica.oscilacao.notaMedia}
-                    </span>
-                    <span className="text-[10px] text-gray-400 block">
-                      {data.sensibilidadeTermica.oscilacao.total} fornadas
-                    </span>
-                  </div>
+                <div className="pt-2.5 border-t border-gray-50 text-[10px] text-gray-400 mt-3 flex items-center justify-between">
+                  <span>Variações bruscas de temperatura tendem a impactar a regularidade da nota.</span>
                 </div>
               </div>
 
-              <div className="pt-2.5 border-t border-gray-50 text-[10px] text-gray-400 mt-3 flex items-center justify-between">
-                <span>Variações bruscas de temperatura tendem a impactar a regularidade da nota.</span>
+              {/* Perfil Nota 5 (Zona de Ouro) */}
+              <div className="bg-white p-5 rounded-4xl shadow-sm border border-gray-100 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="p-2 bg-yellow-50 text-yellow-600 rounded-2xl">
+                      <Award size={18} />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-gray-900">
+                        Perfil das Fornadas Nota 5
+                      </h3>
+                      <p className="text-[10px] text-gray-400">
+                        Parâmetros médios consolidados das fornadas de qualidade máxima
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 mt-3">
+                    <div className="p-2.5 bg-yellow-50/50 rounded-2xl border border-yellow-100/50 text-center">
+                      <span className="text-[9px] font-bold text-yellow-800 uppercase tracking-wider block">
+                        Total Nota 5
+                      </span>
+                      <span className="text-base font-black text-gray-900 mt-0.5 block">
+                        {data.zonaDeOuro.totalNota5 ?? 0}
+                      </span>
+                      <span className="text-[9px] text-yellow-700 block">
+                        {data.zonaDeOuro.percentualDoTotal ?? 0}% avaliações
+                      </span>
+                    </div>
+
+                    <div className="p-2.5 bg-yellow-50/50 rounded-2xl border border-yellow-100/50 text-center">
+                      <span className="text-[9px] font-bold text-yellow-800 uppercase tracking-wider block">
+                        Tempo Médio
+                      </span>
+                      <span className="text-base font-black text-gray-900 mt-0.5 block">
+                        {formatarMinutos(data.zonaDeOuro.tempoMedioMinutos ?? 0)}
+                      </span>
+                      <span className="text-[9px] text-yellow-700 block">
+                        fermentação
+                      </span>
+                    </div>
+
+                    <div className="p-2.5 bg-yellow-50/50 rounded-2xl border border-yellow-100/50 text-center">
+                      <span className="text-[9px] font-bold text-yellow-800 uppercase tracking-wider block">
+                        Temp Média
+                      </span>
+                      <span className="text-base font-black text-gray-900 mt-0.5 block">
+                        {data.zonaDeOuro.tempMediaAmbiente ?? 0}°C
+                      </span>
+                      <span className="text-[9px] text-yellow-700 block">
+                        ambiente
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2.5 border-t border-gray-50 text-[10px] text-gray-400 mt-3 flex items-center justify-between">
+                  <span>Padrão ouro de operação da padaria</span>
+                </div>
               </div>
             </div>
-
-            {/* Perfil Nota 5 (Zona de Ouro) */}
-            <div className="bg-white p-5 rounded-4xl shadow-sm border border-gray-100 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="p-2 bg-yellow-50 text-yellow-600 rounded-2xl">
-                    <Award size={18} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-gray-900">
-                      Perfil das Fornadas Nota 5
-                    </h3>
-                    <p className="text-[10px] text-gray-400">
-                      Parâmetros médios consolidados das fornadas de qualidade máxima
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 mt-3">
-                  <div className="p-2.5 bg-yellow-50/50 rounded-2xl border border-yellow-100/50 text-center">
-                    <span className="text-[9px] font-bold text-yellow-800 uppercase tracking-wider block">
-                      Total Nota 5
-                    </span>
-                    <span className="text-base font-black text-gray-900 mt-0.5 block">
-                      {data.zonaDeOuro.totalNota5}
-                    </span>
-                    <span className="text-[9px] text-yellow-700 block">
-                      {data.zonaDeOuro.percentualDoTotal}% avaliações
-                    </span>
-                  </div>
-
-                  <div className="p-2.5 bg-yellow-50/50 rounded-2xl border border-yellow-100/50 text-center">
-                    <span className="text-[9px] font-bold text-yellow-800 uppercase tracking-wider block">
-                      Tempo Médio
-                    </span>
-                    <span className="text-base font-black text-gray-900 mt-0.5 block">
-                      {formatarMinutos(data.zonaDeOuro.tempoMedioMinutos)}
-                    </span>
-                    <span className="text-[9px] text-yellow-700 block">
-                      fermentação
-                    </span>
-                  </div>
-
-                  <div className="p-2.5 bg-yellow-50/50 rounded-2xl border border-yellow-100/50 text-center">
-                    <span className="text-[9px] font-bold text-yellow-800 uppercase tracking-wider block">
-                      Temp Média
-                    </span>
-                    <span className="text-base font-black text-gray-900 mt-0.5 block">
-                      {data.zonaDeOuro.tempMediaAmbiente}°C
-                    </span>
-                    <span className="text-[9px] text-yellow-700 block">
-                      ambiente
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-2.5 border-t border-gray-50 text-[10px] text-gray-400 mt-3 flex items-center justify-between">
-                <span>Padrão ouro de operação da padaria</span>
-              </div>
-            </div>
-          </div>
+          )}
 
           {/* Indicadores Operacionais de Suporte */}
           <div className="grid grid-cols-2 gap-4">
