@@ -246,34 +246,67 @@ export class ProducaoService {
     seisMesesAtras.setDate(1);
     seisMesesAtras.setHours(0, 0, 0, 0);
 
-    const [agg, totalCount, producoesRecentes] = await Promise.all([
-      this.prisma.producao.aggregate({
-        where: whereClause,
-        _sum: {
-          farinhaKg: true,
-          fermentoGrama: true,
-          emulsificanteMl: true,
-        },
-        _avg: {
-          farinhaKg: true,
-          fermentoGrama: true,
-          tempoFermentacaoMinutos: true,
-        },
-      }),
-      this.prisma.producao.count({ where: whereClause }),
-      this.prisma.producao.findMany({
-        where: {
-          dataProducao: { gte: seisMesesAtras },
-        },
-        select: {
-          dataProducao: true,
-          farinhaKg: true,
-        },
-        orderBy: {
-          dataProducao: 'asc',
-        },
-      }),
-    ]);
+    const [agg, totalCount, producoesRecentes, producoesPeriodo, producoesNota5Global] =
+      await Promise.all([
+        this.prisma.producao.aggregate({
+          where: whereClause,
+          _sum: {
+            farinhaKg: true,
+            fermentoGrama: true,
+            emulsificanteMl: true,
+          },
+          _avg: {
+            farinhaKg: true,
+            fermentoGrama: true,
+            tempoFermentacaoMinutos: true,
+          },
+        }),
+        this.prisma.producao.count({ where: whereClause }),
+        this.prisma.producao.findMany({
+          where: {
+            dataProducao: { gte: seisMesesAtras },
+          },
+          select: {
+            dataProducao: true,
+            farinhaKg: true,
+          },
+          orderBy: {
+            dataProducao: 'asc',
+          },
+        }),
+        this.prisma.producao.findMany({
+          where: whereClause,
+          select: {
+            id: true,
+            farinhaKg: true,
+            fermentoGrama: true,
+            tempAmbienteInicial: true,
+            tempAmbienteFinal: true,
+            tempoFermentacaoMinutos: true,
+            avaliacao: {
+              select: {
+                nota: true,
+              },
+            },
+          },
+        }),
+        periodo === 'mes'
+          ? this.prisma.producao.findMany({
+              where: {
+                avaliacao: {
+                  nota: 5,
+                },
+              },
+              select: {
+                farinhaKg: true,
+                fermentoGrama: true,
+                tempAmbienteInicial: true,
+                tempAmbienteFinal: true,
+                tempoFermentacaoMinutos: true,
+              },
+            })
+          : Promise.resolve(null),
+      ]);
 
     const totalFarinhaKg = agg._sum.farinhaKg ? Number(agg._sum.farinhaKg) : 0;
     const totalFermentoGrama = agg._sum.fermentoGrama ? Number(agg._sum.fermentoGrama) : 0;
@@ -283,19 +316,288 @@ export class ProducaoService {
       ? Math.round(Number(agg._avg.tempoFermentacaoMinutos))
       : 0;
 
-    // Proporção de fermento: g de fermento por kg de farinha
+    const mediaFarinhaPorFornada =
+      totalCount > 0 ? Number((totalFarinhaKg / totalCount).toFixed(2)) : 0;
+
+    // Proporção média de fermento: g de fermento por kg de farinha
     const proporcaoFermentoGramaPorKg =
       totalFarinhaKg > 0 ? Number((totalFermentoGrama / totalFarinhaKg).toFixed(2)) : 0;
 
-    // Agrupamento mensal para o gráfico de evolução nos últimos 6 meses
-    const mesesMap = new Map<string, { nome: string; farinhaKg: number; fornadas: number; sortKey: number }>();
+    // Helper: Categorização em 3 faixas climáticas naturais
+    const getFaixaClima = (
+      tIniVal: number | null,
+      tFimVal: number | null,
+    ): 'frio' | 'ameno' | 'quente' => {
+      let tMed: number;
+      if (tIniVal !== null && tFimVal !== null) {
+        tMed = (tIniVal + tFimVal) / 2;
+      } else if (tIniVal !== null) {
+        tMed = tIniVal;
+      } else if (tFimVal !== null) {
+        tMed = tFimVal;
+      } else {
+        tMed = 23; // fallback ameno
+      }
+
+      if (tMed < 20) return 'frio';
+      if (tMed <= 26) return 'ameno';
+      return 'quente';
+    };
+
+    // --- EDGE CASE 1: Fallback Global da Zona de Ouro (Nota 5) ---
+    const globalNota5List: Array<{
+      farinhaKg: any;
+      fermentoGrama: any;
+      tempAmbienteInicial: any;
+      tempAmbienteFinal: any;
+      tempoFermentacaoMinutos?: any;
+    }> =
+      periodo === 'mes' && producoesNota5Global
+        ? producoesNota5Global
+        : producoesPeriodo.filter((p) => p.avaliacao?.nota === 5);
+
+    const globalFaixas: Record<'frio' | 'ameno' | 'quente', { somaDosagem: number; count: number }> =
+      {
+        frio: { somaDosagem: 0, count: 0 },
+        ameno: { somaDosagem: 0, count: 0 },
+        quente: { somaDosagem: 0, count: 0 },
+      };
+
+    globalNota5List.forEach((p) => {
+      const far = Number(p.farinhaKg);
+      const fer = Number(p.fermentoGrama);
+      if (far > 0) {
+        const dosagem = fer / far;
+        const tIni = p.tempAmbienteInicial !== null ? Number(p.tempAmbienteInicial) : null;
+        const tFim = p.tempAmbienteFinal !== null ? Number(p.tempAmbienteFinal) : null;
+        const faixa = getFaixaClima(tIni, tFim);
+        globalFaixas[faixa].somaDosagem += dosagem;
+        globalFaixas[faixa].count += 1;
+      }
+    });
+
+    const globalMediaOuro: Record<'frio' | 'ameno' | 'quente', number> = {
+      frio:
+        globalFaixas.frio.count > 0
+          ? Number((globalFaixas.frio.somaDosagem / globalFaixas.frio.count).toFixed(2))
+          : 8.54,
+      ameno:
+        globalFaixas.ameno.count > 0
+          ? Number((globalFaixas.ameno.somaDosagem / globalFaixas.ameno.count).toFixed(2))
+          : 8.54,
+      quente:
+        globalFaixas.quente.count > 0
+          ? Number((globalFaixas.quente.somaDosagem / globalFaixas.quente.count).toFixed(2))
+          : 8.54,
+    };
+
+    // --- LOOP 1: Agregação da Zona de Ouro do Período e Sensibilidade Térmica ---
+    const periodoFaixas: Record<'frio' | 'ameno' | 'quente', { somaDosagem: number; count: number }> =
+      {
+        frio: { somaDosagem: 0, count: 0 },
+        ameno: { somaDosagem: 0, count: 0 },
+        quente: { somaDosagem: 0, count: 0 },
+      };
+
+    let totalNota5Periodo = 0;
+    let somaTempoNota5 = 0;
+    let somaTempNota5 = 0;
+    let countTempNota5 = 0;
+    let totalAvaliadosPeriodo = 0;
+
+    let countTotalEstavel = 0;
+    let somaNotaEstavel = 0;
+    let countAvalEstavel = 0;
+
+    let countTotalOscilacao = 0;
+    let somaNotaOscilacao = 0;
+    let countAvalOscilacao = 0;
+
+    producoesPeriodo.forEach((p) => {
+      const tIni = p.tempAmbienteInicial !== null ? Number(p.tempAmbienteInicial) : null;
+      const tFim = p.tempAmbienteFinal !== null ? Number(p.tempAmbienteFinal) : null;
+      const temAvaliacao = p.avaliacao && typeof p.avaliacao.nota === 'number';
+      const nota = temAvaliacao ? p.avaliacao!.nota : null;
+
+      if (temAvaliacao) {
+        totalAvaliadosPeriodo += 1;
+      }
+
+      // Zona de Ouro (Fornadas com Nota 5)
+      if (nota === 5) {
+        totalNota5Periodo += 1;
+        somaTempoNota5 += p.tempoFermentacaoMinutos || 0;
+        if (tIni !== null || tFim !== null) {
+          const tMed =
+            tIni !== null && tFim !== null ? (tIni + tFim) / 2 : (tIni ?? tFim ?? 23);
+          somaTempNota5 += tMed;
+          countTempNota5 += 1;
+        }
+
+        const far = Number(p.farinhaKg);
+        const fer = Number(p.fermentoGrama);
+        if (far > 0) {
+          const dosagem = fer / far;
+          const faixa = getFaixaClima(tIni, tFim);
+          periodoFaixas[faixa].somaDosagem += dosagem;
+          periodoFaixas[faixa].count += 1;
+        }
+      }
+
+      // Sensibilidade Térmica (Amplitude Delta T = |tFim - tIni|)
+      // EDGE CASE 3: Ignorar fornadas sem avaliação no cálculo das notas médias
+      if (tIni !== null && tFim !== null) {
+        const deltaT = Math.abs(tFim - tIni);
+        if (deltaT <= 4) {
+          countTotalEstavel += 1;
+          if (nota !== null) {
+            somaNotaEstavel += nota;
+            countAvalEstavel += 1;
+          }
+        } else {
+          countTotalOscilacao += 1;
+          if (nota !== null) {
+            somaNotaOscilacao += nota;
+            countAvalOscilacao += 1;
+          }
+        }
+      }
+    });
+
+    // Consolidação das faixas de referência com fallback seguro
+    const faixasReferencia = {
+      frio: {
+        faixa: '< 20°C' as const,
+        dosagemMediaNota5:
+          periodoFaixas.frio.count > 0
+            ? Number((periodoFaixas.frio.somaDosagem / periodoFaixas.frio.count).toFixed(2))
+            : globalMediaOuro.frio,
+        fornadas:
+          periodoFaixas.frio.count > 0 ? periodoFaixas.frio.count : globalFaixas.frio.count,
+        usouFallback: periodoFaixas.frio.count === 0,
+      },
+      ameno: {
+        faixa: '20°C - 26°C' as const,
+        dosagemMediaNota5:
+          periodoFaixas.ameno.count > 0
+            ? Number((periodoFaixas.ameno.somaDosagem / periodoFaixas.ameno.count).toFixed(2))
+            : globalMediaOuro.ameno,
+        fornadas:
+          periodoFaixas.ameno.count > 0 ? periodoFaixas.ameno.count : globalFaixas.ameno.count,
+        usouFallback: periodoFaixas.ameno.count === 0,
+      },
+      quente: {
+        faixa: '> 26°C' as const,
+        dosagemMediaNota5:
+          periodoFaixas.quente.count > 0
+            ? Number((periodoFaixas.quente.somaDosagem / periodoFaixas.quente.count).toFixed(2))
+            : globalMediaOuro.quente,
+        fornadas:
+          periodoFaixas.quente.count > 0 ? periodoFaixas.quente.count : globalFaixas.quente.count,
+        usouFallback: periodoFaixas.quente.count === 0,
+      },
+    };
+
+    // --- LOOP 2: Auditoria Climática (Opção B - Aderência a ±10% da Zona de Ouro) ---
+    let countAderente = 0;
+    let somaNotaAderente = 0;
+    let countAvalAderente = 0;
+
+    let countDescalibrado = 0;
+    let somaNotaDescalibrado = 0;
+    let countAvalDescalibrado = 0;
+
+    producoesPeriodo.forEach((p) => {
+      const far = Number(p.farinhaKg);
+      const fer = Number(p.fermentoGrama);
+      const dosagem = far > 0 ? fer / far : 0;
+      const tIni = p.tempAmbienteInicial !== null ? Number(p.tempAmbienteInicial) : null;
+      const tFim = p.tempAmbienteFinal !== null ? Number(p.tempAmbienteFinal) : null;
+      const faixa = getFaixaClima(tIni, tFim);
+      const metaOuro = faixasReferencia[faixa].dosagemMediaNota5;
+
+      // Margem aceitável para o clima do dia: ±10%
+      const isAderente = dosagem >= metaOuro * 0.9 && dosagem <= metaOuro * 1.1;
+      const temAvaliacao = p.avaliacao && typeof p.avaliacao.nota === 'number';
+      const nota = temAvaliacao ? p.avaliacao!.nota : null;
+
+      if (isAderente) {
+        countAderente += 1;
+        // EDGE CASE 3: Ignora fornada sem avaliação na média de notas
+        if (nota !== null) {
+          somaNotaAderente += nota;
+          countAvalAderente += 1;
+        }
+      } else {
+        countDescalibrado += 1;
+        if (nota !== null) {
+          somaNotaDescalibrado += nota;
+          countAvalDescalibrado += 1;
+        }
+      }
+    });
+
+    const totalAuditoria = countAderente + countDescalibrado;
+    const taxaAderenciaIdeal =
+      totalAuditoria > 0 ? Number(((countAderente / totalAuditoria) * 100).toFixed(1)) : 0;
+
+    const notaMediaAderente =
+      countAvalAderente > 0 ? Number((somaNotaAderente / countAvalAderente).toFixed(2)) : 0;
+
+    const notaMediaDescalibrado =
+      countAvalDescalibrado > 0
+        ? Number((somaNotaDescalibrado / countAvalDescalibrado).toFixed(2))
+        : 0;
+
+    // --- MÓDULO 1: Balanço de Massa e Estimativa de Produção (3 Cenários) ---
+    const paesEstimadosTotalFarinha = Math.round(totalFarinhaKg * 21.25);
+    const paesEstimadosPorFornadaFarinha = Math.round(mediaFarinhaPorFornada * 21.25);
+
+    const massaCruaTotalKg = Number((totalFarinhaKg * 1.505).toFixed(2));
+    const massaCruaPorFornadaKg = Number((mediaFarinhaPorFornada * 1.505).toFixed(2));
+
+    const paoAssadoTotalKg = Number((totalFarinhaKg * 1.16875).toFixed(2));
+    const paoAssadoPorFornadaKg = Number((mediaFarinhaPorFornada * 1.16875).toFixed(2));
+
+    const balancoMassa = {
+      cenarioFarinha: {
+        fatorConversao: 21.25,
+        paesEstimadosTotal: paesEstimadosTotalFarinha,
+        paesEstimadosPorFornada: paesEstimadosPorFornadaFarinha,
+      },
+      cenarioMassaCrua: {
+        fatorMassa: 1.505,
+        massaCruaTotalKg,
+        massaCruaPorFornadaKg,
+        rendimentoPorKgMassa: 14,
+        paesEstimadosTotal: Math.round(massaCruaTotalKg * 14),
+        paesEstimadosPorFornada: Math.round(massaCruaPorFornadaKg * 14),
+      },
+      cenarioPaoAssado: {
+        fatorAssado: 1.16875,
+        paoAssadoTotalKg,
+        paoAssadoPorFornadaKg,
+        rendimentoPorKgAssado: 18,
+        taxaQuebraEvaporacao: 22.3,
+        perdaAguaTotalKg: Number((totalFarinhaKg * (1.505 - 1.16875)).toFixed(2)),
+        paesEstimadosTotal: Math.round(paoAssadoTotalKg * 18),
+        paesEstimadosPorFornada: Math.round(paoAssadoPorFornadaKg * 18),
+      },
+    };
+
+    // --- Agrupamento mensal com projeção linear (Run-Rate) ---
+    const mesesMap = new Map<
+      string,
+      { nome: string; farinhaKg: number; fornadas: number; sortKey: number; isMesAtual: boolean }
+    >();
 
     for (let i = 5; i >= 0; i--) {
       const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
       const mesNome = d.toLocaleDateString('pt-BR', { month: 'short' });
       const key = (mesNome.charAt(0).toUpperCase() + mesNome.slice(1)).replace('.', '');
       const sortKey = d.getFullYear() * 100 + d.getMonth();
-      mesesMap.set(key, { nome: key, farinhaKg: 0, fornadas: 0, sortKey });
+      const isMesAtual = i === 0;
+      mesesMap.set(key, { nome: key, farinhaKg: 0, fornadas: 0, sortKey, isMesAtual });
     }
 
     producoesRecentes.forEach((p) => {
@@ -309,13 +611,39 @@ export class ProducaoService {
       }
     });
 
+    const diasNoMesAtual = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
+    const diaHoje = Math.max(1, hoje.getDate());
+
     const evolucaoFarinha = Array.from(mesesMap.values())
       .sort((a, b) => a.sortKey - b.sortKey)
-      .map((item) => ({
-        name: item.nome,
-        farinhaKg: Number(item.farinhaKg.toFixed(1)),
-        fornadas: item.fornadas,
-      }));
+      .map((item) => {
+        const farinhaRealizada = Number(item.farinhaKg.toFixed(1));
+        if (item.isMesAtual) {
+          const projecaoFechamento = Number(
+            ((farinhaRealizada / diaHoje) * diasNoMesAtual).toFixed(1),
+          );
+          const projecaoRestante = Math.max(
+            0,
+            Number((projecaoFechamento - farinhaRealizada).toFixed(1)),
+          );
+          return {
+            name: item.nome,
+            farinhaKg: farinhaRealizada,
+            fornadas: item.fornadas,
+            isMesAtual: true,
+            projecaoFechamentoKg: projecaoFechamento,
+            projecaoRestanteKg: projecaoRestante,
+          };
+        }
+        return {
+          name: item.nome,
+          farinhaKg: farinhaRealizada,
+          fornadas: item.fornadas,
+          isMesAtual: false,
+          projecaoFechamentoKg: farinhaRealizada,
+          projecaoRestanteKg: 0,
+        };
+      });
 
     return {
       periodo,
@@ -324,7 +652,7 @@ export class ProducaoService {
       totalEmulsificanteMl: Number(totalEmulsificanteMl.toFixed(2)),
       totalFornadas: totalCount,
       tempoMedioMinutos,
-      mediaFarinhaPorFornada: totalCount > 0 ? Number((totalFarinhaKg / totalCount).toFixed(2)) : 0,
+      mediaFarinhaPorFornada,
       proporcaoFermentoGramaPorKg,
       tendenciaFarinha: await (async () => {
         if (periodo !== 'mes') return null;
@@ -339,6 +667,40 @@ export class ProducaoService {
         return Number((((totalFarinhaKg - farinhaAnt) / farinhaAnt) * 100).toFixed(1));
       })(),
       evolucaoFarinha,
+      balancoMassa,
+      auditoriaClima: {
+        taxaAderenciaIdeal,
+        notaMediaAderente,
+        notaMediaDescalibrado,
+        totalAderente: countAderente,
+        totalDescalibrado: countDescalibrado,
+        faixasReferencia,
+      },
+      sensibilidadeTermica: {
+        estavel: {
+          total: countTotalEstavel,
+          notaMedia:
+            countAvalEstavel > 0 ? Number((somaNotaEstavel / countAvalEstavel).toFixed(2)) : 0,
+        },
+        oscilacao: {
+          total: countTotalOscilacao,
+          notaMedia:
+            countAvalOscilacao > 0
+              ? Number((somaNotaOscilacao / countAvalOscilacao).toFixed(2))
+              : 0,
+        },
+      },
+      zonaDeOuro: {
+        totalNota5: totalNota5Periodo,
+        percentualDoTotal:
+          totalAvaliadosPeriodo > 0
+            ? Number(((totalNota5Periodo / totalAvaliadosPeriodo) * 100).toFixed(1))
+            : 0,
+        tempoMedioMinutos:
+          totalNota5Periodo > 0 ? Math.round(somaTempoNota5 / totalNota5Periodo) : 0,
+        tempMediaAmbiente:
+          countTempNota5 > 0 ? Number((somaTempNota5 / countTempNota5).toFixed(1)) : 0,
+      },
     };
   }
 
