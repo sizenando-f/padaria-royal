@@ -67,6 +67,7 @@ export class ProducaoService {
         tempAmbienteInicial: data.tempAmbienteInicial,
         tempAmbienteFinal: data.tempAmbienteFinal,
         observacoes: data.observacoes,
+        usouCamara: data.usouCamara ?? false,
 
         // Para saber quem fez
         criadoPorId: usuarioId || null,
@@ -217,6 +218,10 @@ export class ProducaoService {
       }
     }
 
+    if (params.usouCamara !== undefined && params.usouCamara !== '') {
+      where.usouCamara = params.usouCamara === 'true' || params.usouCamara === true;
+    }
+
     return await this.prisma.producao.findMany({
       where,
       include: { avaliacao: true },
@@ -283,6 +288,7 @@ export class ProducaoService {
             tempAmbienteInicial: true,
             tempAmbienteFinal: true,
             tempoFermentacaoMinutos: true,
+            usouCamara: true,
             avaliacao: {
               select: {
                 nota: true,
@@ -296,6 +302,7 @@ export class ProducaoService {
                 avaliacao: {
                   nota: 5,
                 },
+                usouCamara: false,
               },
               select: {
                 farinhaKg: true,
@@ -345,6 +352,7 @@ export class ProducaoService {
     };
 
     // --- EDGE CASE 1: Fallback Global da Zona de Ouro (Nota 5) ---
+    // Apenas fornadas naturais (não câmara) participam da zona de ouro climática
     const globalNota5List: Array<{
       farinhaKg: any;
       fermentoGrama: any;
@@ -354,7 +362,7 @@ export class ProducaoService {
     }> =
       periodo === 'mes' && producoesNota5Global
         ? producoesNota5Global
-        : producoesPeriodo.filter((p) => p.avaliacao?.nota === 5);
+        : producoesPeriodo.filter((p) => p.avaliacao?.nota === 5 && !p.usouCamara);
 
     const globalFaixas: Record<'frio' | 'ameno' | 'quente', { somaDosagem: number; count: number }> =
       {
@@ -414,6 +422,11 @@ export class ProducaoService {
     let countAvalOscilacao = 0;
 
     producoesPeriodo.forEach((p) => {
+      // Fornadas de câmara possuem clima e receita controlados, não entram na auditoria climática nem no delta T
+      if (p.usouCamara) {
+        return;
+      }
+
       const tIni = p.tempAmbienteInicial !== null ? Number(p.tempAmbienteInicial) : null;
       const tFim = p.tempAmbienteFinal !== null ? Number(p.tempAmbienteFinal) : null;
       const temAvaliacao = p.avaliacao && typeof p.avaliacao.nota === 'number';
@@ -508,6 +521,11 @@ export class ProducaoService {
     let countAvalDescalibrado = 0;
 
     producoesPeriodo.forEach((p) => {
+      // Fornadas de câmara possuem clima e receita controlados, não entram na auditoria climática
+      if (p.usouCamara) {
+        return;
+      }
+
       const far = Number(p.farinhaKg);
       const fer = Number(p.fermentoGrama);
       const dosagem = far > 0 ? fer / far : 0;
@@ -645,12 +663,15 @@ export class ProducaoService {
         };
       });
 
+    const totalFornadasCamara = producoesPeriodo.filter((p) => p.usouCamara).length;
+
     return {
       periodo,
       totalFarinhaKg: Number(totalFarinhaKg.toFixed(2)),
       totalFermentoGrama: Number(totalFermentoGrama.toFixed(2)),
       totalEmulsificanteMl: Number(totalEmulsificanteMl.toFixed(2)),
       totalFornadas: totalCount,
+      totalFornadasCamara,
       tempoMedioMinutos,
       mediaFarinhaPorFornada,
       proporcaoFermentoGramaPorKg,
@@ -805,9 +826,10 @@ export class ProducaoService {
     tempFinal?: number,
     minutosAlvo?: number,
   ) {
-    // Para pegar todas as prodoções de sucesso com as duas temperaturas
+    // Para pegar todas as prodoções de sucesso com as duas temperaturas (excluindo câmara)
     const historico = await this.prisma.producao.findMany({
       where: {
+        usouCamara: false, // Câmara possui parâmetros fixos e clima artificial; não contamina a sugestão K-NN
         avaliacao: {
           nota: { gte: 4 }, // Maior ou igual a 4
         },
@@ -824,6 +846,7 @@ export class ProducaoService {
         tempAmbienteFinal: true,
         tempoFermentacaoMinutos: true,
         observacoes: true,
+        usouCamara: true,
         avaliacao: {
           select: {
             nota: true,
@@ -1193,6 +1216,7 @@ export class ProducaoService {
       return {
         Fornada: `#${p.id}`,
         'Data/Hora': new Date(p.horaInicio).toLocaleString('pt-BR'),
+        'Câmara': p.usouCamara ? 'Sim' : 'Não',
         'Temperatura Inicial (°C)': p.tempAmbienteInicial,
         'Temperatura Final Prevista (°C)': p.tempAmbienteFinal,
         'Temperatura Final Real (°C)': p.avaliacao?.tempAmbienteFinalReal || '',

@@ -47,6 +47,7 @@ interface BiStats {
   totalFermentoGrama: number;
   totalEmulsificanteMl: number;
   totalFornadas: number;
+  totalFornadasCamara?: number;
   tempoMedioMinutos: number;
   mediaFarinhaPorFornada: number;
   proporcaoFermentoGramaPorKg: number;
@@ -878,10 +879,15 @@ export default function BiGerencial() {
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
                   Total de Fornadas
                 </span>
-                <span className="text-base font-extrabold text-gray-900">
+                <span className="text-base font-extrabold text-gray-900 block">
                   {data.totalFornadas.toLocaleString("pt-BR")}{" "}
                   {data.totalFornadas === 1 ? "fornada" : "fornadas"}
                 </span>
+                {data.totalFornadasCamara != null && data.totalFornadasCamara > 0 && (
+                  <span className="text-[10px] text-cyan-700 font-semibold flex items-center gap-1 mt-0.5">
+                    <Snowflake size={11} className="text-cyan-600" /> {data.totalFornadasCamara} em câmara
+                  </span>
+                )}
               </div>
             </div>
           </div>

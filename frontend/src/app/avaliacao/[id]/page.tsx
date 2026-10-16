@@ -7,6 +7,7 @@ import {
   Save,
   Check,
   Loader2,
+  Snowflake,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -32,6 +33,7 @@ export default function RevisaoAvaliacao() {
     emulsificanteMl: "",
     tempAmbienteInicial: "",
     tempAmbienteFinal: "",
+    usouCamara: false,
   });
 
   // Dados da Avaliação
@@ -73,6 +75,7 @@ export default function RevisaoAvaliacao() {
           tempAmbienteFinal: data.tempAmbienteFinal
             ? String(data.tempAmbienteFinal)
             : "",
+          usouCamara: Boolean(data.usouCamara),
         });
 
         // Se já existir avaliação, popula também
@@ -119,6 +122,10 @@ export default function RevisaoAvaliacao() {
           tempAmbienteInicial: prodData.tempAmbienteInicial
             ? Number(prodData.tempAmbienteInicial)
             : null,
+          tempAmbienteFinal: prodData.tempAmbienteFinal
+            ? Number(prodData.tempAmbienteFinal)
+            : null,
+          usouCamara: prodData.usouCamara,
         }),
       });
 
@@ -271,6 +278,30 @@ export default function RevisaoAvaliacao() {
                   }
                 />
               </div>
+            </div>
+
+            {/* Toggle Câmara Fria */}
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+              <div>
+                <span className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+                  <Snowflake size={15} className="text-cyan-600" />
+                  Produção em Câmara Fria
+                </span>
+                <p className="text-[10px] text-gray-400 mt-0.5">
+                  Fornadas de câmara são excluídas do cálculo de sugestão IA
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-2">
+                <input
+                  type="checkbox"
+                  checked={prodData.usouCamara}
+                  onChange={(e) =>
+                    setProdData({ ...prodData, usouCamara: e.target.checked })
+                  }
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-600"></div>
+              </label>
             </div>
           </div>
 

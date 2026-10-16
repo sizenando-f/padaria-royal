@@ -1,4 +1,4 @@
-import { isNotEmpty, IsNumber, IsString, IsDateString, IsOptional, Min, IsNotEmpty, IsDate, min } from "class-validator";
+import { IsNumber, IsString, IsDateString, IsOptional, Min, IsNotEmpty, IsBoolean } from "class-validator";
 
 export class CreateProducaoDto {
     // Valida se é uma string de data ISO 8601 (ex: "2025-11-27T14:00:00Z")
@@ -34,4 +34,8 @@ export class CreateProducaoDto {
     @IsOptional()
     @IsString()
     observacoes?: string;
+
+    @IsOptional()
+    @IsBoolean()
+    usouCamara?: boolean;
 }

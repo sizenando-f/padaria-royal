@@ -20,6 +20,7 @@ import {
   X,
   ThermometerSun,
   ArrowRight,
+  Snowflake,
 } from "lucide-react";
 import Toast from "@/app/components/Toast";
 import { useAuth } from "@/context/AuthContext";
@@ -48,7 +49,8 @@ export default function HistoricoProducao() {
     fermentoMin: '', fermentoMax: '',
     emulsificanteMin: '', emulsificanteMax: '',
     tempoHoraMin: '', tempoHoraMax: '',
-    tempPrevMin: '', tempPrevMax: ''
+    tempPrevMin: '', tempPrevMax: '',
+    usouCamara: '',
   };
 
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
@@ -102,6 +104,10 @@ export default function HistoricoProducao() {
 
     if (filtrosAplicados.tempRealMin) params.append("tempRealMin", filtrosAplicados.tempRealMin);
     if (filtrosAplicados.tempRealMax) params.append("tempRealMax", filtrosAplicados.tempRealMax);
+
+    if (filtrosAplicados.usouCamara !== '' && filtrosAplicados.usouCamara !== undefined) {
+      params.append("usouCamara", filtrosAplicados.usouCamara);
+    }
 
     return params.toString();
   };
@@ -357,6 +363,48 @@ const { data, isLoading, isFetching, refetch} = useQuery({
                   </div>
                 </div>
 
+                {/* Tipo de Fermentação / Câmara */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase flex items-center gap-1">
+                    <Snowflake size={14} className="text-cyan-600" /> Método de Fermentação
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFiltros({ ...filtros, usouCamara: '' })}
+                      className={`px-3 py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                        filtros.usouCamara === ''
+                          ? 'bg-blue-50 border-blue-300 text-blue-700 ring-2 ring-offset-1 ring-blue-100'
+                          : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      Todas
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFiltros({ ...filtros, usouCamara: 'false' })}
+                      className={`px-3 py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                        filtros.usouCamara === 'false'
+                          ? 'bg-amber-50 border-amber-300 text-amber-700 ring-2 ring-offset-1 ring-amber-100'
+                          : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      Natural / Armário
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFiltros({ ...filtros, usouCamara: 'true' })}
+                      className={`px-3 py-2.5 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center gap-1 ${
+                        filtros.usouCamara === 'true'
+                          ? 'bg-cyan-50 border-cyan-300 text-cyan-800 ring-2 ring-offset-1 ring-cyan-100'
+                          : 'bg-white border-gray-200 text-gray-500 hover:bg-gray-50'
+                      }`}
+                    >
+                      <Snowflake size={12} className="text-cyan-600" /> Câmara Fria
+                    </button>
+                  </div>
+                </div>
+
                 {/* Tempo de Fermentação */}
                 <div className="space-y-2">
                     <label className="text-xs font-bold text-gray-400 uppercase flex items-center gap-1"><Clock size={14}/> Tempo (Horas)</label>
@@ -454,6 +502,11 @@ const { data, isLoading, isFetching, refetch} = useQuery({
                           {formatData(prod.horaInicio)}
                         </h3>
                         {renderBadgeNota(prod.avaliacao)}
+                        {prod.usouCamara && (
+                          <span className="text-[10px] bg-cyan-50 text-cyan-800 border border-cyan-200 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-2xs">
+                            <Snowflake size={11} className="text-cyan-600" /> Câmara
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-gray-400 flex items-center gap-1">
                         <Clock size={12} /> {formatHora(prod.horaInicio)} -{" "}

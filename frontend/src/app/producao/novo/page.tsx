@@ -18,7 +18,8 @@ import {
   Star,
   Droplets,
   AlertTriangle,
-  RefreshCw
+  RefreshCw,
+  Snowflake,
 } from "lucide-react";
 import Toast from "@/app/components/Toast";
 import { getApiBaseUrl } from "@/utils/api";
@@ -49,6 +50,7 @@ export default function NovaProducao() {
     observacoes: "",
     tempAmbienteInicial: "",
     tempAmbienteFinal: "",
+    usouCamara: false,
   });
 
   useEffect(() => {
@@ -76,6 +78,62 @@ export default function NovaProducao() {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleToggleCamara = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    const formatarDataLocal = (data: Date) => {
+      const offset = data.getTimezoneOffset() * 60000;
+      const dataLocal = new Date(data.getTime() - offset);
+      return dataLocal.toISOString().slice(0, 16);
+    };
+
+    if (checked) {
+      // 1. Temperatura inicial 6°C e final 30°C (editáveis)
+      // 2. Hora inicial 18:00 de hoje e final 02:00 de amanhã (8h, editáveis)
+      // 3. Fermento 110g, farinha 20kg, emulsificante 80ml (editáveis)
+      const hoje18 = new Date();
+      hoje18.setHours(18, 0, 0, 0);
+
+      const amanha02 = new Date(hoje18.getTime() + 8 * 60 * 60 * 1000);
+
+      setFormData((prev) => ({
+        ...prev,
+        usouCamara: true,
+        tempAmbienteInicial: "6",
+        tempAmbienteFinal: "30",
+        horaInicio: formatarDataLocal(hoje18),
+        horaFim: formatarDataLocal(amanha02),
+        farinhaKg: "20",
+        fermentoGrama: "110",
+        emulsificanteMl: "80",
+      }));
+      setProvasSugestao(null);
+      setSugestaoFermento(null);
+      setMensagemIA("");
+    } else {
+      // Desmarcou, limpou
+      const agora = new Date();
+      const inicioPadrao = formatarDataLocal(agora);
+      const fimPadrao = formatarDataLocal(
+        new Date(agora.getTime() + 7 * 60 * 60 * 1000),
+      );
+
+      setFormData((prev) => ({
+        ...prev,
+        usouCamara: false,
+        tempAmbienteInicial: "",
+        tempAmbienteFinal: "",
+        horaInicio: inicioPadrao,
+        horaFim: fimPadrao,
+        farinhaKg: "",
+        fermentoGrama: "",
+        emulsificanteMl: "",
+      }));
+      setProvasSugestao(null);
+      setSugestaoFermento(null);
+      setMensagemIA("");
+    }
   };
 
   const adicionarHoras = (horas: number) => {
@@ -230,6 +288,10 @@ export default function NovaProducao() {
   }
 
   async function pedirSugestao() {
+    if (formData.usouCamara) {
+      return;
+    }
+
     const farinhaStr = String(formData.farinhaKg);
     const farinha = Number(farinhaStr.replace(",", "."));
 
@@ -342,6 +404,7 @@ export default function NovaProducao() {
         tempAmbienteFinal: formData.tempAmbienteFinal
           ? safeParse(formData.tempAmbienteFinal)
           : null,
+        usouCamara: formData.usouCamara,
       };
 
       const res = await fetch(`${getApiBaseUrl()}/producao`, {
@@ -398,6 +461,48 @@ export default function NovaProducao() {
       </div>
 
       <form onSubmit={handleSubmit} className="w-full max-w-lg space-y-6 pb-24">
+        {/* Toggle Câmara Controlada */}
+        <div
+          className={`p-4 rounded-3xl border transition-all ${
+            formData.usouCamara
+              ? "bg-cyan-50/80 border-cyan-200 shadow-xs"
+              : "bg-white border-gray-100 shadow-sm"
+          }`}
+        >
+          <label className="flex items-center justify-between cursor-pointer select-none gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className={`w-10 h-10 rounded-2xl shrink-0 flex items-center justify-center transition-all ${
+                  formData.usouCamara
+                    ? "bg-cyan-600 text-white shadow-md shadow-cyan-200"
+                    : "bg-gray-100 text-gray-500"
+                }`}
+              >
+                <Snowflake size={20} />
+              </div>
+              <div className="min-w-0">
+                <span className="font-bold text-gray-900 text-sm block leading-snug">
+                  Câmara Fria
+                </span>
+                <p className="text-xs text-gray-500 leading-tight">
+                  Sugestão inteligente desativada
+                </p>
+              </div>
+            </div>
+
+            <div className="relative inline-flex items-center shrink-0">
+              <input
+                type="checkbox"
+                name="usouCamara"
+                checked={formData.usouCamara}
+                onChange={handleToggleCamara}
+                className="sr-only peer"
+              />
+              <div className="w-12 h-7 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-cyan-600 cursor-pointer"></div>
+            </div>
+          </label>
+        </div>
+
         {/* Card de tempo */}
         <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100">
           <div className="flex items-center gap-2 mb-4 text-gray-800 font-bold">
@@ -538,14 +643,24 @@ export default function NovaProducao() {
                 <button
                   type="button"
                   onClick={pedirSugestao}
-                  className="shrink-0 w-auto bg-purple-600 text-white px-4 rounded-2xl shadow-lg shadow-purple-200 hover:bg-purple-700 active:scale-95 transition-all flex flex-col items-center justify-center"
+                  disabled={formData.usouCamara}
+                  title={formData.usouCamara ? "Modo câmara: dosagem padrão fixa (110g fermento / 20kg farinha / 8h)" : "Sugerir dosagem por IA"}
+                  className={`shrink-0 w-auto px-4 rounded-2xl shadow-lg transition-all flex flex-col items-center justify-center ${
+                    formData.usouCamara
+                      ? "bg-cyan-100/70 text-cyan-800 border border-cyan-200 shadow-none cursor-default opacity-85"
+                      : "bg-purple-600 text-white shadow-purple-200 hover:bg-purple-700 active:scale-95 cursor-pointer"
+                  }`}
                 >
                   {sugerindo ? (
                     <Loader2 className="animate-spin" size={20} />
+                  ) : formData.usouCamara ? (
+                    <Snowflake size={20} className="text-cyan-700" />
                   ) : (
                     <Wand2 size={20} />
                   )}
-                  <span className="text-[10px] font-bold mt-1">Sugerir</span>
+                  <span className="text-[10px] font-bold mt-1">
+                    {formData.usouCamara ? "Câmara" : "Sugerir"}
+                  </span>
                 </button>
               </div>
             </div>
@@ -672,9 +787,9 @@ export default function NovaProducao() {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wide ml-1">
+                <label className="h-8 flex items-end text-xs font-bold text-gray-400 uppercase tracking-wide ml-1 leading-tight">
                   Emulsificante (ml)
                 </label>
                 <input
@@ -682,20 +797,20 @@ export default function NovaProducao() {
                   name="emulsificanteMl"
                   value={formData.emulsificanteMl}
                   onChange={handleChange}
-                  className="w-full mt-1 bg-gray-50 border border-gray-200 text-gray-900 text-lg rounded-2xl focus:ring-2 focus:ring-blue-400 p-3 outline-none"
+                  className="w-full mt-1.5 bg-gray-50 border border-gray-200 text-gray-900 text-lg rounded-2xl focus:ring-2 focus:ring-blue-400 p-3 outline-none"
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-wide ml-1">
+                <label className="h-8 flex items-end text-xs font-bold text-gray-400 uppercase tracking-wide ml-1 leading-tight">
                   Fermento (g)
                 </label>
-                <div className="relative">
+                <div className="relative mt-1.5">
                   <input
                     type="number"
                     name="fermentoGrama"
                     value={formData.fermentoGrama}
                     onChange={handleChange}
-                    className={`w-full mt-1 border text-lg rounded-2xl p-3 outline-none font-bold transition-all ${
+                    className={`w-full border text-lg rounded-2xl p-3 outline-none font-bold transition-all ${
                       sugestaoFermento && Number(formData.fermentoGrama) !== sugestaoFermento ? "bg-yellow-50 border-yellow-400 text-yellow-800 focus:ring-yellow-400 ring-2 ring-yellow-100"
                       : provasSugestao ? "bg-purple-50 border-purple-300 text-purple-900 focus:ring-purple-400"
                       : "bg-gray-50 border-gray-200 text-gray-900 focus:ring-2 focus:ring-orange-500"
