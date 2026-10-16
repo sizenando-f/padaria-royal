@@ -200,5 +200,124 @@ describe('ProducaoService', () => {
       expect(result.auditoriaClima.faixasReferencia.frio.usouFallback).toBe(true);
       expect(result.auditoriaClima.faixasReferencia.frio.dosagemMediaNota5).toBe(10);
     });
+
+    it('deve desconsiderar fornadas de câmara fria na auditoria climática mas contar em totalFornadasCamara', async () => {
+      prisma.producao.aggregate.mockResolvedValue({
+        _sum: {
+          farinhaKg: 100,
+          fermentoGrama: 550,
+          emulsificanteMl: 400,
+        },
+        _avg: {
+          farinhaKg: 20,
+          fermentoGrama: 110,
+          tempoFermentacaoMinutos: 480,
+        },
+      });
+
+      prisma.producao.count.mockResolvedValue(2);
+
+      prisma.producao.findMany
+        .mockResolvedValueOnce([]) // producoesRecentes
+        .mockResolvedValueOnce([
+          // Fornada 1: Câmara Fria (temp 6 -> 30, usouCamara: true)
+          {
+            id: 1,
+            farinhaKg: 20,
+            fermentoGrama: 110,
+            tempAmbienteInicial: 6,
+            tempAmbienteFinal: 30,
+            tempoFermentacaoMinutos: 480,
+            usouCamara: true,
+            avaliacao: { nota: 5 },
+          },
+          // Fornada 2: Natural (temp 22 -> 24, usouCamara: false)
+          {
+            id: 2,
+            farinhaKg: 20,
+            fermentoGrama: 170,
+            tempAmbienteInicial: 22,
+            tempAmbienteFinal: 24,
+            tempoFermentacaoMinutos: 240,
+            usouCamara: false,
+            avaliacao: { nota: 5 },
+          },
+        ]);
+
+      const result = await service.getBiStats('todos');
+
+      expect(result.totalFornadas).toBe(2);
+      expect(result.totalFornadasCamara).toBe(1);
+      // Na auditoria climática, a câmara não deve ter entrado (apenas a natural participou)
+      expect(result.auditoriaClima.totalAderente + result.auditoriaClima.totalDescalibrado).toBe(1);
+      // Sensibilidade térmica deve ter considerado apenas a natural
+      expect(result.sensibilidadeTermica.estavel.total + result.sensibilidadeTermica.oscilacao.total).toBe(1);
+    });
+  });
+
+  describe('calcularSugestao', () => {
+    it('deve consultar apenas produções com usouCamara: false para calcular a sugestão K-NN', async () => {
+      prisma.producao.findMany.mockResolvedValue([
+        {
+          id: 101,
+          farinhaKg: 20,
+          fermentoGrama: 160,
+          emulsificanteMl: 80,
+          tempAmbienteInicial: 24,
+          tempAmbienteFinal: 26,
+          tempoFermentacaoMinutos: 300,
+          usouCamara: false,
+          observacoes: null,
+          avaliacao: {
+            nota: 5,
+            comentario: 'Excelente',
+            tempAmbienteFinalReal: 26,
+          },
+        },
+      ]);
+
+      const sugestao = await service.calcularSugestao(20, 24, 26, 300);
+
+      expect(prisma.producao.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            usouCamara: false,
+          }),
+        }),
+      );
+      expect(sugestao.fermento).toBe(160);
+      expect(sugestao.provas.length).toBe(1);
+    });
+  });
+
+  describe('create', () => {
+    it('deve persistir usouCamara como true quando informado', async () => {
+      const now = new Date();
+      const in8Hours = new Date(now.getTime() + 8 * 3600 * 1000);
+
+      prisma.producao.create.mockResolvedValue({
+        id: 999,
+        usouCamara: true,
+      });
+
+      await service.create({
+        farinhaKg: 20,
+        fermentoGrama: 110,
+        emulsificanteMl: 80,
+        tempAmbienteInicial: 6,
+        tempAmbienteFinal: 30,
+        horaInicio: now.toISOString(),
+        horaFim: in8Hours.toISOString(),
+        usouCamara: true,
+      } as any);
+
+      expect(prisma.producao.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            usouCamara: true,
+          }),
+        }),
+      );
+    });
   });
 });
