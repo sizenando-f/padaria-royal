@@ -3,36 +3,50 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Padaria Royal — Documentação Técnica</title>
+<title>Padaria Royal — Documentação Técnica &amp; Arquitetura</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg:        #f7f6f3;
-    --surface:   #ffffff;
-    --sidebar-bg:#18181b;
-    --sidebar-w: 272px;
-    --text:      #1c1917;
-    --muted:     #78716c;
-    --border:    #e5e2dd;
-    --accent:    #c2410c;
-    --accent-lt: #fff3ed;
-    --mono:      'IBM Plex Mono', monospace;
-    --sans:      'IBM Plex Sans', sans-serif;
-    --code-bg:   #1e1e1e;
+    --bg:          #f8fafc;
+    --surface:     #ffffff;
+    --surface-alt: #f1f5f9;
+    --sidebar-bg:  #090d16;
+    --sidebar-w:   288px;
+    --text:        #0f172a;
+    --text-body:   #334155;
+    --muted:       #64748b;
+    --border:      #e2e8f0;
+    --border-str:  #cbd5e1;
+    --accent:      #c2410c;
+    --accent-med:  #ea580c;
+    --accent-lt:   #fff7ed;
+    --mono:        'IBM Plex Mono', monospace;
+    --sans:        'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --code-bg:     #0d1117;
+    --shadow-sm:   0 1px 2px 0 rgba(15, 23, 42, 0.04);
+    --shadow-md:   0 4px 12px -2px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.03);
+    --shadow-lg:   0 12px 28px -6px rgba(15, 23, 42, 0.08), 0 4px 10px -3px rgba(15, 23, 42, 0.04);
   }
 
   html { scroll-behavior: smooth; }
 
   body {
     font-family: var(--sans);
-    background: var(--bg);
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(at 80% 0%, rgba(234, 88, 12, 0.045) 0px, transparent 50%),
+      radial-gradient(at 15% 25%, rgba(37, 99, 235, 0.035) 0px, transparent 50%),
+      radial-gradient(#cbd5e1 0.65px, transparent 0.65px);
+    background-size: 100% 100%, 100% 100%, 28px 28px;
+    background-attachment: fixed;
     color: var(--text);
-    line-height: 1.7;
+    line-height: 1.72;
     font-size: 15px;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* ── SIDEBAR ────────────────────────────── */
@@ -41,250 +55,422 @@
     top: 0; left: 0;
     width: var(--sidebar-w);
     height: 100vh;
-    background: var(--sidebar-bg);
+    background: linear-gradient(180deg, #0b0f19 0%, #070a12 100%);
+    border-right: 1px solid rgba(255, 255, 255, 0.07);
     overflow-y: auto;
     z-index: 100;
     display: flex;
     flex-direction: column;
-    padding-bottom: 2rem;
+    padding-bottom: 2.5rem;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
   }
 
   .sidebar::-webkit-scrollbar { width: 4px; }
   .sidebar::-webkit-scrollbar-track { background: transparent; }
-  .sidebar::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 2px; }
+  .sidebar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
 
   .sidebar-header {
-    padding: 1.75rem 1.5rem 1.25rem;
-    border-bottom: 1px solid #27272a;
+    padding: 1.85rem 1.5rem 1.4rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    background: radial-gradient(circle at top left, rgba(234, 88, 12, 0.14), transparent 70%);
+  }
+
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+  }
+
+  .sidebar-brand-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #ea580c 0%, #9a3412 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 800;
+    font-size: 15px;
+    letter-spacing: -0.03em;
+    box-shadow: 0 4px 12px rgba(234, 88, 12, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    flex-shrink: 0;
   }
 
   .sidebar-logo {
-    font-size: 13px;
-    font-weight: 600;
-    color: #e4e0d8;
-    letter-spacing: .04em;
-    text-transform: uppercase;
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #f8fafc;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
   }
 
   .sidebar-subtitle {
-    font-size: 11px;
-    color: #71717a;
-    margin-top: 3px;
-    font-weight: 300;
+    font-size: 11.5px;
+    color: #94a3b8;
+    margin-top: 2px;
+    font-weight: 400;
+  }
+
+  .sidebar-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
   }
 
   .sidebar-version {
-    display: inline-block;
-    margin-top: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     font-family: var(--mono);
-    font-size: 10px;
-    color: #a16207;
-    background: rgba(161,98,7,.15);
-    border: 1px solid rgba(161,98,7,.3);
-    padding: 2px 8px;
-    border-radius: 3px;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #fdba74;
+    background: rgba(234, 88, 12, 0.14);
+    border: 1px solid rgba(251, 146, 60, 0.28);
+    padding: 2px 9px;
+    border-radius: 999px;
   }
 
-  .nav-group { padding: 1.25rem 0 0; }
+  .sidebar-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: #86efac;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.22);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+
+  .sidebar-status::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 8px #4ade80;
+  }
+
+  .nav-group { padding: 1.35rem 0.75rem 0; }
 
   .nav-group-label {
-    font-size: 9.5px;
-    font-weight: 600;
+    font-size: 10px;
+    font-weight: 700;
     letter-spacing: .1em;
     text-transform: uppercase;
-    color: #52525b;
-    padding: 0 1.5rem .5rem;
+    color: #475569;
+    padding: 0 0.75rem .45rem;
   }
 
   .nav-link {
-    display: block;
-    padding: .38rem 1.5rem;
-    color: #a1a1aa;
+    display: flex;
+    align-items: center;
+    padding: .42rem .85rem;
+    margin: 2px 0;
+    color: #94a3b8;
     text-decoration: none;
     font-size: 13px;
-    font-weight: 400;
-    transition: color .15s, background .15s;
+    font-weight: 500;
+    border-radius: 7px;
+    transition: all .15s ease;
     border-left: 2px solid transparent;
   }
 
   .nav-link:hover {
-    color: #e4e0d8;
-    background: rgba(255,255,255,.04);
+    color: #f1f5f9;
+    background: rgba(255, 255, 255, 0.045);
+    text-decoration: none;
   }
 
   .nav-link.active {
-    color: #fb923c;
-    border-left-color: #fb923c;
-    background: rgba(251,146,60,.06);
+    color: #fff;
+    background: linear-gradient(90deg, rgba(234, 88, 12, 0.18) 0%, rgba(234, 88, 12, 0.03) 100%);
+    border-left: 2.5px solid #fb923c;
+    font-weight: 600;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
 
   .nav-link-sub {
-    padding-left: 2.25rem;
+    padding-left: 1.65rem;
     font-size: 12px;
-    color: #71717a;
+    font-weight: 400;
+    color: #64748b;
   }
 
-  .nav-link-sub:hover { color: #a1a1aa; }
+  .nav-link-sub:hover { color: #cbd5e1; }
 
   /* ── MAIN ───────────────────────────────── */
   .main {
     margin-left: var(--sidebar-w);
     min-height: 100vh;
-    padding: 3rem 4rem 6rem;
-    max-width: calc(var(--sidebar-w) + 860px);
+    padding: 3.5rem 4.5rem 7rem;
+    max-width: calc(var(--sidebar-w) + 960px);
   }
 
   /* ── SECTION ────────────────────────────── */
   .section {
-    margin-bottom: 5rem;
-    scroll-margin-top: 2rem;
+    margin-bottom: 5.5rem;
+    scroll-margin-top: 2.5rem;
   }
 
   .section-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-family: var(--mono);
     font-size: 11px;
+    font-weight: 600;
     color: var(--accent);
-    letter-spacing: .08em;
+    background: var(--accent-lt);
+    border: 1px solid #fed7aa;
+    padding: 3px 10px;
+    border-radius: 999px;
+    letter-spacing: .06em;
     text-transform: uppercase;
-    margin-bottom: .5rem;
+    margin-bottom: .85rem;
   }
 
   h1 {
-    font-size: 2.2rem;
-    font-weight: 600;
-    line-height: 1.2;
+    font-size: 2.55rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
     color: var(--text);
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
   }
 
   h2 {
-    font-size: 1.45rem;
-    font-weight: 600;
+    font-size: 1.55rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
     color: var(--text);
-    margin-bottom: 1rem;
-    padding-bottom: .6rem;
-    border-bottom: 1.5px solid var(--border);
+    margin-bottom: 1.15rem;
+    padding-bottom: .75rem;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  h2::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 56px;
+    height: 2.5px;
+    background: linear-gradient(90deg, var(--accent-med), transparent);
+    border-radius: 2px;
   }
 
   h3 {
-    font-size: 1.05rem;
-    font-weight: 600;
+    font-size: 1.12rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
     color: var(--text);
-    margin: 2rem 0 .75rem;
+    margin: 2.25rem 0 .75rem;
   }
 
   h4 {
-    font-size: .9rem;
-    font-weight: 600;
+    font-size: .78rem;
+    font-weight: 700;
     color: var(--muted);
     text-transform: uppercase;
-    letter-spacing: .06em;
-    margin: 1.5rem 0 .5rem;
+    letter-spacing: .08em;
+    margin: 1.4rem 0 .55rem;
   }
 
-  p { margin-bottom: 1rem; color: #3c3835; }
+  p { margin-bottom: 1rem; color: var(--text-body); }
 
-  a { color: var(--accent); text-decoration: none; }
+  a { color: var(--accent); text-decoration: none; font-weight: 500; }
   a:hover { text-decoration: underline; }
 
   strong { font-weight: 600; color: var(--text); }
 
-  /* ── LEAD / INTRO ───────────────────────── */
+  /* ── HERO BANNER & METRICS ──────────────── */
+  .hero-banner {
+    background: linear-gradient(135deg, #ffffff 0%, #fffbf7 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2.5rem 2.5rem 2rem;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1.75rem;
+  }
+
+  .hero-banner::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #ea580c 0%, #f59e0b 50%, #2563eb 100%);
+  }
+
   .lead {
-    font-size: 1.05rem;
-    font-weight: 300;
-    color: #57534e;
-    line-height: 1.8;
-    margin-bottom: 1.5rem;
+    font-size: 1.06rem;
+    font-weight: 400;
+    color: #475569;
+    line-height: 1.78;
+    margin-bottom: 1.75rem;
+  }
+
+  .hero-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .metric-item {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: .85rem 1rem;
+  }
+
+  .metric-val {
+    font-family: var(--mono);
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .metric-lbl {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 3px;
+    font-weight: 500;
   }
 
   /* ── DIVIDER ────────────────────────────── */
-  hr { border: none; border-top: 1.5px solid var(--border); margin: 2.5rem 0; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
 
   /* ── CALLOUT ────────────────────────────── */
   .callout {
-    border-left: 3px solid var(--accent);
-    background: var(--accent-lt);
-    padding: 1rem 1.25rem;
-    border-radius: 0 6px 6px 0;
+    border: 1px solid #fed7aa;
+    border-left: 4px solid var(--accent-med);
+    background: linear-gradient(90deg, #fff7ed 0%, #ffffff 100%);
+    padding: 1.1rem 1.35rem;
+    border-radius: 10px;
     margin: 1.5rem 0;
     font-size: 14px;
+    color: #334155;
+    box-shadow: var(--shadow-sm);
   }
 
   .callout.info {
-    border-color: #2563eb;
-    background: #eff6ff;
+    border-color: #bfdbfe;
+    border-left-color: #2563eb;
+    background: linear-gradient(90deg, #eff6ff 0%, #ffffff 100%);
   }
 
   .callout.warn {
-    border-color: #d97706;
-    background: #fffbeb;
+    border-color: #fde68a;
+    border-left-color: #d97706;
+    background: linear-gradient(90deg, #fffbeb 0%, #ffffff 100%);
   }
 
   .callout-title {
-    font-weight: 600;
-    font-size: 12px;
+    font-weight: 700;
+    font-size: 11.5px;
     text-transform: uppercase;
-    letter-spacing: .06em;
+    letter-spacing: .07em;
     margin-bottom: .35rem;
     color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
   .callout.info .callout-title { color: #1d4ed8; }
   .callout.warn .callout-title { color: #b45309; }
 
-  /* ── CODE ───────────────────────────────── */
+  /* ── CODE & TERMINAL ────────────────────── */
   code {
     font-family: var(--mono);
-    font-size: .85em;
-    background: #f0ede8;
-    padding: .15em .4em;
-    border-radius: 3px;
-    color: #9a3412;
+    font-size: .83em;
+    font-weight: 500;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: .15em .45em;
+    border-radius: 5px;
+    color: #0f172a;
   }
 
   pre {
     background: var(--code-bg);
-    border-radius: 8px;
-    padding: 1.25rem 1.5rem;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 2.4rem 1.5rem 1.35rem;
     overflow-x: auto;
     margin: 1rem 0 1.5rem;
     font-family: var(--mono);
     font-size: 13px;
-    line-height: 1.7;
-    color: #d4d0c8;
+    line-height: 1.72;
+    color: #e2e8f0;
     position: relative;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.25);
+  }
+
+  pre::before {
+    content: '';
+    position: absolute;
+    top: 13px;
+    left: 16px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ef4444;
+    box-shadow: 18px 0 0 #f59e0b, 36px 0 0 #22c55e;
+    opacity: 0.85;
+  }
+
+  pre::after {
+    content: 'CODE / JSON';
+    position: absolute;
+    top: 9px;
+    right: 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: .08em;
+    color: #475569;
+    font-weight: 600;
   }
 
   pre code {
     background: none;
+    border: none;
     padding: 0;
     color: inherit;
     font-size: inherit;
     border-radius: 0;
-  }
-
-  .pre-label {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: #71717a;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-    margin-bottom: .4rem;
+    font-weight: 400;
   }
 
   /* Syntax colors */
-  .kw  { color: #c792ea; }
-  .str { color: #a5d6a7; }
-  .num { color: #f78c6c; }
-  .cmt { color: #546e7a; font-style: italic; }
-  .fn  { color: #82aaff; }
-  .key { color: #ffcb6b; }
-  .op  { color: #89ddff; }
-  .url { color: #80cbc4; }
+  .kw  { color: #c084fc; }
+  .str { color: #86efac; }
+  .num { color: #fb923c; }
+  .cmt { color: #64748b; font-style: italic; }
+  .fn  { color: #60a5fa; }
+  .key { color: #fde047; }
+  .op  { color: #38bdf8; }
+  .url { color: #2dd4bf; }
 
   /* ── TABLES ─────────────────────────────── */
-  .table-wrap { overflow-x: auto; margin: 1rem 0 1.5rem; }
+  .table-wrap {
+    overflow-x: auto;
+    margin: 1rem 0 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-sm);
+  }
 
   table {
     width: 100%;
@@ -293,264 +479,329 @@
   }
 
   thead tr {
-    background: #f0ede8;
-    border-bottom: 2px solid var(--border);
+    background: #f8fafc;
+    border-bottom: 1px solid var(--border);
   }
 
   th {
     text-align: left;
-    padding: .65rem 1rem;
-    font-weight: 600;
+    padding: .8rem 1.15rem;
+    font-weight: 700;
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: .07em;
-    color: var(--muted);
+    color: #475569;
   }
 
   td {
-    padding: .65rem 1rem;
+    padding: .8rem 1.15rem;
     border-bottom: 1px solid var(--border);
     vertical-align: top;
+    color: var(--text-body);
   }
 
   tr:last-child td { border-bottom: none; }
-  tr:hover td { background: #faf9f7; }
+  tbody tr { transition: background .12s ease; }
+  tbody tr:hover td { background: #f8fafc; }
 
   /* ── ENDPOINT CARD ──────────────────────── */
   .endpoint {
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
     margin: 1.5rem 0;
     overflow: hidden;
     background: var(--surface);
+    box-shadow: var(--shadow-md);
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+
+  .endpoint:hover {
+    border-color: var(--border-str);
+    box-shadow: var(--shadow-lg);
   }
 
   .endpoint-header {
     display: flex;
     align-items: center;
-    gap: .75rem;
-    padding: .85rem 1.25rem;
-    background: #faf9f7;
-    border-bottom: 1.5px solid var(--border);
+    gap: .85rem;
+    padding: .95rem 1.35rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border-bottom: 1px solid var(--border);
   }
 
   .method {
     font-family: var(--mono);
     font-size: 11px;
-    font-weight: 500;
-    padding: .2em .65em;
-    border-radius: 3px;
-    letter-spacing: .04em;
-    min-width: 52px;
+    font-weight: 600;
+    padding: .28em .75em;
+    border-radius: 6px;
+    letter-spacing: .05em;
+    min-width: 60px;
     text-align: center;
   }
 
-  .method.GET    { background: #dbeafe; color: #1d4ed8; }
-  .method.POST   { background: #dcfce7; color: #15803d; }
-  .method.PATCH  { background: #fef9c3; color: #854d0e; }
-  .method.DELETE { background: #fee2e2; color: #b91c1c; }
+  .method.GET    { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+  .method.POST   { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+  .method.PATCH  { background: #fefce8; color: #a16207; border: 1px solid #fef08a; }
+  .method.DELETE { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
 
   .endpoint-path {
     font-family: var(--mono);
-    font-size: 13.5px;
+    font-size: 14px;
+    font-weight: 600;
     color: var(--text);
     flex: 1;
   }
 
   .badge {
+    font-family: var(--mono);
     font-size: 10px;
     font-weight: 600;
     letter-spacing: .05em;
-    padding: .2em .65em;
-    border-radius: 3px;
+    padding: .25em .75em;
+    border-radius: 999px;
     text-transform: uppercase;
   }
 
-  .badge-auth    { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-  .badge-gerente { background: #fce7f3; color: #9d174d; border: 1px solid #fbcfe8; }
-  .badge-public  { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+  .badge-auth    { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+  .badge-gerente { background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; }
+  .badge-public  { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
 
-  .endpoint-body { padding: 1.25rem; }
+  .endpoint-body { padding: 1.35rem; }
 
-  .endpoint-desc { color: #57534e; font-size: 14px; margin-bottom: 1rem; }
+  .endpoint-desc { color: #475569; font-size: 14px; margin-bottom: 1rem; line-height: 1.65; }
 
   /* ── FLOW DIAGRAM ───────────────────────── */
   .flow {
     display: flex;
     flex-direction: column;
     gap: 0;
-    margin: 1.5rem 0;
-    font-size: 13.5px;
+    margin: 1.75rem 0;
+    font-size: 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.75rem 1.75rem .5rem;
+    box-shadow: var(--shadow-sm);
   }
 
   .flow-step {
     display: flex;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 1.15rem;
     position: relative;
   }
 
   .flow-step:not(:last-child)::before {
     content: '';
     position: absolute;
-    left: 13px;
-    top: 28px;
-    bottom: -12px;
-    width: 1.5px;
-    background: #d6d3cd;
+    left: 15px;
+    top: 34px;
+    bottom: 4px;
+    width: 2px;
+    background: linear-gradient(180deg, #fdba74 0%, #e2e8f0 100%);
   }
 
   .flow-dot {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--accent);
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
     color: #fff;
     font-family: var(--mono);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     margin-top: 2px;
+    box-shadow: 0 4px 10px rgba(234, 88, 12, 0.25);
   }
 
   .flow-content {
-    padding: .2rem 0 1.5rem;
+    padding: .15rem 0 1.65rem;
     flex: 1;
   }
 
   .flow-title {
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text);
-    margin-bottom: .2rem;
+    margin-bottom: .25rem;
+    font-size: 14.5px;
   }
 
-  .flow-text { color: #57534e; }
+  .flow-text { color: #475569; line-height: 1.65; }
 
   /* ── FORMULA BOX ────────────────────────── */
   .formula {
-    background: #18181b;
-    border: 1px solid #3f3f46;
-    border-radius: 6px;
-    padding: 1rem 1.5rem;
+    background: linear-gradient(145deg, #0f172a 0%, #090d16 100%);
+    border: 1px solid #1e293b;
+    border-left: 4px solid #fb923c;
+    border-radius: 12px;
+    padding: 1.25rem 1.6rem;
     font-family: var(--mono);
     font-size: 13px;
-    color: #e4e0d8;
-    margin: 1rem 0;
+    color: #f1f5f9;
+    margin: 1.25rem 0;
     line-height: 2;
+    box-shadow: var(--shadow-md);
   }
 
-  .formula .comment { color: #52525b; }
+  .formula .comment { color: #64748b; }
 
   /* ── GRID CARDS ─────────────────────────── */
-  .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+  .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.15rem; margin: 1.25rem 0; }
 
   .card {
     background: var(--surface);
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    padding: 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.4rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    position: relative;
+    overflow: hidden;
   }
 
-  .card-title { font-weight: 600; font-size: 14px; margin-bottom: .4rem; }
-  .card-text  { font-size: 13px; color: #57534e; }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 3px;
+    background: linear-gradient(90deg, var(--accent-med), #f59e0b);
+    opacity: 0;
+    transition: opacity .18s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-str);
+  }
+
+  .card:hover::before { opacity: 1; }
+
+  .card-title { font-weight: 700; font-size: 14.5px; margin-bottom: .45rem; color: var(--text); }
+  .card-text  { font-size: 13.5px; color: #475569; line-height: 1.65; }
 
   /* ── ARCH DIAGRAM ───────────────────────── */
   .arch {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 1.5px;
-    background: var(--border);
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-    margin: 1.5rem 0;
+    gap: 1rem;
+    margin: 1.5rem 0 2rem;
   }
 
   .arch-box {
     background: var(--surface);
-    padding: 1.25rem;
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent-med);
+    border-radius: 12px;
+    padding: 1.35rem;
+    box-shadow: var(--shadow-sm);
   }
 
+  .arch-box:nth-child(2) { border-top-color: #2563eb; }
+  .arch-box:nth-child(3) { border-top-color: #059669; }
+
   .arch-label {
+    font-family: var(--mono);
     font-size: 10px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: .08em;
     color: var(--muted);
-    margin-bottom: .5rem;
+    margin-bottom: .35rem;
   }
 
   .arch-title {
-    font-weight: 600;
-    font-size: 14px;
-    margin-bottom: .5rem;
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: .75rem;
     color: var(--text);
   }
 
   .arch-item {
-    font-size: 12px;
-    color: #57534e;
-    padding: .2rem 0;
-    border-bottom: 1px solid var(--border);
+    font-size: 12.5px;
+    color: #475569;
+    padding: .38rem 0;
+    border-bottom: 1px dashed var(--border);
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
-  .arch-item:last-child { border: none; }
+  .arch-item::before {
+    content: '▹';
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .arch-item:last-child { border: none; padding-bottom: 0; }
 
   /* ── SCHEMA ENTITY ──────────────────────── */
   .entity {
     background: var(--surface);
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    margin: 1rem 0;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin: 1.25rem 0;
     overflow: hidden;
+    box-shadow: var(--shadow-sm);
   }
 
   .entity-header {
-    background: var(--sidebar-bg);
-    color: #e4e0d8;
-    padding: .65rem 1.1rem;
+    background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%);
+    color: #f8fafc;
+    padding: .8rem 1.25rem;
     font-family: var(--mono);
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 13.5px;
+    font-weight: 600;
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
 
-  .entity-header span { font-size: 10px; color: #71717a; font-weight: 400; }
+  .entity-header span {
+    font-family: var(--sans);
+    font-size: 11.5px;
+    color: #94a3b8;
+    font-weight: 400;
+  }
 
   .entity-field {
     display: grid;
-    grid-template-columns: 160px 110px 1fr;
-    gap: .5rem;
-    padding: .5rem 1.1rem;
+    grid-template-columns: 185px 125px 1fr;
+    gap: .75rem;
+    padding: .65rem 1.25rem;
     border-bottom: 1px solid var(--border);
     font-size: 13px;
     align-items: baseline;
   }
 
   .entity-field:last-child { border: none; }
-  .entity-field:nth-child(even) { background: #faf9f7; }
+  .entity-field:nth-child(even) { background: #f8fafc; }
 
-  .field-name { font-family: var(--mono); font-size: 12px; color: #9a3412; }
-  .field-type { font-family: var(--mono); font-size: 11px; color: #2563eb; }
-  .field-desc { color: #78716c; font-size: 12.5px; }
+  .field-name { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: #9a3412; }
+  .field-type { font-family: var(--mono); font-size: 11.5px; font-weight: 500; color: #2563eb; }
+  .field-desc { color: #475569; font-size: 13px; }
 
   /* ── RESPONSIVE ─────────────────────────── */
-  @media (max-width: 900px) {
+  @media (max-width: 980px) {
     :root { --sidebar-w: 240px; }
-    .main { padding: 2rem 1.5rem 4rem; }
+    .main { padding: 2rem 1.75rem 4rem; }
     .card-grid { grid-template-columns: 1fr; }
     .arch { grid-template-columns: 1fr; }
-    .entity-field { grid-template-columns: 130px 90px 1fr; }
+    .hero-metrics { grid-template-columns: 1fr 1fr; }
+    .entity-field { grid-template-columns: 140px 100px 1fr; }
   }
 
-  @media (max-width: 650px) {
+  @media (max-width: 680px) {
     .sidebar { display: none; }
-    .main { margin-left: 0; }
+    .main { margin-left: 0; padding: 1.5rem 1.25rem 3rem; }
+    .hero-banner { padding: 1.5rem; }
+    .hero-metrics { grid-template-columns: 1fr; }
+    .entity-field { grid-template-columns: 1fr; gap: .2rem; }
   }
 </style>
 </head>
@@ -561,9 +812,17 @@
 ═══════════════════════════════════════════════════ -->
 <nav class="sidebar">
   <div class="sidebar-header">
-    <div class="sidebar-logo">Padaria Royal</div>
-    <div class="sidebar-subtitle">Documentação Técnica</div>
-    <div class="sidebar-version">v1.0 — mar/2026</div>
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">PR</div>
+      <div>
+        <div class="sidebar-logo">Padaria Royal</div>
+        <div class="sidebar-subtitle">Engenharia &amp; Arquitetura</div>
+      </div>
+    </div>
+    <div class="sidebar-meta">
+      <span class="sidebar-version">v2.0 — abr/2026</span>
+      <span class="sidebar-status">Production</span>
+    </div>
   </div>
 
   <div class="nav-group">
@@ -580,17 +839,19 @@
     <a class="nav-link nav-link-sub" href="#api-producao-create">↳ Registrar fornada</a>
     <a class="nav-link nav-link-sub" href="#api-producao-list">↳ Listar / filtrar</a>
     <a class="nav-link nav-link-sub" href="#api-producao-sugestao">↳ Sugestão de fermento</a>
+    <a class="nav-link nav-link-sub" href="#api-producao-bi">↳ BI Gerencial</a>
     <a class="nav-link nav-link-sub" href="#api-producao-clima">↳ Previsão climática</a>
     <a class="nav-link nav-link-sub" href="#api-producao-import">↳ Importar / exportar</a>
     <a class="nav-link" href="#api-avaliacao">Avaliação</a>
     <a class="nav-link nav-link-sub" href="#api-dashboard">↳ Dashboard</a>
     <a class="nav-link" href="#api-usuario">Usuários</a>
-    <a class="nav-link" href="#api-admin">Admin</a>
+    <a class="nav-link" href="#api-admin">Admin &amp; Backup</a>
   </div>
 
   <div class="nav-group">
     <div class="nav-group-label">Lógica do Sistema</div>
-    <a class="nav-link" href="#algoritmo">Algoritmo de Sugestão</a>
+    <a class="nav-link" href="#algoritmo">Algoritmo de Sugestão (K-NN)</a>
+    <a class="nav-link" href="#bi-gerencial">Inteligência de Produção (BI)</a>
     <a class="nav-link" href="#regras">Regras de Negócio</a>
     <a class="nav-link" href="#permissoes">Permissões</a>
     <a class="nav-link" href="#autenticacao">Autenticação JWT</a>
@@ -606,12 +867,12 @@
   <div class="nav-group">
     <div class="nav-group-label">Frontend</div>
     <a class="nav-link" href="#frontend-rotas">Rotas</a>
-    <a class="nav-link" href="#frontend-auth">Gerenciamento de Sessão</a>
+    <a class="nav-link" href="#frontend-auth">Sessão e Estado Assíncrono</a>
   </div>
 
   <div class="nav-group">
     <div class="nav-group-label">Operações</div>
-    <a class="nav-link" href="#setup">Configuração Local</a>
+    <a class="nav-link" href="#setup">Configuração &amp; Deploy</a>
     <a class="nav-link" href="#variaveis">Variáveis de Ambiente</a>
   </div>
 </nav>
@@ -623,28 +884,48 @@
 
   <!-- ── VISÃO GERAL ──────────────────────── -->
   <section class="section" id="visao-geral">
-    <div class="section-eyebrow">Introdução</div>
-    <h1>Padaria Royal</h1>
-    <p class="lead">
-      Sistema web completo para gestão de produção e controle de qualidade de fornadas. Registra os parâmetros técnicos de cada produção, coleta avaliações de qualidade e utiliza esse histórico para alimentar um mecanismo de sugestão de dosagem de fermento baseado em similaridade climática ponderada.
-    </p>
+    <div class="hero-banner">
+      <div class="section-eyebrow">Especificação &amp; Arquitetura de Software</div>
+      <h1>Padaria Royal</h1>
+      <p class="lead">
+        Sistema web full-stack para gestão industrial de panificação, controle de qualidade e Business Intelligence (BI). Registra parâmetros técnicos de cada fornada (ambiente natural ou câmara fria controlada), coleta avaliações sensoriais e utiliza o histórico validado para alimentar um motor preditivo K-NN de sugestão de fermento e um painel analítico de balanço de massa e auditoria climática.
+      </p>
+      <div class="hero-metrics">
+        <div class="metric-item">
+          <div class="metric-val">K = 20</div>
+          <div class="metric-lbl">Vizinhos no Motor K-NN</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-val">3 Óticas</div>
+          <div class="metric-lbl">Balanço Físico de Massa</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-val">21 REST</div>
+          <div class="metric-lbl">Endpoints Documentados</div>
+        </div>
+        <div class="metric-item">
+          <div class="metric-val">5 Entidades</div>
+          <div class="metric-lbl">PostgreSQL + Prisma ORM</div>
+        </div>
+      </div>
+    </div>
 
     <div class="card-grid">
       <div class="card">
-        <div class="card-title">Backend</div>
-        <div class="card-text">API REST em NestJS com PostgreSQL via Prisma ORM. Autenticação por JWT, validação global por DTO e tarefas agendadas com <code>@nestjs/schedule</code>.</div>
+        <div class="card-title">Backend &amp; Motor Analítico</div>
+        <div class="card-text">API REST em NestJS 11 com PostgreSQL via Prisma ORM. Autenticação JWT, compressão HTTP Gzip, motor K-NN ponderado, cálculos de BI (balanço de massa, Zona de Ouro e Run-Rate) e rotinas agendadas com <code>@nestjs/schedule</code>.</div>
       </div>
       <div class="card">
-        <div class="card-title">Frontend</div>
-        <div class="card-text">Interface web em Next.js 16 com App Router, React 19 e Tailwind CSS 4. Gráficos renderizados com Recharts. Sessão gerenciada via React Context.</div>
+        <div class="card-title">Frontend Mobile-First</div>
+        <div class="card-text">Interface em Next.js 16 (App Router), React 19, TypeScript e Tailwind CSS 4. Cache e sincronização de estado assíncrono com TanStack React Query, gráficos interativos em Recharts e responsividade otimizada para uso no chão de fábrica.</div>
       </div>
       <div class="card">
-        <div class="card-title">Banco de Dados</div>
-        <div class="card-text">PostgreSQL 15 em contêiner Docker. Schema versionado com migrations do Prisma. Cinco entidades principais com relações definidas via chave estrangeira.</div>
+        <div class="card-title">Banco de Dados &amp; Cloud</div>
+        <div class="card-text">PostgreSQL 15 gerenciado pelo Prisma ORM (local via Docker Compose e em produção via Neon Serverless Postgres). Deploy contínuo distribuído entre Vercel (Frontend) e Render (Backend API).</div>
       </div>
       <div class="card">
-        <div class="card-title">API Meteorológica</div>
-        <div class="card-text">Integração com Open-Meteo para preenchimento automático de temperatura ambiente ao iniciar uma fornada. Gratuita, sem chave de API.</div>
+        <div class="card-title">Integrações &amp; Resiliência</div>
+        <div class="card-text">Previsão meteorológica via Open-Meteo com arquitetura de fallback híbrido (Backend + Client-side) e automação de backups diários em CSV via Resend API com retry exponencial e trava de concorrência.</div>
       </div>
     </div>
   </section>
@@ -654,40 +935,39 @@
     <div class="section-eyebrow">Estrutura</div>
     <h2>Arquitetura do Sistema</h2>
 
-    <p>O projeto é organizado como um monorepo com dois serviços independentes que se comunicam via HTTP, além de um contêiner de banco de dados orquestrado pelo Docker Compose.</p>
+    <p>O projeto é organizado como um monorepo com dois serviços independentes que se comunicam via REST/JSON comprimido (Gzip), suportando tanto execução local em contêineres Docker quanto operação em nuvem.</p>
 
     <div class="arch">
       <div class="arch-box">
-        <div class="arch-label">Frontend</div>
+        <div class="arch-label">Frontend (Vercel)</div>
         <div class="arch-title">Next.js 16</div>
         <div class="arch-item">React 19 + TypeScript</div>
-        <div class="arch-item">Tailwind CSS 4</div>
-        <div class="arch-item">Recharts (gráficos)</div>
-        <div class="arch-item">Lucide React (ícones)</div>
-        <div class="arch-item">App Router / SSR</div>
+        <div class="arch-item">TanStack React Query</div>
+        <div class="arch-item">Tailwind CSS 4 (Mobile-First)</div>
+        <div class="arch-item">Recharts (BI &amp; Dashboard)</div>
+        <div class="arch-item">Lucide React + Sonner</div>
       </div>
       <div class="arch-box">
-        <div class="arch-label">Backend</div>
+        <div class="arch-label">Backend (Render)</div>
         <div class="arch-title">NestJS 11</div>
         <div class="arch-item">TypeScript + Prisma ORM</div>
-        <div class="arch-item">JWT + bcrypt</div>
-        <div class="arch-item">class-validator (DTOs)</div>
-        <div class="arch-item">@nestjs/schedule</div>
-        <div class="arch-item">Nodemailer + json2csv</div>
+        <div class="arch-item">JWT + bcrypt + Guards</div>
+        <div class="arch-item">class-validator + Gzip</div>
+        <div class="arch-item">@nestjs/schedule (Cron)</div>
+        <div class="arch-item">Resend API + json2csv</div>
       </div>
       <div class="arch-box">
-        <div class="arch-label">Infraestrutura</div>
+        <div class="arch-label">Dados &amp; Serviços (Neon)</div>
         <div class="arch-title">PostgreSQL 15</div>
-        <div class="arch-item">Docker + Docker Compose</div>
-        <div class="arch-item">Volume persistente (pgdata)</div>
-        <div class="arch-item">Porta 5432</div>
-        <div class="arch-item">Open-Meteo API</div>
-        <div class="arch-item">SMTP (backup por e-mail)</div>
+        <div class="arch-item">Neon Serverless / Docker</div>
+        <div class="arch-item">Prisma Migrations</div>
+        <div class="arch-item">Open-Meteo API (Híbrido)</div>
+        <div class="arch-item">Resend (Backup Transacional)</div>
       </div>
     </div>
 
     <h3>Módulos do Backend</h3>
-    <p>O NestJS organiza o código em módulos por domínio. Cada módulo encapsula um controller (rotas), um service (lógica de negócio) e seus DTOs (validação de entrada).</p>
+    <p>O NestJS organiza o código em módulos por domínio. Cada módulo encapsula um controller (rotas), um service (lógica de negócio e cálculos matemáticos) e seus DTOs (validação estrita de entrada).</p>
 
     <div class="table-wrap">
       <table>
@@ -695,13 +975,13 @@
           <tr><th>Módulo</th><th>Responsabilidade</th><th>Depende de</th></tr>
         </thead>
         <tbody>
-          <tr><td><code>ProducaoModule</code></td><td>CRUD de fornadas, sugestão, clima, importação/exportação CSV</td><td>Prisma, Config</td></tr>
-          <tr><td><code>AvaliacaoModule</code></td><td>CRUD de avaliações, estatísticas de dashboard</td><td>Prisma, Backup</td></tr>
-          <tr><td><code>AuthModule</code></td><td>Login com validação de horário, emissão de JWT</td><td>Prisma, JWT</td></tr>
-          <tr><td><code>UsuarioModule</code></td><td>Gerenciamento de contas (exclusivo para gerentes)</td><td>Prisma</td></tr>
-          <tr><td><code>AdminModule</code></td><td>Logs de exclusão, configuração de e-mail, reset do sistema</td><td>Prisma</td></tr>
-          <tr><td><code>BackupModule</code></td><td>Tarefa agendada de backup CSV por e-mail</td><td>Prisma, Nodemailer</td></tr>
-          <tr><td><code>PrismaModule</code></td><td>Singleton do cliente Prisma, injetado globalmente</td><td>—</td></tr>
+          <tr><td><code>ProducaoModule</code></td><td>CRUD de fornadas, motor preditivo K-NN, BI Gerencial (<code>getBiStats</code>), controle de Câmara Fria, clima e importação/exportação CSV</td><td>Prisma, Config</td></tr>
+          <tr><td><code>AvaliacaoModule</code></td><td>CRUD de avaliações sensoriais, detecção automática de câmara fria via comentário e estatísticas do dashboard</td><td>Prisma</td></tr>
+          <tr><td><code>AuthModule</code></td><td>Login com validação de janela de horário, emissão de token JWT e controle de permissões</td><td>Prisma, JWT</td></tr>
+          <tr><td><code>UsuarioModule</code></td><td>Gerenciamento de equipe e permissões granulares (exclusivo para gerentes)</td><td>Prisma</td></tr>
+          <tr><td><code>AdminModule</code></td><td>Auditoria de logs de exclusão, configuração dinâmica de e-mail de backup e reset seguro do histórico</td><td>Prisma</td></tr>
+          <tr><td><code>BackupModule</code></td><td>Cron job diário e disparo manual de backup CSV por e-mail com retry exponencial e trava de idempotência</td><td>Prisma, Producao, Resend</td></tr>
+          <tr><td><code>PrismaModule</code></td><td>Singleton do cliente Prisma com pool de conexões, injetado globalmente</td><td>—</td></tr>
         </tbody>
       </table>
     </div>
@@ -727,12 +1007,13 @@
       <div class="entity-field"><span class="field-name">horaInicio</span><span class="field-type">DateTime</span><span class="field-desc">Timestamp de início da fermentação</span></div>
       <div class="entity-field"><span class="field-name">horaFim</span><span class="field-type">DateTime</span><span class="field-desc">Timestamp de fim da fermentação</span></div>
       <div class="entity-field"><span class="field-name">tempoFermentacaoMinutos</span><span class="field-type">Int</span><span class="field-desc">Calculado automaticamente: (horaFim − horaInicio) em minutos</span></div>
-      <div class="entity-field"><span class="field-name">farinhaKg</span><span class="field-type">Decimal(10,3)</span><span class="field-desc">Quantidade de farinha em quilos (ex: 10.500)</span></div>
+      <div class="entity-field"><span class="field-name">farinhaKg</span><span class="field-type">Decimal(10,3)</span><span class="field-desc">Quantidade de farinha em quilos (ex: 20.000)</span></div>
       <div class="entity-field"><span class="field-name">emulsificanteMl</span><span class="field-type">Decimal(10,2)</span><span class="field-desc">Volume de emulsificante em mililitros</span></div>
       <div class="entity-field"><span class="field-name">fermentoGrama</span><span class="field-type">Decimal(10,2)</span><span class="field-desc">Massa de fermento em gramas</span></div>
-      <div class="entity-field"><span class="field-name">tempAmbienteInicial</span><span class="field-type">Decimal? (5,2)</span><span class="field-desc">Temperatura ambiente no início (preenchida via API ou manual)</span></div>
+      <div class="entity-field"><span class="field-name">tempAmbienteInicial</span><span class="field-type">Decimal? (5,2)</span><span class="field-desc">Temperatura ambiente no início (via Open-Meteo, preset da câmara ou manual)</span></div>
       <div class="entity-field"><span class="field-name">tempAmbienteFinal</span><span class="field-type">Decimal? (5,2)</span><span class="field-desc">Temperatura ambiente prevista para o fim</span></div>
-      <div class="entity-field"><span class="field-name">observacoes</span><span class="field-type">String? @Text</span><span class="field-desc">Campo livre de anotações</span></div>
+      <div class="entity-field"><span class="field-name">usouCamara</span><span class="field-type">Boolean</span><span class="field-desc">Indica fermentação em câmara fria controlada (@default(false)). Isola a fornada do motor K-NN e da auditoria climática</span></div>
+      <div class="entity-field"><span class="field-name">observacoes</span><span class="field-type">String? @Text</span><span class="field-desc">Campo livre de anotações (também inspecionado via regex para detecção automática de câmara fria)</span></div>
       <div class="entity-field"><span class="field-name">criadoPorId</span><span class="field-type">Int?</span><span class="field-desc">FK → Usuario.id (quem registrou a fornada)</span></div>
     </div>
 
@@ -742,7 +1023,7 @@
       <div class="entity-field"><span class="field-name">id</span><span class="field-type">Int @id</span><span class="field-desc">Identificador auto-incremental</span></div>
       <div class="entity-field"><span class="field-name">producaoId</span><span class="field-type">Int @unique</span><span class="field-desc">FK → Producao.id (garante unicidade da avaliação)</span></div>
       <div class="entity-field"><span class="field-name">nota</span><span class="field-type">Int</span><span class="field-desc">1=Péssimo · 2=Ruim · 3=Regular · 4=Bom · 5=Excelente</span></div>
-      <div class="entity-field"><span class="field-name">comentario</span><span class="field-type">String?</span><span class="field-desc">Observação textual sobre a qualidade</span></div>
+      <div class="entity-field"><span class="field-name">comentario</span><span class="field-type">String?</span><span class="field-desc">Observação textual sobre a qualidade (menções a "câmara fria" marcam automaticamente <code>usouCamara=true</code> na produção)</span></div>
       <div class="entity-field"><span class="field-name">tempAmbienteFinalReal</span><span class="field-type">Decimal?</span><span class="field-desc">Temperatura medida no momento da avaliação (controle de qualidade)</span></div>
     </div>
 
@@ -776,7 +1057,7 @@
     <div class="entity">
       <div class="entity-header">Configuracao <span>Chave-valor para configurações globais</span></div>
       <div class="entity-field"><span class="field-name">id</span><span class="field-type">Int @id</span><span class="field-desc">Identificador auto-incremental</span></div>
-      <div class="entity-field"><span class="field-name">chave</span><span class="field-type">String @unique</span><span class="field-desc">Identificador da configuração (ex: "Email_Backup")</span></div>
+      <div class="entity-field"><span class="field-name">chave</span><span class="field-type">String @unique</span><span class="field-desc">Identificador da configuração (ex: "EMAIL_BACKUP")</span></div>
       <div class="entity-field"><span class="field-name">valor</span><span class="field-type">String</span><span class="field-desc">Valor armazenado</span></div>
     </div>
   </section>
@@ -843,7 +1124,7 @@
   <!-- ── API PRODUCAO ──────────────────────── -->
   <section class="section" id="api-producao">
     <h2>Produção</h2>
-    <p>Recurso principal do sistema. Gerencia o ciclo completo de uma fornada desde o registro até a exportação.</p>
+    <p>Recurso principal do sistema. Gerencia o ciclo completo de uma fornada desde o registro (natural ou em câmara fria) até a inteligência analítica (BI) e exportação.</p>
 
     <!-- POST /producao -->
     <div id="api-producao-create">
@@ -854,7 +1135,7 @@
         <span class="badge badge-auth">JWT</span>
       </div>
       <div class="endpoint-body">
-        <div class="endpoint-desc">Registra uma nova fornada. O tempo de fermentação em minutos é calculado automaticamente pelo backend. Requer permissão <code>registrar</code>.</div>
+        <div class="endpoint-desc">Registra uma nova fornada. O tempo de fermentação em minutos é calculado automaticamente pelo backend. Caso o campo <code>observacoes</code> mencione variações de "câmara fria", o sistema ativa automaticamente <code>usouCamara = true</code>. Requer permissão <code>registrar</code>.</div>
         <h4>Corpo da requisição</h4>
         <div class="table-wrap">
           <table>
@@ -862,11 +1143,12 @@
             <tbody>
               <tr><td><code>horaInicio</code></td><td>string (ISO 8601)</td><td>Sim</td><td>Timestamp de início da fermentação</td></tr>
               <tr><td><code>horaFim</code></td><td>string (ISO 8601)</td><td>Sim</td><td>Timestamp de fim (deve ser posterior ao início)</td></tr>
-              <tr><td><code>farinhaKg</code></td><td>number</td><td>Sim</td><td>Quantidade de farinha em kg (> 0)</td></tr>
-              <tr><td><code>fermentoGrama</code></td><td>number</td><td>Sim</td><td>Massa de fermento em gramas (> 0)</td></tr>
-              <tr><td><code>emulsificanteMl</code></td><td>number</td><td>Sim</td><td>Volume de emulsificante em ml (> 0)</td></tr>
-              <tr><td><code>tempAmbienteInicial</code></td><td>number</td><td>Sim</td><td>Temperatura no início (> 0)</td></tr>
-              <tr><td><code>tempAmbienteFinal</code></td><td>number</td><td>Sim</td><td>Temperatura prevista para o fim (> 0)</td></tr>
+              <tr><td><code>farinhaKg</code></td><td>number</td><td>Sim</td><td>Quantidade de farinha em kg (&gt; 0)</td></tr>
+              <tr><td><code>fermentoGrama</code></td><td>number</td><td>Sim</td><td>Massa de fermento em gramas (&gt; 0)</td></tr>
+              <tr><td><code>emulsificanteMl</code></td><td>number</td><td>Sim</td><td>Volume de emulsificante em ml (&gt; 0)</td></tr>
+              <tr><td><code>tempAmbienteInicial</code></td><td>number</td><td>Sim</td><td>Temperatura no início (&gt; 0)</td></tr>
+              <tr><td><code>tempAmbienteFinal</code></td><td>number</td><td>Sim</td><td>Temperatura prevista para o fim (&gt; 0)</td></tr>
+              <tr><td><code>usouCamara</code></td><td>boolean</td><td>Não</td><td>Se <code>true</code>, marca fermentação em câmara fria controlada (padrão: <code>false</code>)</td></tr>
               <tr><td><code>observacoes</code></td><td>string</td><td>Não</td><td>Anotações livres sobre a fornada</td></tr>
             </tbody>
           </table>
@@ -912,7 +1194,7 @@
         <span class="badge badge-auth">JWT</span>
       </div>
       <div class="endpoint-body">
-        <div class="endpoint-desc">Busca avançada com filtros combinados por data, ingredientes, temperatura e nota. Todos os parâmetros são opcionais e combináveis.</div>
+        <div class="endpoint-desc">Busca avançada com filtros combinados por data, ingredientes, temperatura, método de fermentação (câmara fria ou natural) e nota. Todos os parâmetros são opcionais e combináveis.</div>
         <h4>Query params disponíveis</h4>
         <div class="table-wrap">
           <table>
@@ -925,6 +1207,7 @@
               <tr><td><code>tempoMin</code> / <code>tempoMax</code></td><td>Faixa de tempo de fermentação em minutos</td></tr>
               <tr><td><code>tempIniMin</code> / <code>tempIniMax</code></td><td>Faixa de temperatura ambiente inicial</td></tr>
               <tr><td><code>tempFimPrevMin</code> / <code>tempFimPrevMax</code></td><td>Faixa de temperatura final prevista</td></tr>
+              <tr><td><code>usouCamara</code></td><td>Filtra por método de fermentação: <code>"true"</code> (apenas Câmara Fria) ou <code>"false"</code> (apenas Natural)</td></tr>
               <tr><td><code>nota</code></td><td>Nota exata da avaliação (1–5)</td></tr>
               <tr><td><code>tempRealMin</code> / <code>tempRealMax</code></td><td>Faixa de temperatura final real (campo da avaliação)</td></tr>
             </tbody>
@@ -962,7 +1245,7 @@
         <span class="badge badge-auth">JWT</span>
       </div>
       <div class="endpoint-body">
-        <div class="endpoint-desc">Atualiza campos de uma produção existente. Requer permissão <code>editar</code>. Padeiros só podem editar produções com até 3 dias de antiguidade.</div>
+        <div class="endpoint-desc">Atualiza campos de uma produção existente (incluindo alternância de <code>usouCamara</code>). Requer permissão <code>editar</code>. Padeiros só podem editar produções com até 3 dias de antiguidade.</div>
       </div>
     </div>
 
@@ -987,7 +1270,7 @@
         <span class="badge badge-auth">JWT</span>
       </div>
       <div class="endpoint-body">
-        <div class="endpoint-desc">Calcula a dosagem sugerida de fermento com base no histórico de fornadas bem-avaliadas (nota ≥ 4) e no cenário climático atual. Retorna também as 5 fornadas mais similares usadas no cálculo.</div>
+        <div class="endpoint-desc">Calcula a dosagem sugerida de fermento via algoritmo K-NN ponderado com base no histórico de fornadas naturais (<code>usouCamara: false</code>) bem-avaliadas (nota ≥ 4) e no cenário climático atual. Retorna também as 5 fornadas mais similares usadas no cálculo.</div>
         <h4>Query params</h4>
         <div class="table-wrap">
           <table>
@@ -1025,6 +1308,68 @@
     </div>
     </div>
 
+    <!-- BI Gerencial -->
+    <div id="api-producao-bi">
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method GET">GET</span>
+        <span class="endpoint-path">/producao/bi-stats</span>
+        <span class="badge badge-gerente">Gerente</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Motor de Business Intelligence (BI) para tomada de decisão gerencial. Calcula KPIs de insumos, projeção Run-Rate de fechamento mensal, balanço de massa sob 3 óticas físicas, auditoria climática de dosagem (Zona de Ouro ±10%) e sensibilidade de oscilação térmica.</div>
+        <h4>Query params</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Param</th><th>Padrão</th><th>Descrição</th></tr></thead>
+            <tbody>
+              <tr><td><code>periodo</code></td><td><code>"todos"</code></td><td>Escopo temporal da análise: <code>"todos"</code> (histórico completo) ou <code>"mes"</code> (mês corrente com comparativo MoM)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>Resposta — 200 OK</h4>
+        <pre><code>{
+  <span class="key">"periodo"</span>: <span class="str">"mes"</span>,
+  <span class="key">"totalFarinhaKg"</span>: <span class="num">284.0</span>,
+  <span class="key">"totalFermentoGrama"</span>: <span class="num">1720.0</span>,
+  <span class="key">"totalEmulsificanteMl"</span>: <span class="num">1180.0</span>,
+  <span class="key">"totalFornadas"</span>: <span class="num">16</span>,
+  <span class="key">"totalFornadasCamara"</span>: <span class="num">3</span>,
+  <span class="key">"tempoMedioMinutos"</span>: <span class="num">512</span>,
+  <span class="key">"mediaFarinhaPorFornada"</span>: <span class="num">17.8</span>,
+  <span class="key">"proporcaoFermentoGramaPorKg"</span>: <span class="num">6.1</span>,
+  <span class="key">"tendenciaFarinha"</span>: {
+    <span class="key">"percentual"</span>: <span class="num">8.4</span>,
+    <span class="key">"direcao"</span>: <span class="str">"alta"</span>,
+    <span class="key">"farinhaMesAnteriorKg"</span>: <span class="num">262.0</span>
+  },
+  <span class="key">"evolucaoFarinha"</span>: [
+    { <span class="key">"label"</span>: <span class="str">"Out/26"</span>, <span class="key">"farinhaKg"</span>: <span class="num">284.0</span>, <span class="key">"fornadas"</span>: <span class="num">16</span>, <span class="key">"projecaoFechamentoKg"</span>: <span class="num">400.2</span>, <span class="key">"projecaoRestanteKg"</span>: <span class="num">116.2</span> }
+  ],
+  <span class="key">"balancoMassa"</span>: {
+    <span class="key">"cenarioFarinha"</span>:   { <span class="key">"paesPorKgFarinha"</span>: <span class="num">21.25</span>, <span class="key">"totalPaesEstimados"</span>: <span class="num">6035</span>, <span class="key">"mediaPaesPorFornada"</span>: <span class="num">377</span> },
+    <span class="key">"cenarioMassaCrua"</span>: { <span class="key">"fatorConversao"</span>: <span class="num">1.505</span>, <span class="key">"massaCruaTotalKg"</span>: <span class="num">427.4</span>, <span class="key">"paesPorKgMassa"</span>: <span class="num">14</span>, <span class="key">"totalPaesEstimados"</span>: <span class="num">5984</span>, <span class="key">"mediaPaesPorFornada"</span>: <span class="num">374</span> },
+    <span class="key">"cenarioPaoAssado"</span>: { <span class="key">"fatorConversao"</span>: <span class="num">1.16875</span>, <span class="key">"massaAssadaTotalKg"</span>: <span class="num">331.9</span>, <span class="key">"perdaCoccaoTotalKg"</span>: <span class="num">95.5</span>, <span class="key">"percentualPerdaTermica"</span>: <span class="num">22.3</span>, <span class="key">"paesPorKgAssado"</span>: <span class="num">18</span>, <span class="key">"totalPaesEstimados"</span>: <span class="num">5975</span>, <span class="key">"mediaPaesPorFornada"</span>: <span class="num">374</span> }
+  },
+  <span class="key">"auditoriaClima"</span>: {
+    <span class="key">"taxaAderenciaIdeal"</span>: <span class="num">69.2</span>,
+    <span class="key">"notaMediaAderente"</span>: <span class="num">4.7</span>,
+    <span class="key">"notaMediaDescalibrado"</span>: <span class="num">3.9</span>,
+    <span class="key">"faixasReferencia"</span>: {
+      <span class="key">"frio"</span>:   { <span class="key">"label"</span>: <span class="str">"Frio (&lt; 20°C)"</span>,      <span class="key">"idealGramaPorKg"</span>: <span class="num">7.2</span>, <span class="key">"usouFallbackGlobal"</span>: <span class="kw">false</span> },
+      <span class="key">"ameno"</span>:  { <span class="key">"label"</span>: <span class="str">"Ameno (20°C - 26°C)"</span>, <span class="key">"idealGramaPorKg"</span>: <span class="num">5.8</span>, <span class="key">"usouFallbackGlobal"</span>: <span class="kw">false</span> },
+      <span class="key">"quente"</span>: { <span class="key">"label"</span>: <span class="str">"Quente (&gt; 26°C)"</span>,    <span class="key">"idealGramaPorKg"</span>: <span class="num">4.9</span>, <span class="key">"usouFallbackGlobal"</span>: <span class="kw">true</span> }
+    }
+  },
+  <span class="key">"sensibilidadeTermica"</span>: {
+    <span class="key">"estavel"</span>:   { <span class="key">"label"</span>: <span class="str">"Estável (ΔT ≤ 4°C)"</span>,        <span class="key">"fornadas"</span>: <span class="num">9</span>, <span class="key">"notaMedia"</span>: <span class="num">4.6</span>, <span class="key">"taxaExcelencia"</span>: <span class="num">77.8</span> },
+    <span class="key">"oscilacao"</span>: { <span class="key">"label"</span>: <span class="str">"Alta Oscilação (ΔT &gt; 4°C)"</span>, <span class="key">"fornadas"</span>: <span class="num">4</span>, <span class="key">"notaMedia"</span>: <span class="num">4.1</span>, <span class="key">"taxaExcelencia"</span>: <span class="num">50.0</span> }
+  }
+}</code></pre>
+      </div>
+    </div>
+    </div>
+
     <!-- Clima -->
     <div id="api-producao-clima">
     <div class="endpoint">
@@ -1051,9 +1396,9 @@
   <span class="key">"tempFinal"</span>:   <span class="num">26</span>,
   <span class="key">"fonte"</span>:       <span class="str">"Open-Meteo (Best Match)"</span>
 }</code></pre>
-        <div class="callout warn">
-          <div class="callout-title">Fallback</div>
-          Se a API Open-Meteo não retornar dados para o horário solicitado, a resposta conterá <code>tempInicial: null</code>, <code>tempFinal: null</code> e um campo <code>aviso</code> explicativo. O frontend deve tratar esse caso e permitir preenchimento manual.
+        <div class="callout info">
+          <div class="callout-title">Fallback Híbrido (Server + Client-Side)</div>
+          Em ambientes de nuvem com IP compartilhado (como Render), a Open-Meteo pode aplicar rate-limiting temporário ao servidor. Caso o backend retorne <code>tempInicial: null</code> ou erro de rede, o frontend aciona automaticamente um <strong>fallback direto no navegador do cliente</strong> para consultar a Open-Meteo usando o IP local do operador, garantindo preenchimento contínuo sem interrupção.
         </div>
       </div>
     </div>
@@ -1068,7 +1413,7 @@
         <span class="badge badge-auth">JWT</span>
       </div>
       <div class="endpoint-body">
-        <div class="endpoint-desc">Recebe um arquivo CSV via <code>multipart/form-data</code> (campo <code>file</code>) e inicia a importação em segundo plano. A resposta é imediata — o processamento ocorre de forma assíncrona em lotes de 50 registros para evitar timeout.</div>
+        <div class="endpoint-desc">Recebe um arquivo CSV via <code>multipart/form-data</code> (campo <code>file</code>) e inicia a importação em segundo plano. A resposta é imediata — o processamento ocorre de forma assíncrona em lotes de 50 registros para evitar timeout. O importador também detecta automaticamente produções de câmara fria via coluna dedicada ou menções nos textos de observação/comentário.</div>
         <h4>Colunas esperadas no CSV</h4>
         <div class="table-wrap">
           <table>
@@ -1082,6 +1427,7 @@
               <tr><td>temperatura final prevista</td><td><code>25</code></td></tr>
               <tr><td>temperatura final real</td><td><code>24,5</code> ou <code>N/A</code></td></tr>
               <tr><td>tempo fermentação</td><td><code>3,0</code> (em horas)</td></tr>
+              <tr><td>câmara (opcional)</td><td><code>Sim</code> ou <code>Não</code></td></tr>
               <tr><td>qualidade</td><td><code>excelente</code> / <code>bom</code> / <code>regular</code> / <code>ruim</code> / <code>pessimo</code> / <code>N/A</code></td></tr>
               <tr><td>status</td><td><code>Avaliado</code> ou <code>Pendente</code></td></tr>
               <tr><td>observações</td><td>Texto livre ou <code>N/A</code></td></tr>
@@ -1099,7 +1445,7 @@
         <span class="badge badge-auth">JWT</span>
       </div>
       <div class="endpoint-body">
-        <div class="endpoint-desc">Exporta todas as produções com suas avaliações em um arquivo CSV com delimitador <code>;</code>. O arquivo é enviado diretamente como download com nome <code>producao_royal_export.csv</code>. O CSV exportado é compatível com o formato de importação.</div>
+        <div class="endpoint-desc">Exporta todas as produções com suas avaliações em um arquivo CSV com delimitador <code>;</code>, incluindo as colunas analíticas <code>Fermento por KG</code> e <code>Câmara</code> (<code>Sim</code>/<code>Não</code>). O arquivo é enviado diretamente como download com nome <code>producao_royal_export.csv</code> e é 100% compatível com o formato de reimportação.</div>
       </div>
     </div>
     </div>
@@ -1243,8 +1589,8 @@
 
   <!-- ── API ADMIN ─────────────────────────── -->
   <section class="section" id="api-admin">
-    <h2>Administração</h2>
-    <p>Endpoints de configuração e auditoria, exclusivos para gerentes.</p>
+    <h2>Administração &amp; Backup</h2>
+    <p>Endpoints de auditoria, configuração de backup diário e manutenção do banco de dados, exclusivos para gerentes.</p>
 
     <div class="endpoint">
       <div class="endpoint-header">
@@ -1264,7 +1610,7 @@
         <span class="badge badge-gerente">Gerente</span>
       </div>
       <div class="endpoint-body">
-        <div class="endpoint-desc">Retorna o e-mail destinatário configurado para o backup diário. Lê da tabela <code>Configuracao</code> pela chave <code>Email_Backup</code>.</div>
+        <div class="endpoint-desc">Retorna o e-mail destinatário configurado para o backup diário. Lê da tabela <code>Configuracao</code> pela chave <code>EMAIL_BACKUP</code> (com fallback para a variável de ambiente <code>EMAIL_DESTINO</code>).</div>
       </div>
     </div>
 
@@ -1275,7 +1621,18 @@
         <span class="badge badge-gerente">Gerente</span>
       </div>
       <div class="endpoint-body">
-        <div class="endpoint-desc">Atualiza o e-mail destinatário do backup. Corpo: <code>{ "email": "novo@email.com" }</code>.</div>
+        <div class="endpoint-desc">Atualiza ou cria (upsert) o e-mail destinatário do backup na chave <code>EMAIL_BACKUP</code>. Corpo: <code>{ "email": "novo@email.com" }</code>.</div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method POST">POST</span>
+        <span class="endpoint-path">/backup/run</span>
+        <span class="badge badge-gerente">Gerente</span>
+      </div>
+      <div class="endpoint-body">
+        <div class="endpoint-desc">Dispara manualmente a rotina de backup CSV por e-mail via Resend API, utilizando a mesma lógica de retry exponencial (até 5 tentativas) e trava de concorrência do agendamento automático.</div>
       </div>
     </div>
 
@@ -1300,43 +1657,48 @@
   ══════════════════════════════════════════ -->
   <section class="section" id="algoritmo">
     <div class="section-eyebrow">Lógica Central</div>
-    <h2>Algoritmo de Sugestão de Fermento</h2>
+    <h2>Algoritmo de Sugestão de Fermento (K-NN Ponderado)</h2>
 
-    <p>O módulo de sugestão responde a uma pergunta prática: <em>dado o clima previsto e o tempo de fermentação desejado, qual deve ser a dosagem de fermento por quilo de farinha?</em> A abordagem é baseada em similaridade sobre o histórico de fornadas bem-sucedidas, sem necessidade de treinamento offline.</p>
+    <p>O módulo de sugestão responde a uma pergunta prática: <em>dado o clima previsto e o tempo de fermentação desejado em armário aberto, qual deve ser a dosagem de fermento por quilo de farinha?</em> A abordagem utiliza um algoritmo <strong>K-Nearest Neighbors (K-NN) ponderado pelo inverso da distância de Manhattan</strong> sobre o histórico de fornadas bem-sucedidas, sem necessidade de treinamento offline.</p>
 
-    <h3>Etapa 1 — Seleção da base histórica</h3>
-    <p>Apenas fornadas que atendam os três critérios abaixo são consideradas:</p>
+    <h3>Etapa 1 — Seleção e sanitização da base histórica</h3>
+    <p>Apenas fornadas que atendam simultaneamente aos <strong>quatro critérios</strong> abaixo entram no espaço de busca:</p>
     <ul style="margin: .5rem 0 1rem 1.5rem; color: #3c3835;">
       <li>Nota da avaliação ≥ 4 (Bom ou Excelente)</li>
       <li>Campo <code>tempAmbienteInicial</code> preenchido</li>
       <li>Campo <code>tempAmbienteFinal</code> preenchido</li>
+      <li>Fermentação natural (<code>usouCamara: false</code>) — fornadas de Câmara Fria são estritamente excluídas</li>
     </ul>
-    <p>Isso garante que o modelo aprenda exclusivamente com produções validadas e com contexto climático completo.</p>
 
-    <h3>Etapa 2 — Cálculo de distância</h3>
-    <p>Para cada fornada histórica, calcula-se uma distância em relação ao cenário atual. A métrica combina diferença de temperatura e diferença de tempo de fermentação:</p>
+    <div class="callout warn">
+      <div class="callout-title">Isolamento de Câmara Fria no K-NN</div>
+      Fornadas realizadas em câmara fria seguem parâmetros padronizados de ambiente fechado (6°C ➜ 30°C, 8h de fermentação, 20 kg de trigo, 110 g de fermento e 80 ml de emulsificante). Excluí-las da busca K-NN impede que clusters artificiais ou registros salvos com temperatura externa contaminem os 20 vizinhos mais próximos das fornadas naturais.
+    </div>
+
+    <h3>Etapa 2 — Cálculo de distância (Manhattan Normalizada)</h3>
+    <p>Para cada fornada histórica elegível, calcula-se a distância multidimensional em relação ao cenário atual, combinando desvios térmicos e diferença temporal:</p>
 
     <div class="formula">
       distancia = |tempIni<sub>hist</sub> − tempIni<sub>atual</sub>|<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; + |tempFim<sub>hist</sub> − tempFim<sub>atual</sub>|<br>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; + |tempo<sub>hist</sub> − tempo<sub>alvo</sub>| ÷ 60<br>
-      <span class="comment"><br>// A divisão por 60 normaliza minutos para a mesma escala
-// que os graus Celsius, evitando dominância da variável temporal.</span>
+      <span class="comment"><br>// A divisão por 60 converte minutos para horas, equiparando a escala temporal
+// à escala de graus Celsius (1 hora de diferença equivale a 1°C de distância).</span>
     </div>
 
-    <p>Os registros históricos são então ordenados pela distância e os 20 mais próximos são selecionados para o cálculo.</p>
+    <p>Os registros históricos são ordenados de forma crescente pela distância e os <strong>K = 20 vizinhos mais próximos</strong> são selecionados para a inferência.</p>
 
     <h3>Etapa 3 — Peso inversamente proporcional</h3>
-    <p>Cada fornada selecionada recebe um peso que aumenta quanto menor for sua distância ao cenário atual:</p>
+    <p>Cada uma das 20 fornadas selecionadas recebe um peso que cresce exponencialmente quanto mais próxima ela estiver do cenário atual:</p>
 
     <div class="formula">
       peso = 1 ÷ (distancia + 0.1)<br>
-      <span class="comment"><br>// O +0.1 evita divisão por zero quando a distância é exatamente 0
-// (temperatura e tempo idênticos ao alvo). Nesse caso, peso ≈ 10.</span>
+      <span class="comment"><br>// A constante de suavização +0.1 evita divisão por zero quando a distância é 0
+// (temperatura e tempo idênticos ao alvo). Nesse caso, peso máximo = 10.</span>
     </div>
 
     <h3>Etapa 4 — Média ponderada da proporção fermento/farinha</h3>
-    <p>O sistema não trabalha com gramas absolutas, mas com a <strong>proporção</strong> entre fermento e farinha de cada fornada. Isso torna a sugestão independente do volume de produção.</p>
+    <p>O algoritmo opera sobre a <strong>densidade relativa</strong> (gramas de fermento por quilo de farinha) de cada fornada, tornando a recomendação invariante à escala da batida:</p>
 
     <div class="formula">
       proporcao<sub>i</sub> = fermento<sub>i</sub> ÷ farinha<sub>i</sub><br><br>
@@ -1349,9 +1711,10 @@
       <table>
         <thead><tr><th>Situação</th><th>Comportamento</th></tr></thead>
         <tbody>
-          <tr><td>Nenhuma temperatura informada</td><td>Todos os 20 últimos registros recebem peso igual (média simples)</td></tr>
+          <tr><td>Modo Câmara Fria ativado no formulário</td><td>Preenche automaticamente a receita padrão (20kg trigo, 110g fermento, 80ml emulsificante, 18:00➜02:00, 6°C➜30°C) e congela o botão de sugestão K-NN</td></tr>
+          <tr><td>Nenhuma temperatura informada</td><td>Todos os 20 últimos registros naturais recebem peso igual (média simples)</td></tr>
           <tr><td>Nenhum histórico disponível</td><td>Retorna <code>fermento: 0</code> e mensagem explicativa</td></tr>
-          <tr><td>Open-Meteo indisponível</td><td>Campos de temperatura ficam <code>null</code>; usuário preenche manualmente</td></tr>
+          <tr><td>Open-Meteo indisponível no backend</td><td>Frontend executa fallback direto no navegador; se offline, permite preenchimento manual</td></tr>
         </tbody>
       </table>
     </div>
@@ -1362,10 +1725,55 @@
     </div>
   </section>
 
+  <!-- ── INTELIGÊNCIA DE PRODUÇÃO (BI) ─────── -->
+  <section class="section" id="bi-gerencial">
+    <div class="section-eyebrow">Análise Industrial</div>
+    <h2>Inteligência de Produção (BI Gerencial)</h2>
+
+    <p>Exclusivo para o perfil de gerência no Dashboard, o módulo de Business Intelligence (<code>GET /producao/bi-stats</code>) transforma os dados operacionais do chão de fábrica em indicadores físicos, termodinâmicos e preditivos.</p>
+
+    <h3>1. Balanço de Massa Físico (3 Cenários de Rendimento)</h3>
+    <p>Modelado sobre a receita industrial padrão da padaria — <strong>40 kg de farinha</strong> + <strong>20 kg de água (50% de hidratação)</strong> + <strong>0,2 kg de aditivos</strong> = <strong>60,2 kg de massa crua</strong>, resultando em <strong>46,75 kg de pão assado</strong> (unidades de 55g) após a perda térmica de cocção —, o sistema calcula a produção estimada sob três perspectivas:</p>
+
+    <div class="formula">
+      <span class="comment">// Aba 1 — Por Farinha (Rendimento Direto: 21,25 pães por kg de trigo)</span><br>
+      paes_farinha = round(totalFarinhaKg × 21.25)<br><br>
+      <span class="comment">// Aba 2 — Massa Crua (Fator de hidratação 1,505× e 14 pães de ~71g por kg de massa)</span><br>
+      massa_crua_kg = totalFarinhaKg × 1.505<br>
+      paes_massa_crua = round(massa_crua_kg × 14)<br><br>
+      <span class="comment">// Aba 3 — Pão Assado (Quebra térmica de 22,3% na cocção → fator 1,16875× e 18 pães de 55g/kg)</span><br>
+      massa_assada_kg = totalFarinhaKg × 1.16875<br>
+      perda_termica_kg = massa_crua_kg − massa_assada_kg<br>
+      paes_assados = round(massa_assada_kg × 18)
+    </div>
+
+    <h3>2. Auditoria Climática de Dosagem (Zona de Ouro ±10%)</h3>
+    <p>Avalia a precisão da dosagem de fermento aplicada pelos padeiros frente às condições térmicas naturais (excluindo fornadas de câmara fria). O histórico é segmentado pela temperatura média da fornada em três faixas:</p>
+    <ul style="margin: .5rem 0 1rem 1.5rem; color: #3c3835;">
+      <li><strong>Frio (&lt; 20°C):</strong> exige maior concentração de fermento para compensar a letargia biológica.</li>
+      <li><strong>Ameno (20°C – 26°C):</strong> faixa de equilíbrio operacional.</li>
+      <li><strong>Quente (&gt; 26°C):</strong> exige redução de fermento para evitar superfermentação e queda de estrutura.</li>
+    </ul>
+    <p>Para cada faixa, o motor extrai a <strong>proporção ideal (g/kg)</strong> a partir das fornadas com <strong>Nota 5 (Excelente)</strong>. Se o filtro mensal não possuir amostras Nota 5 em determinada faixa climática, o algoritmo aciona automaticamente um <strong>fallback histórico global</strong> (sinalizado na interface com a badge <em>Ref. Histórica</em>). Uma fornada é classificada como <strong>Aderente (Zona de Ouro)</strong> quando sua dosagem fica dentro da margem de tolerância de <strong>±10%</strong> do ideal daquela faixa.</p>
+
+    <h3>3. Sensibilidade e Estabilidade Térmica (ΔT)</h3>
+    <p>Mede o impacto da amplitude térmica durante a fermentação (<code>ΔT = |tempFinal − tempInicial|</code>) sobre a qualidade final do pão, comparando a nota média e a taxa de excelência entre fornadas em <strong>Ambiente Estável (ΔT ≤ 4°C)</strong> e fornadas submetidas a <strong>Alta Oscilação (ΔT &gt; 4°C)</strong>.</p>
+
+    <h3>4. Projeção Mensal de Consumo (Run-Rate)</h3>
+    <p>No filtro mensal (<em>Neste Mês</em>) ou no último mês da série histórica, o gráfico empilhado projeta o fechamento de consumo de farinha calculando o ritmo diário médio (<code>farinhaAcumulada ÷ diaAtualDoMes</code>) multiplicado pelo total de dias do mês corrente.</p>
+  </section>
+
   <!-- ── REGRAS DE NEGÓCIO ─────────────────── -->
   <section class="section" id="regras">
     <div class="section-eyebrow">Lógica do Sistema</div>
     <h2>Regras de Negócio</h2>
+
+    <h3>Detecção híbrida de Câmara Fria</h3>
+    <p>Uma produção pode ser marcada como realizada em câmara fria (<code>usouCamara = true</code>) de duas maneiras complementares:</p>
+    <ul style="margin: .5rem 0 1rem 1.5rem; color: #3c3835;">
+      <li><strong>Acionamento explícito (Switch no Frontend):</strong> Na tela de Nova Produção, ativar a chave <em>Câmara Fria</em> preenche instantaneamente os valores padrão (18:00 às 02:00, 8h, 6°C inicial, 30°C final, 20 kg de trigo, 110 g de fermento e 80 ml de emulsificante), mantendo-os editáveis e desativando o botão de sugestão K-NN.</li>
+      <li><strong>Detecção automática por expressão regular (Backend):</strong> Ao criar/editar uma produção, submeter uma avaliação ou importar planilhas CSV legadas, o backend inspeciona os campos <code>observacoes</code> e <code>comentario</code>. Qualquer menção textual a variantes como <em>"câmara fria"</em>, <em>"camara"</em> ou <em>"câmera fria"</em> (independente de acentuação ou maiúsculas) converte automaticamente o registro para <code>usouCamara = true</code>.</li>
+    </ul>
 
     <h3>Janela de edição de 3 dias</h3>
     <p>Padeiros podem editar produções e avaliações somente se a produção vinculada tem menos de 3 dias a partir de <code>horaInicio</code>. O cálculo é feito em milissegundos:</p>
@@ -1448,8 +1856,8 @@
       <div class="flow-step">
         <div class="flow-dot">1</div>
         <div class="flow-content">
-          <div class="flow-title">Registro da fornada</div>
-          <div class="flow-text">O padeiro preenche o formulário com ingredientes e horário. O frontend consulta <code>GET /producao/clima-previsao</code> para preencher as temperaturas automaticamente. O padeiro pode ajustar os valores antes de salvar. <code>POST /producao</code> calcula <code>tempoFermentacaoMinutos</code> e persiste o registro.</div>
+          <div class="flow-title">Registro da fornada (Natural ou Câmara Fria)</div>
+          <div class="flow-text">O padeiro escolhe o método de fermentação. Em modo natural, o frontend consulta <code>GET /producao/clima-previsao</code> (com fallback client-side) para preencher as temperaturas automaticamente. Se o switch <strong>Câmara Fria</strong> for ativado, o sistema preenche a receita padrão (18:00➜02:00, 6°C➜30°C, 20kg trigo, 110g fermento, 80ml emulsificante). <code>POST /producao</code> calcula <code>tempoFermentacaoMinutos</code> e persiste o registro.</div>
         </div>
       </div>
       <div class="flow-step">
@@ -1462,15 +1870,15 @@
       <div class="flow-step">
         <div class="flow-dot">3</div>
         <div class="flow-content">
-          <div class="flow-title">Avaliação</div>
-          <div class="flow-text">O operador atribui uma nota de 1 a 5, com comentário e temperatura final real opcional. <code>POST /avaliacao</code> verifica unicidade e persiste. A fornada sai da lista de pendentes.</div>
+          <div class="flow-title">Avaliação sensorial</div>
+          <div class="flow-text">O operador atribui uma nota de 1 a 5, com comentário e temperatura final real opcional. <code>POST /avaliacao</code> verifica unicidade, detecta eventuais menções textuais à câmara fria no comentário e persiste. A fornada sai da lista de pendentes.</div>
         </div>
       </div>
       <div class="flow-step">
         <div class="flow-dot">4</div>
         <div class="flow-content">
-          <div class="flow-title">Contribuição ao modelo</div>
-          <div class="flow-text">Se a nota for ≥ 4 e os campos de temperatura estiverem preenchidos, a fornada passa a compor a base do algoritmo de sugestão em todas as chamadas futuras a <code>GET /producao/sugestao</code>.</div>
+          <div class="flow-title">Contribuição ao modelo K-NN e ao BI</div>
+          <div class="flow-text">Todas as fornadas alimentam imediatamente o Balanço de Massa do BI. Já as fornadas naturais (<code>usouCamara: false</code>) com nota ≥ 4 e temperaturas preenchidas passam a integrar a base de vizinhos do algoritmo K-NN e a Auditoria Climática (Zona de Ouro).</div>
         </div>
       </div>
     </div>
@@ -1484,21 +1892,21 @@
         <div class="flow-dot">1</div>
         <div class="flow-content">
           <div class="flow-title">Frontend busca previsão climática</div>
-          <div class="flow-text">Ao informar os horários de início e fim, o frontend chama <code>GET /producao/clima-previsao</code>. As temperaturas são preenchidas automaticamente nos campos do formulário.</div>
+          <div class="flow-text">Ao informar os horários de início e fim em fermentação natural, o frontend chama <code>GET /producao/clima-previsao</code> (ou consulta a Open-Meteo diretamente do navegador em caso de rate-limit no servidor). As temperaturas são preenchidas automaticamente nos campos do formulário.</div>
         </div>
       </div>
       <div class="flow-step">
         <div class="flow-dot">2</div>
         <div class="flow-content">
           <div class="flow-title">Requisição de sugestão</div>
-          <div class="flow-text">Com farinha, temperaturas e tempo de fermentação preenchidos, o frontend chama <code>GET /producao/sugestao?farinha=20&temp=24&tempFim=26&minutos=180</code>.</div>
+          <div class="flow-text">Com farinha, temperaturas e tempo de fermentação preenchidos, o frontend chama <code>GET /producao/sugestao?farinha=20&amp;temp=24&amp;tempFim=26&amp;minutos=180</code>.</div>
         </div>
       </div>
       <div class="flow-step">
         <div class="flow-dot">3</div>
         <div class="flow-content">
-          <div class="flow-title">Cálculo no backend</div>
-          <div class="flow-text">O algoritmo seleciona os 20 registros mais similares, calcula os pesos, computa a média ponderada e retorna a dosagem sugerida em gramas junto com as 5 fornadas mais próximas como evidência.</div>
+          <div class="flow-title">Cálculo K-NN no backend</div>
+          <div class="flow-text">O algoritmo filtra apenas fornadas naturais bem-avaliadas, seleciona os 20 registros mais similares pela distância de Manhattan normalizada, aplica os pesos inversamente proporcionais e retorna a dosagem sugerida em gramas junto com as 5 fornadas mais próximas como evidência.</div>
         </div>
       </div>
       <div class="flow-step">
@@ -1512,34 +1920,34 @@
   </section>
 
   <section class="section" id="fluxo-backup">
-    <h2>Backup Automático</h2>
-    <p>O <code>BackupModule</code> usa <code>@nestjs/schedule</code> para executar uma tarefa agendada diariamente. O processo é:</p>
+    <h2>Backup Automático e Resiliência</h2>
+    <p>O <code>BackupModule</code> usa <code>@nestjs/schedule</code> para executar uma rotina diária às <strong>19:00</strong> (fuso horário <code>America/Campo_Grande</code>), além de permitir disparo manual via <code>POST /backup/run</code>. O processo conta com mecanismos de proteção contra falhas de rede:</p>
 
     <div class="flow">
       <div class="flow-step">
         <div class="flow-dot">1</div>
         <div class="flow-content">
-          <div class="flow-title">Leitura do destinatário</div>
-          <div class="flow-text">O service busca o e-mail configurado na tabela <code>Configuracao</code> pela chave <code>Email_Backup</code>.</div>
+          <div class="flow-title">Trava de concorrência e idempotência</div>
+          <div class="flow-text">O service verifica as flags em memória <code>isProcessing</code> e <code>lastBackupDate</code> para impedir execuções duplicadas no mesmo dia ou disparos simultâneos.</div>
         </div>
       </div>
       <div class="flow-step">
         <div class="flow-dot">2</div>
         <div class="flow-content">
-          <div class="flow-title">Geração do CSV</div>
-          <div class="flow-text">Chama internamente a mesma lógica de <code>GET /producao/exportar</code> para gerar o arquivo com todos os dados.</div>
+          <div class="flow-title">Resolução do destinatário e geração do CSV</div>
+          <div class="flow-text">Busca o e-mail configurado na tabela <code>Configuracao</code> pela chave <code>EMAIL_BACKUP</code> (com fallback para a variável de ambiente <code>EMAIL_DESTINO</code>) e gera o CSV completo via <code>ProducaoService.exportarDados()</code>.</div>
         </div>
       </div>
       <div class="flow-step">
         <div class="flow-dot">3</div>
         <div class="flow-content">
-          <div class="flow-title">Envio por e-mail</div>
-          <div class="flow-text">O Nodemailer envia o CSV como anexo usando as credenciais configuradas nas variáveis de ambiente (<code>EMAIL_USER</code> e <code>EMAIL_PASS</code>).</div>
+          <div class="flow-title">Envio via Resend API com Retry Exponencial</div>
+          <div class="flow-text">Envia o CSV em anexo utilizando a API HTTP da <strong>Resend</strong> (<code>RESEND_API_KEY</code>). Em caso de instabilidade externa, executa até <strong>5 tentativas</strong> com <em>exponential backoff</em> (2s, 4s, 8s, 16s...).</div>
         </div>
       </div>
     </div>
 
-    <p>O e-mail destinatário pode ser alterado a qualquer momento pelo gerente via <code>PATCH /admin/config/email</code>.</p>
+    <p>O e-mail destinatário pode ser alterado a qualquer momento pelo gerente no Painel Admin via <code>PATCH /admin/config/email</code>.</p>
   </section>
 
   <!-- ══════════════════════════════════════════
@@ -1554,30 +1962,30 @@
         <thead><tr><th>Rota</th><th>Descrição</th><th>Acesso</th></tr></thead>
         <tbody>
           <tr><td><code>/login</code></td><td>Tela de autenticação</td><td>Público</td></tr>
-          <tr><td><code>/</code></td><td>Dashboard principal com gráficos, contador de pendências e atalhos</td><td>Autenticado</td></tr>
-          <tr><td><code>/producao/novo</code></td><td>Formulário de registro de nova fornada com sugestão inteligente</td><td>Autenticado + perm. registrar</td></tr>
-          <tr><td><code>/producao/historico</code></td><td>Listagem paginada e filtrável de todas as fornadas</td><td>Autenticado + perm. histórico</td></tr>
+          <tr><td><code>/</code></td><td>Dashboard principal (KPIs de qualidade, gráficos, contador de pendências e módulo de BI Gerencial)</td><td>Autenticado (BI restrito a Gerente)</td></tr>
+          <tr><td><code>/producao/novo</code></td><td>Formulário mobile-first de registro de fornada com switch de Câmara Fria e sugestão K-NN</td><td>Autenticado + perm. registrar</td></tr>
+          <tr><td><code>/producao/historico</code></td><td>Listagem paginada, busca multifiltro (incluindo Câmara Fria/Natural) e edição modal</td><td>Autenticado + perm. histórico</td></tr>
           <tr><td><code>/avaliacao</code></td><td>Lista de produções pendentes de avaliação</td><td>Autenticado</td></tr>
-          <tr><td><code>/avaliacao/[id]</code></td><td>Formulário de avaliação de uma fornada específica</td><td>Autenticado + perm. avaliar</td></tr>
-          <tr><td><code>/usuarios</code></td><td>Gerenciamento de equipe (criar, editar, remover funcionários)</td><td>Gerente</td></tr>
-          <tr><td><code>/painel</code></td><td>Painel gerencial: backup, logs de auditoria, reset do sistema</td><td>Gerente</td></tr>
+          <tr><td><code>/avaliacao/[id]</code></td><td>Formulário de avaliação sensorial de uma fornada específica</td><td>Autenticado + perm. avaliar</td></tr>
+          <tr><td><code>/usuarios</code></td><td>Gerenciamento de equipe (criar, editar, permissões e horários)</td><td>Gerente</td></tr>
+          <tr><td><code>/painel</code></td><td>Painel gerencial: backup CSV, importação em lote, logs de auditoria e reset do sistema</td><td>Gerente</td></tr>
         </tbody>
       </table>
     </div>
   </section>
 
   <section class="section" id="frontend-auth">
-    <h2>Gerenciamento de Sessão</h2>
-    <p>A sessão é controlada pelo <code>AuthContext</code>, um React Context disponível em toda a aplicação via <code>AuthProvider</code> no <code>layout.tsx</code>.</p>
+    <h2>Gerenciamento de Sessão e Estado Assíncrono</h2>
+    <p>A sessão é controlada pelo <code>AuthContext</code> (disponível via <code>AuthProvider</code> no <code>layout.tsx</code>), enquanto o estado de servidor e cache de dados analíticos são gerenciados pelo <strong>TanStack React Query</strong> (<code>QueryProvider</code>).</p>
 
-    <h3>Persistência</h3>
+    <h3>Cache e Sincronização (React Query)</h3>
+    <p>Consultas pesadas — como estatísticas do Dashboard, BI Gerencial (<code>['bi-stats', periodo]</code>) e listagens do histórico — são cacheadas em memória, evitando requisições redundantes ao alternar abas ou filtros e garantindo invalidação automática após mutações.</p>
+
+    <h3>Persistência de Sessão</h3>
     <p>Ao fazer login, o token JWT é armazenado em <code>localStorage</code> com a chave <code>royal_token</code>. Os dados básicos do usuário (nome, cargo, permissões) são armazenados em <code>royal_user</code> como JSON. Na inicialização do app, o <code>AuthProvider</code> verifica a presença dessas chaves e restaura a sessão automaticamente.</p>
 
-    <h3>Proteção de rotas</h3>
-    <p>O <code>useEffect</code> do <code>AuthProvider</code> redireciona para <code>/login</code> caso nenhum token seja encontrado no <code>localStorage</code>. Rotas específicas (como <code>/usuarios</code> e <code>/painel</code>) verificam adicionalmente o cargo do usuário via <code>isGerente</code>.</p>
-
-    <h3>Expiração do token</h3>
-    <p>Quando o backend retorna <code>401</code> em qualquer requisição, o frontend executa <code>logout()</code>, que limpa o <code>localStorage</code> e redireciona para <code>/login</code>.</p>
+    <h3>Proteção de rotas e Expiração</h3>
+    <p>O <code>useEffect</code> do <code>AuthProvider</code> redireciona para <code>/login</code> caso nenhum token seja encontrado no <code>localStorage</code>. Rotas administrativas (<code>/usuarios</code> e <code>/painel</code>) verificam adicionalmente o cargo via <code>isGerente</code>. Quando o backend retorna <code>401</code> em qualquer requisição, o interceptor executa <code>logout()</code> e redireciona para <code>/login</code>.</p>
   </section>
 
   <!-- ══════════════════════════════════════════
@@ -1585,14 +1993,14 @@
   ══════════════════════════════════════════ -->
   <section class="section" id="setup">
     <div class="section-eyebrow">Operações</div>
-    <h2>Configuração do Ambiente Local</h2>
+    <h2>Configuração Local &amp; Deploy em Nuvem</h2>
 
     <div class="callout info">
-      <div class="callout-title">Pré-requisitos</div>
-      Node.js 20 ou superior, Docker e Docker Compose instalados na máquina.
+      <div class="callout-title">Infraestrutura de Produção</div>
+      Em produção, o sistema opera de forma distribuída: <strong>Frontend</strong> hospedado na <strong>Vercel</strong>, <strong>Backend API</strong> na <strong>Render</strong> (com compressão HTTP Gzip ativa) e banco de dados PostgreSQL serverless na <strong>Neon</strong>. O fluxo de branches segue GitFlow simplificado (<code>feature/*</code> ➜ <code>develop</code> ➜ <code>main</code>).
     </div>
 
-    <h3>1. Banco de dados</h3>
+    <h3>1. Banco de dados local (Docker)</h3>
     <pre><code><span class="cmt"># Na raiz do projeto</span>
 docker-compose up -d</code></pre>
 
@@ -1626,12 +2034,12 @@ npm run dev</code></pre>
       <table>
         <thead><tr><th>Comando</th><th>Descrição</th></tr></thead>
         <tbody>
-          <tr><td><code>npm run test</code></td><td>Executa testes unitários (backend)</td></tr>
+          <tr><td><code>npm run test</code></td><td>Executa testes unitários com Jest (backend)</td></tr>
           <tr><td><code>npm run test:cov</code></td><td>Testes com relatório de cobertura</td></tr>
           <tr><td><code>npm run test:e2e</code></td><td>Testes end-to-end com Supertest</td></tr>
           <tr><td><code>npx prisma studio</code></td><td>Interface visual para inspecionar o banco de dados</td></tr>
           <tr><td><code>npx prisma migrate dev</code></td><td>Criar e aplicar uma nova migration após alterar o schema</td></tr>
-          <tr><td><code>npm run start:prod</code></td><td>Build e execução em modo produção</td></tr>
+          <tr><td><code>npm run start:prod</code></td><td>Executa migrations pendentes e inicia a API compilada em modo produção</td></tr>
         </tbody>
       </table>
     </div>
@@ -1640,19 +2048,21 @@ npm run dev</code></pre>
   <!-- ── VARIÁVEIS ─────────────────────────── -->
   <section class="section" id="variaveis">
     <h2>Variáveis de Ambiente</h2>
-    <p>Todas as variáveis são carregadas pelo <code>ConfigModule.forRoot({ isGlobal: true })</code> do NestJS e ficam disponíveis em todo o backend via <code>ConfigService</code> ou <code>process.env</code>.</p>
+    <p>As variáveis do backend são carregadas pelo <code>ConfigModule.forRoot({ isGlobal: true })</code> do NestJS. No frontend, variáveis prefixadas com <code>NEXT_PUBLIC_</code> são expostas ao navegador em tempo de build.</p>
 
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Variável</th><th>Obrigatória</th><th>Descrição</th></tr></thead>
+        <thead><tr><th>Variável</th><th>Escopo</th><th>Obrigatória</th><th>Descrição</th></tr></thead>
         <tbody>
-          <tr><td><code>DATABASE_URL</code></td><td>Sim</td><td>String de conexão PostgreSQL. Ex: <code>postgresql://admin:adminpassword@localhost:5432/padaria_royal</code></td></tr>
-          <tr><td><code>JWT_SECRET</code></td><td>Sim</td><td>Chave secreta para assinar e verificar tokens JWT. Use uma string longa e aleatória em produção.</td></tr>
-          <tr><td><code>CIDADE_LAT</code></td><td>Sim</td><td>Latitude da cidade da padaria. Usada na consulta à API Open-Meteo.</td></tr>
-          <tr><td><code>CIDADE_LON</code></td><td>Sim</td><td>Longitude da cidade da padaria.</td></tr>
-          <tr><td><code>EMAIL_USER</code></td><td>Sim</td><td>Endereço de e-mail usado pelo Nodemailer para enviar o backup diário.</td></tr>
-          <tr><td><code>EMAIL_PASS</code></td><td>Sim</td><td>Senha ou token de aplicativo da conta de e-mail.</td></tr>
-          <tr><td><code>PORT</code></td><td>Não</td><td>Porta do servidor HTTP. Padrão: <code>3000</code>.</td></tr>
+          <tr><td><code>DATABASE_URL</code></td><td>Backend</td><td>Sim</td><td>String de conexão PostgreSQL (Docker local ou Neon Serverless em produção).</td></tr>
+          <tr><td><code>JWT_SECRET</code></td><td>Backend</td><td>Sim</td><td>Chave secreta para assinar e verificar tokens JWT (<code>HS256</code>).</td></tr>
+          <tr><td><code>CIDADE_LAT</code></td><td>Backend</td><td>Sim</td><td>Latitude da cidade da padaria para consulta à API Open-Meteo.</td></tr>
+          <tr><td><code>CIDADE_LON</code></td><td>Backend</td><td>Sim</td><td>Longitude da cidade da padaria.</td></tr>
+          <tr><td><code>RESEND_API_KEY</code></td><td>Backend</td><td>Sim</td><td>Chave de API da Resend para envio transacional do backup CSV diário por e-mail.</td></tr>
+          <tr><td><code>EMAIL_DESTINO</code></td><td>Backend</td><td>Não</td><td>E-mail destinatário de fallback caso a chave <code>EMAIL_BACKUP</code> ainda não esteja definida no banco.</td></tr>
+          <tr><td><code>IMPORT_TIMEZONE</code></td><td>Backend</td><td>Não</td><td>Offset de fuso horário usado na importação de planilhas CSV. Padrão: <code>-04:00</code> (MS).</td></tr>
+          <tr><td><code>PORT</code></td><td>Backend</td><td>Não</td><td>Porta do servidor HTTP. Padrão: <code>3000</code>.</td></tr>
+          <tr><td><code>NEXT_PUBLIC_API_URL</code></td><td>Frontend</td><td>Sim</td><td>URL base da API do backend (ex: <code>http://localhost:3000</code> ou URL da Render).</td></tr>
         </tbody>
       </table>
     </div>
