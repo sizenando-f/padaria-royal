@@ -91,7 +91,7 @@ export default function NovaProducao() {
     if (checked) {
       // 1. Temperatura inicial 6°C e final 30°C (editáveis)
       // 2. Hora inicial 18:00 de hoje e final 02:00 de amanhã (8h, editáveis)
-      // 3. Fermento 110g, farinha 20kg, emulsificante 80ml (editáveis)
+      // 3. Fermento 105g, farinha 20kg, emulsificante 80ml (editáveis)
       const hoje18 = new Date();
       hoje18.setHours(18, 0, 0, 0);
 
@@ -105,7 +105,7 @@ export default function NovaProducao() {
         horaInicio: formatarDataLocal(hoje18),
         horaFim: formatarDataLocal(amanha02),
         farinhaKg: "20",
-        fermentoGrama: "110",
+        fermentoGrama: "105",
         emulsificanteMl: "80",
       }));
       setProvasSugestao(null);
@@ -644,7 +644,7 @@ export default function NovaProducao() {
                   type="button"
                   onClick={pedirSugestao}
                   disabled={formData.usouCamara}
-                  title={formData.usouCamara ? "Modo câmara: dosagem padrão fixa (110g fermento / 20kg farinha / 8h)" : "Sugerir dosagem por IA"}
+                  title={formData.usouCamara ? "Modo câmara: dosagem padrão fixa (105g fermento / 20kg farinha / 8h)" : "Sugerir dosagem por IA"}
                   className={`shrink-0 w-auto px-4 rounded-2xl shadow-lg transition-all flex flex-col items-center justify-center ${
                     formData.usouCamara
                       ? "bg-cyan-100/70 text-cyan-800 border border-cyan-200 shadow-none cursor-default opacity-85"
